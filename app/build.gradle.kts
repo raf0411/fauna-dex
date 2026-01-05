@@ -57,6 +57,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
+    // Splash Screen
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

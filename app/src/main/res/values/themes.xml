@@ -6,7 +6,7 @@
     <!-- Splash Screen Theme -->
     <style name="Theme.FaunaDex.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/dark_forest</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_icon</item>
         <item name="postSplashScreenTheme">@style/Theme.FaunaDex</item>
     </style>
 </resources>

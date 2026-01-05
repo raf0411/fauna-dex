@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firebase config - DO NOT commit
+google-services.json
+app/google-services.json
+

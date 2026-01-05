@@ -1,6 +1,5 @@
 package android.app.faunadex.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,25 +11,69 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = PrimaryGreen,
+    onPrimary = White,
+    primaryContainer = DarkGreenShade,
+    onPrimaryContainer = PrimaryGreenLime,
+
+    secondary = MediumGreenMint,
+    onSecondary = DarkForest,
+    secondaryContainer = DarkGreenTeal,
+    onSecondaryContainer = AccentGreenLeaf,
+
+    tertiary = BlueOcean,
+    onTertiary = White,
+    tertiaryContainer = BlueDark,
+    onTertiaryContainer = BlueLight,
+
+    error = ErrorRedBright,
+    onError = White,
+    errorContainer = ErrorRedDark,
+    onErrorContainer = ErrorRedLight,
+
+    background = AlmostBlack,
+    onBackground = OffWhite,
+
+    surface = DarkForest,
+    onSurface = OffWhite,
+    surfaceVariant = DarkGreenMoss,
+    onSurfaceVariant = MediumGreenSage,
+
+    outline = DarkGreenSage,
+    outlineVariant = DarkGreenTeal
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = PrimaryGreen,
+    onPrimary = White,
+    primaryContainer = PrimaryGreenPale,
+    onPrimaryContainer = DarkGreenDeep,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = MediumGreen,
+    onSecondary = White,
+    secondaryContainer = PrimaryGreenLight,
+    onSecondaryContainer = DarkGreen,
+
+    tertiary = PrimaryBlue,
+    onTertiary = White,
+    tertiaryContainer = BlueLight,
+    onTertiaryContainer = BlueDark,
+
+    error = ErrorRed,
+    onError = White,
+    errorContainer = ErrorRedLight,
+    onErrorContainer = ErrorRedDark,
+
+    background = OffWhite,
+    onBackground = DarkForest,
+
+    surface = White,
+    onSurface = DarkForest,
+    surfaceVariant = PastelYellow,
+    onSurfaceVariant = DarkGreenMoss,
+
+    outline = MediumGreenSage,
+    outlineVariant = PrimaryGreenPale
 )
 
 @Composable

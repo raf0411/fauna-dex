@@ -74,14 +74,14 @@ fun OnboardingScreen(
                     shadeColor = DarkNeutral,
                     shineColor = DarkNeutral,
                     textColor = White,
-                    strokeWidth = 24f,
-                    shineHeight = 40.dp,
-                    height = 100.dp,
-                    fontSize = 40.sp,
+                    strokeWidth = 14f,
+                    shineHeight = 32.dp,
+                    height = 80.dp,
+                    fontSize = 34.sp,
                     fontFamily = CodeNextFont,
                     cornerRadius = 28.dp,
                     shadowElevation = 12.dp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -94,13 +94,13 @@ fun OnboardingScreen(
                     shadeColor = PrimaryGreenLime,
                     textColor = White,
                     strokeWidth = 14f,
-                    shineHeight = 40.dp,
-                    height = 100.dp,
-                    fontSize = 40.sp,
+                    shineHeight = 32.dp,
+                    height = 80.dp,
+                    fontSize = 34.sp,
                     fontFamily = CodeNextFont,
                     cornerRadius = 28.dp,
                     shadowElevation = 12.dp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }

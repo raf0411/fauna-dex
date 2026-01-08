@@ -4,6 +4,7 @@ import android.app.faunadex.domain.model.AuthResult
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.domain.repository.AuthRepository
 import android.app.faunadex.domain.repository.UserRepository
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import kotlinx.coroutines.channels.awaitClose
@@ -90,6 +91,32 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signOut() {
         firebaseAuth.signOut()
+    }
+
+    override suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> {
+        return try {
+            val user = firebaseAuth.currentUser
+            if (user == null || user.email == null) {
+                return Result.failure(Exception("User not logged in"))
+            }
+
+            // Re-authenticate user with current password
+            val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
+            user.reauthenticate(credential).await()
+
+            // Update password
+            user.updatePassword(newPassword).await()
+
+            Result.success(Unit)
+        } catch (e: FirebaseAuthException) {
+            when (e.errorCode) {
+                "ERROR_WRONG_PASSWORD" -> Result.failure(Exception("Current password is incorrect"))
+                "ERROR_WEAK_PASSWORD" -> Result.failure(Exception("New password is too weak"))
+                else -> Result.failure(Exception(e.message ?: "Failed to change password"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to change password"))
+        }
     }
 
     override fun getCurrentUser(): User? {

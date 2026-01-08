@@ -74,6 +74,7 @@ private fun EducationLevelOption(
 ) {
     Row(
         modifier = Modifier
+            .clip(RoundedCornerShape(24.dp))
             .clickable(enabled = enabled) { onClick() }
             .padding(1.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),

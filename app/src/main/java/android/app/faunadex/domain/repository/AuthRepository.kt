@@ -13,6 +13,7 @@ interface AuthRepository {
     ): AuthResult<User>
     suspend fun signIn(email: String, password: String): AuthResult<User>
     suspend fun signOut()
+    suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit>
     fun getCurrentUser(): User?
     fun isUserLoggedIn(): Flow<Boolean>
 }

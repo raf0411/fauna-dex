@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @Composable
@@ -26,6 +27,8 @@ fun EditProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -33,6 +36,15 @@ fun EditProfileScreen(
                 title = "Edit Profile",
                 onNavigateBack = onNavigateBack
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = PrimaryGreen,
+                    contentColor = PastelYellow
+                )
+            }
         },
         containerColor = DarkForest
     ) { paddingValues ->
@@ -55,9 +67,11 @@ fun EditProfileScreen(
                 EditProfileContent(
                     user = (uiState as ProfileUiState.Success).user,
                     onSave = { username, educationLevel ->
-                        // TODO: Implement update profile functionality
-                        onNavigateBack()
+                        viewModel.updateProfile(username, educationLevel)
                     },
+                    onNavigateBack = onNavigateBack,
+                    snackbarHostState = snackbarHostState,
+                    scope = scope,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -81,15 +95,31 @@ fun EditProfileScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditProfileContent(
     user: User,
     onSave: (String, String) -> Unit,
+    onNavigateBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    scope: kotlinx.coroutines.CoroutineScope,
     modifier: Modifier = Modifier
 ) {
     var username by remember { mutableStateOf(user.username) }
     var educationLevel by remember { mutableStateOf(user.educationLevel) }
+    var shouldNavigateBack by remember { mutableStateOf(false) }
+
+    LaunchedEffect(shouldNavigateBack) {
+        if (shouldNavigateBack) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Profile updated successfully!",
+                    duration = SnackbarDuration.Short
+                )
+            }
+            kotlinx.coroutines.delay(1500) // Show snackbar then navigate
+            onNavigateBack()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -140,7 +170,10 @@ private fun EditProfileContent(
 
         // Save Button
         Button(
-            onClick = { onSave(username, educationLevel) },
+            onClick = {
+                onSave(username, educationLevel)
+                shouldNavigateBack = true
+            },
             modifier = Modifier
                 .width(120.dp)
                 .height(48.dp),
@@ -165,6 +198,9 @@ private fun EditProfileContent(
 @Preview(showBackground = true)
 @Composable
 fun EditProfileScreenPreview() {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     FaunaDexTheme {
         Scaffold(
             topBar = {
@@ -186,6 +222,9 @@ fun EditProfileScreenPreview() {
                     joinedAt = Date()
                 ),
                 onSave = { _, _ -> },
+                onNavigateBack = {},
+                snackbarHostState = snackbarHostState,
+                scope = scope,
                 modifier = Modifier.padding(paddingValues)
             )
         }

@@ -1,6 +1,7 @@
 package android.app.faunadex.presentation.profile
 
 import android.app.faunadex.domain.model.User
+import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.EducationLevelSelector
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @Composable
@@ -106,14 +108,22 @@ private fun EditProfileContent(
     var username by remember { mutableStateOf(user.username) }
     var educationLevel by remember { mutableStateOf(user.educationLevel) }
     var shouldNavigateBack by remember { mutableStateOf(false) }
+    var showEditProfileDialog by remember { mutableStateOf(false) }
+    var showEducationLevelDialog by remember { mutableStateOf(false) }
+    var pendingUsername by remember { mutableStateOf("") }
+    var pendingEducationLevel by remember { mutableStateOf("") }
 
     LaunchedEffect(shouldNavigateBack) {
         if (shouldNavigateBack) {
-            snackbarHostState.showSnackbar(
-                message = "Profile updated successfully!",
-                duration = SnackbarDuration.Short
-            )
-            kotlinx.coroutines.delay(1000)
+            // Launch snackbar in background without waiting
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Profile updated successfully!",
+                    duration = SnackbarDuration.Short
+                )
+            }
+            // Wait briefly then navigate
+            kotlinx.coroutines.delay(500)
             onNavigateBack()
         }
     }
@@ -168,8 +178,9 @@ private fun EditProfileContent(
         // Save Button
         Button(
             onClick = {
-                onSave(username, educationLevel)
-                shouldNavigateBack = true
+                pendingUsername = username
+                pendingEducationLevel = educationLevel
+                showEditProfileDialog = true
             },
             modifier = Modifier
                 .width(120.dp)
@@ -190,6 +201,46 @@ private fun EditProfileContent(
 
         Spacer(modifier = Modifier.height(16.dp))
     }
+
+    // First confirmation dialog - Edit Profile
+    ConfirmationDialog(
+        title = "Edit Profile",
+        message = "Are you sure you want to edit your profile?",
+        confirmText = "Confirm",
+        cancelText = "Cancel",
+        onConfirm = {
+            // Check if education level changed
+            if (pendingEducationLevel != user.educationLevel) {
+                // Show second confirmation for education level
+                showEducationLevelDialog = true
+            } else {
+                // Only username changed, save directly
+                onSave(pendingUsername, pendingEducationLevel)
+                shouldNavigateBack = true
+            }
+        },
+        onDismiss = { showEditProfileDialog = false },
+        showDialog = showEditProfileDialog
+    )
+
+    // Second confirmation dialog - Education Level Change
+    ConfirmationDialog(
+        title = "Changing Education Level",
+        message = "This will change all of the quizzes and changes the animal detail content. Are you sure you want to edit your education level?",
+        confirmText = "Confirm",
+        cancelText = "Cancel",
+        onConfirm = {
+            // Save the changes
+            onSave(pendingUsername, pendingEducationLevel)
+            shouldNavigateBack = true
+            showEditProfileDialog = false
+        },
+        onDismiss = {
+            showEducationLevelDialog = false
+            showEditProfileDialog = false
+        },
+        showDialog = showEducationLevelDialog
+    )
 }
 
 @Preview(showBackground = true)

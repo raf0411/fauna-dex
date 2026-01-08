@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.profile
 
+import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.ui.theme.*
@@ -80,6 +81,7 @@ private fun ChangePasswordContent(
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -187,16 +189,8 @@ private fun ChangePasswordContent(
                         errorMessage = "Passwords do not match"
                     }
                     else -> {
-                        isLoading = true
-                        onChangePassword(
-                            currentPassword,
-                            newPassword,
-                            { isLoading = false },
-                            { error ->
-                                isLoading = false
-                                errorMessage = error
-                            }
-                        )
+                        // Show confirmation dialog
+                        showConfirmDialog = true
                     }
                 }
             },
@@ -252,6 +246,28 @@ private fun ChangePasswordContent(
             )
         }
     }
+
+    // Confirmation Dialog
+    ConfirmationDialog(
+        title = "Change Password",
+        message = "Are you sure you want to change your password?",
+        confirmText = "Confirm",
+        cancelText = "Cancel",
+        onConfirm = {
+            isLoading = true
+            onChangePassword(
+                currentPassword,
+                newPassword,
+                { isLoading = false },
+                { error ->
+                    isLoading = false
+                    errorMessage = error
+                }
+            )
+        },
+        onDismiss = { showConfirmDialog = false },
+        showDialog = showConfirmDialog
+    )
 }
 
 @Preview(showBackground = true)

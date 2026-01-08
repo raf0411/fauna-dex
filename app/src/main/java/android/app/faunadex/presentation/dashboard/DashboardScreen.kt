@@ -1,5 +1,12 @@
 package android.app.faunadex.presentation.dashboard
 
+import android.app.faunadex.domain.model.User
+import android.app.faunadex.presentation.components.FaunaBottomBar
+import android.app.faunadex.presentation.components.FaunaTopBar
+import android.app.faunadex.ui.theme.DarkForest
+import android.app.faunadex.ui.theme.JerseyFont
+import android.app.faunadex.ui.theme.PastelYellow
+import android.app.faunadex.ui.theme.PrimaryGreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -10,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -26,67 +34,53 @@ fun DashboardScreen(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+    DashboardScreenContent(
+        uiState = uiState,
+        onNavigateToProfile = onNavigateToProfile
+    )
+}
+
+@Composable
+fun DashboardScreenContent(
+    uiState: DashboardUiState,
+    onNavigateToProfile: () -> Unit,
+    currentRoute: String = "dashboard"
+) {
+    Scaffold(
+        topBar = {
+            FaunaTopBar(backgroundColor = PrimaryGreen)
+        },
+        bottomBar = {
+            FaunaBottomBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    when (route) {
+                        "profile" -> onNavigateToProfile()
+                        "quiz" -> { /* TODO: Navigate to quiz */ }
+                        "dashboard" -> { /* Already on dashboard */ }
+                    }
+                }
+            )
+        },
+        containerColor = DarkForest
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Dashboard",
-                style = MaterialTheme.typography.headlineLarge,
+                fontSize = 64.sp,
+                fontFamily = JerseyFont,
+                color = PastelYellow,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            uiState.user?.let { user ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Welcome!",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Text(
-                            text = "Email: ${user.email}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = "UID: ${user.uid}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = onNavigateToProfile,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("View Profile")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { viewModel.signOut() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Sign Out")
-            }
         }
     }
 }
@@ -95,67 +89,17 @@ fun DashboardScreen(
 @Composable
 fun DashboardScreenPreview() {
     MaterialTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Dashboard",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Welcome!",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Text(
-                            text = "Email: test@example.com",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = "UID: abc123xyz456",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Button(
-                    onClick = { },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("View Profile")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = { },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Sign Out")
-                }
-            }
-        }
+        DashboardScreenContent(
+            uiState = DashboardUiState(
+                user = User(
+                    uid = "abc123xyz456",
+                    email = "test@example.com",
+                    username = "TestUser"
+                ),
+                isSignedOut = false
+            ),
+            onNavigateToProfile = {}
+        )
     }
 }
 

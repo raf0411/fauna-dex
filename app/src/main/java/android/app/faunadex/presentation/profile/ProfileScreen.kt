@@ -37,6 +37,8 @@ fun ProfileScreen(
     onNavigateToDashboard: () -> Unit = {},
     onNavigateToQuiz: () -> Unit = {},
     onNavigateToOnboarding: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,7 +54,9 @@ fun ProfileScreen(
         },
         onUploadProfilePicture = { uri ->
             viewModel.uploadProfilePicture(uri)
-        }
+        },
+        onNavigateToEditProfile = onNavigateToEditProfile,
+        onNavigateToChangePassword = onNavigateToChangePassword
     )
 }
 
@@ -64,6 +68,8 @@ fun ProfileScreenContent(
     onRetry: () -> Unit,
     onLogout: () -> Unit = {},
     onUploadProfilePicture: (android.net.Uri) -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {},
     currentRoute: String = "profile"
 ) {
     Scaffold(
@@ -97,7 +103,9 @@ fun ProfileScreenContent(
                     ProfileContent(
                         user = uiState.user,
                         onLogout = onLogout,
-                        onUploadProfilePicture = onUploadProfilePicture
+                        onUploadProfilePicture = onUploadProfilePicture,
+                        onNavigateToEditProfile = onNavigateToEditProfile,
+                        onNavigateToChangePassword = onNavigateToChangePassword
                     )
                 }
                 is ProfileUiState.Error -> {
@@ -176,9 +184,10 @@ private fun ErrorContent(
 private fun ProfileContent(
     user: User,
     onLogout: () -> Unit = {},
-    onUploadProfilePicture: (android.net.Uri) -> Unit = {}
+    onUploadProfilePicture: (android.net.Uri) -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {}
 ) {
-    // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -205,7 +214,6 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         Box(contentAlignment = Alignment.Center) {
-            // Debug log
             Log.d("ProfileScreen", "Profile Picture URL: ${user.profilePictureUrl}")
 
             ProfilePicture(
@@ -244,13 +252,13 @@ private fun ProfileContent(
             ProfileActionButton(
                 icon = Icons.Outlined.Edit,
                 text = "Edit Profile",
-                onClick = { /* TODO: Handle edit profile */ }
+                onClick = onNavigateToEditProfile
             )
 
             ProfileActionButton(
                 icon = Icons.Outlined.Lock,
                 text = "Change Password",
-                onClick = { /* TODO: Handle change password */ }
+                onClick = onNavigateToChangePassword
             )
         }
 
@@ -367,7 +375,9 @@ fun ProfileScreenPreview() {
             onNavigateToQuiz = {},
             onRetry = {},
             onLogout = {},
-            onUploadProfilePicture = {}
+            onUploadProfilePicture = {},
+            onNavigateToEditProfile = {},
+            onNavigateToChangePassword = {}
         )
     }
 }

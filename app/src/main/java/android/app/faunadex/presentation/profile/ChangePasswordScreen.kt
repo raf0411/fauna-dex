@@ -11,16 +11,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun ChangePasswordScreen(
     onNavigateBack: () -> Unit = {},
@@ -53,15 +52,13 @@ fun ChangePasswordScreen(
                     currentPassword = currentPassword,
                     newPassword = newPassword,
                     onSuccess = {
+                        onSuccess()
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 message = "Password changed successfully!",
                                 duration = SnackbarDuration.Short
                             )
-                        }
-                        onSuccess()
-                        kotlinx.coroutines.GlobalScope.launch {
-                            kotlinx.coroutines.delay(1500)
+                            kotlinx.coroutines.delay(1000)
                             onNavigateBack()
                         }
                     },
@@ -166,7 +163,8 @@ private fun ChangePasswordContent(
                 text = errorMessage,
                 fontFamily = PoppinsFont,
                 fontSize = 14.sp,
-                color = androidx.compose.ui.graphics.Color.Red
+                textAlign = TextAlign.Center,
+                color = Color.Red
             )
         }
 

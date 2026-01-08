@@ -1,6 +1,7 @@
 package android.app.faunadex.presentation.profile
 
 import android.app.faunadex.domain.model.User
+import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.FaunaTopBar
 import android.app.faunadex.presentation.components.ProfilePicture
@@ -18,10 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -44,7 +43,6 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Refresh profile data every time this screen is displayed
     LaunchedEffect(key1 = true) {
         viewModel.loadUserProfile()
     }
@@ -78,6 +76,9 @@ fun ProfileScreenContent(
     onNavigateToChangePassword: () -> Unit = {},
     currentRoute: String = "profile"
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             FaunaTopBar(backgroundColor = PrimaryGreen)
@@ -93,6 +94,15 @@ fun ProfileScreenContent(
                     }
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = PrimaryGreen,
+                    contentColor = PastelYellow
+                )
+            }
         },
         containerColor = DarkForest
     ) { paddingValues ->
@@ -111,7 +121,9 @@ fun ProfileScreenContent(
                         onLogout = onLogout,
                         onUploadProfilePicture = onUploadProfilePicture,
                         onNavigateToEditProfile = onNavigateToEditProfile,
-                        onNavigateToChangePassword = onNavigateToChangePassword
+                        onNavigateToChangePassword = onNavigateToChangePassword,
+                        snackbarHostState = snackbarHostState,
+                        scope = scope
                     )
                 }
                 is ProfileUiState.Error -> {
@@ -192,8 +204,12 @@ private fun ProfileContent(
     onLogout: () -> Unit = {},
     onUploadProfilePicture: (android.net.Uri) -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
-    onNavigateToChangePassword: () -> Unit = {}
+    onNavigateToChangePassword: () -> Unit = {},
+    snackbarHostState: SnackbarHostState,
+    scope: kotlinx.coroutines.CoroutineScope
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -271,7 +287,7 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onLogout,
+            onClick = { showLogoutDialog = true },
             modifier = Modifier
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(
@@ -303,6 +319,28 @@ private fun ProfileContent(
 
         Spacer(modifier = Modifier.height(16.dp))
     }
+
+    ConfirmationDialog(
+        title = "Logout",
+        message = "Are you sure you want to logout?",
+        confirmText = "Logout",
+        cancelText = "Cancel",
+        onConfirm = {
+            showLogoutDialog = false
+            scope.launch {
+                launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Logged out successfully!",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                kotlinx.coroutines.delay(500)
+                onLogout()
+            }
+        },
+        onDismiss = { showLogoutDialog = false },
+        showDialog = showLogoutDialog
+    )
 }
 
 @Composable

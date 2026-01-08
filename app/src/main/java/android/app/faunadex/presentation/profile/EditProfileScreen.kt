@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.launch
 import java.util.Date
 
 @Composable
@@ -110,13 +109,11 @@ private fun EditProfileContent(
 
     LaunchedEffect(shouldNavigateBack) {
         if (shouldNavigateBack) {
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Profile updated successfully!",
-                    duration = SnackbarDuration.Short
-                )
-            }
-            kotlinx.coroutines.delay(1500) // Show snackbar then navigate
+            snackbarHostState.showSnackbar(
+                message = "Profile updated successfully!",
+                duration = SnackbarDuration.Short
+            )
+            kotlinx.coroutines.delay(1000)
             onNavigateBack()
         }
     }

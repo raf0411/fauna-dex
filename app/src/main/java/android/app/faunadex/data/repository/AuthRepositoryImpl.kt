@@ -3,6 +3,7 @@ package android.app.faunadex.data.repository
 import android.app.faunadex.domain.model.AuthResult
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.domain.repository.AuthRepository
+import android.app.faunadex.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import kotlinx.coroutines.channels.awaitClose
@@ -12,20 +13,42 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val userRepository: UserRepository
 ) : AuthRepository {
 
-    override suspend fun signUp(email: String, password: String): AuthResult<User> {
+    override suspend fun signUp(
+        email: String,
+        password: String,
+        username: String,
+        educationLevel: String
+    ): AuthResult<User> {
         return try {
+            // Step 1: Create user in Firebase Authentication
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
 
             if (firebaseUser != null) {
+                // Step 2: Create User object with full profile data
                 val user = User(
                     uid = firebaseUser.uid,
-                    email = firebaseUser.email ?: ""
+                    email = firebaseUser.email ?: email,
+                    username = username,
+                    educationLevel = educationLevel,
+                    currentTitle = "Petualang Pemula",
+                    totalXp = 0
                 )
-                AuthResult.Success(user)
+
+                // Step 3: Save profile to Firestore (PENTING!)
+                val firestoreResult = userRepository.createUserProfile(user)
+
+                if (firestoreResult.isSuccess) {
+                    AuthResult.Success(user)
+                } else {
+                    // Jika gagal simpan ke Firestore, hapus user dari Auth (rollback)
+                    firebaseUser.delete().await()
+                    AuthResult.Error("Failed to create user profile: ${firestoreResult.exceptionOrNull()?.message}")
+                }
             } else {
                 AuthResult.Error("Failed to create user")
             }
@@ -42,11 +65,19 @@ class AuthRepositoryImpl @Inject constructor(
             val firebaseUser = result.user
 
             if (firebaseUser != null) {
-                val user = User(
-                    uid = firebaseUser.uid,
-                    email = firebaseUser.email ?: ""
-                )
-                AuthResult.Success(user)
+                // Fetch user profile from Firestore
+                val profileResult = userRepository.getUserProfile(firebaseUser.uid)
+
+                if (profileResult.isSuccess) {
+                    AuthResult.Success(profileResult.getOrThrow())
+                } else {
+                    // Fallback: return basic user info if profile not found
+                    val user = User(
+                        uid = firebaseUser.uid,
+                        email = firebaseUser.email ?: ""
+                    )
+                    AuthResult.Success(user)
+                }
             } else {
                 AuthResult.Error("Failed to sign in")
             }

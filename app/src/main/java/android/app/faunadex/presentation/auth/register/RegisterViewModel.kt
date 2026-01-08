@@ -42,6 +42,13 @@ class RegisterViewModel @Inject constructor(
     fun signUp() {
         val state = _uiState.value
 
+        // Validate all required fields
+        if (state.email.isBlank() || state.username.isBlank() ||
+            state.password.isBlank() || state.educationLevel.isBlank()) {
+            _uiState.value = state.copy(errorMessage = "All fields are required")
+            return
+        }
+
         if (state.password != state.confirmPassword) {
             _uiState.value = state.copy(errorMessage = "Passwords do not match")
             return
@@ -50,7 +57,12 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = signUpUseCase(state.email, state.password)) {
+            when (val result = signUpUseCase(
+                state.email,
+                state.password,
+                state.username,
+                state.educationLevel
+            )) {
                 is AuthResult.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,

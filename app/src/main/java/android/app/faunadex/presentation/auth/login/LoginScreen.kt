@@ -150,6 +150,7 @@ internal fun LoginContent(
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
                         text = uiState.errorMessage,
+                        fontFamily = JerseyFont,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )

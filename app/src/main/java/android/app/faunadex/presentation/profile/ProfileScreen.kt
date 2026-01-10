@@ -1,53 +1,137 @@
 package android.app.faunadex.presentation.profile
 
 import android.app.faunadex.domain.model.User
+import android.app.faunadex.presentation.components.ConfirmationDialog
+import android.app.faunadex.presentation.components.FaunaBottomBar
+import android.app.faunadex.presentation.components.FaunaTopBar
+import android.app.faunadex.presentation.components.ProfilePicture
 import android.app.faunadex.ui.theme.*
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import java.text.SimpleDateFormat
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
 fun ProfileScreen(
+    onNavigateToDashboard: () -> Unit = {},
+    onNavigateToQuiz: () -> Unit = {},
+    onNavigateToOnboarding: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = DarkForest
-    ) {
-        when (val state = uiState) {
-            is ProfileUiState.Loading -> {
-                LoadingContent()
-            }
-            is ProfileUiState.Success -> {
-                ProfileContent(
-                    user = state.user,
-                    onUpdateEducationLevel = { level ->
-                        viewModel.updateEducationLevel(level)
+    LaunchedEffect(key1 = true) {
+        viewModel.loadUserProfile()
+    }
+
+    ProfileScreenContent(
+        uiState = uiState,
+        onNavigateToDashboard = onNavigateToDashboard,
+        onNavigateToQuiz = onNavigateToQuiz,
+        onRetry = viewModel::retry,
+        onLogout = {
+            viewModel.logout()
+            onNavigateToOnboarding()
+        },
+        onUploadProfilePicture = { uri ->
+            viewModel.uploadProfilePicture(uri)
+        },
+        onNavigateToEditProfile = onNavigateToEditProfile,
+        onNavigateToChangePassword = onNavigateToChangePassword
+    )
+}
+
+@Composable
+fun ProfileScreenContent(
+    uiState: ProfileUiState,
+    onNavigateToDashboard: () -> Unit,
+    onNavigateToQuiz: () -> Unit,
+    onRetry: () -> Unit,
+    onLogout: () -> Unit = {},
+    onUploadProfilePicture: (android.net.Uri) -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {},
+    currentRoute: String = "profile"
+) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = {
+            FaunaTopBar(backgroundColor = PrimaryGreen)
+        },
+        bottomBar = {
+            FaunaBottomBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    when (route) {
+                        "dashboard" -> onNavigateToDashboard()
+                        "quiz" -> onNavigateToQuiz()
+                        "profile" -> { /* Already on profile */ }
                     }
+                }
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = PrimaryGreen,
+                    contentColor = PastelYellow
                 )
             }
-            is ProfileUiState.Error -> {
-                ErrorContent(
-                    message = state.message,
-                    onRetry = viewModel::retry
-                )
+        },
+        containerColor = DarkForest
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when (uiState) {
+                is ProfileUiState.Loading -> {
+                    LoadingContent()
+                }
+                is ProfileUiState.Success -> {
+                    ProfileContent(
+                        user = uiState.user,
+                        onLogout = onLogout,
+                        onUploadProfilePicture = onUploadProfilePicture,
+                        onNavigateToEditProfile = onNavigateToEditProfile,
+                        onNavigateToChangePassword = onNavigateToChangePassword,
+                        snackbarHostState = snackbarHostState,
+                        scope = scope
+                    )
+                }
+                is ProfileUiState.Error -> {
+                    ErrorContent(
+                        message = uiState.message,
+                        onRetry = onRetry
+                    )
+                }
             }
         }
     }
@@ -117,8 +201,21 @@ private fun ErrorContent(
 @Composable
 private fun ProfileContent(
     user: User,
-    onUpdateEducationLevel: (String) -> Unit = {}
+    onLogout: () -> Unit = {},
+    onUploadProfilePicture: (android.net.Uri) -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {},
+    snackbarHostState: SnackbarHostState,
+    scope: kotlinx.coroutines.CoroutineScope
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { onUploadProfilePicture(it) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -128,176 +225,177 @@ private fun ProfileContent(
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Title Header
         Text(
             text = "Profile",
-            fontFamily = JerseyFont,
-            fontSize = 48.sp,
+            fontFamily = PoppinsFont,
+            fontSize = 32.sp,
             color = PastelYellow,
             fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Profile Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = DarkGreenSage
+        Box(contentAlignment = Alignment.Center) {
+            Log.d("ProfileScreen", "Profile Picture URL: ${user.profilePictureUrl}")
+
+            ProfilePicture(
+                imageUrl = user.profilePictureUrl,
+                onEditClick = { imagePickerLauncher.launch("image/*") }
             )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                ProfileField(label = "Username", value = user.username.ifEmpty { "Not Set" })
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ProfileField(label = "Email", value = user.email)
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ProfileField(
-                    label = "Education Level",
-                    value = user.educationLevel.ifEmpty { "Not Set - Please update below" }
-                )
-
-                // Show update buttons if education level is empty
-                if (user.educationLevel.isEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Select Your Education Level:",
-                        fontFamily = CodeNextFont,
-                        fontSize = 14.sp,
-                        color = PastelYellow,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Button(
-                            onClick = { onUpdateEducationLevel("SD") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryGreenLight
-                            ),
-                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
-                        ) {
-                            Text("SD", fontFamily = CodeNextFont)
-                        }
-
-                        Button(
-                            onClick = { onUpdateEducationLevel("SMP") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryGreenLight
-                            ),
-                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
-                        ) {
-                            Text("SMP", fontFamily = CodeNextFont)
-                        }
-
-                        Button(
-                            onClick = { onUpdateEducationLevel("SMA") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryGreenLight
-                            ),
-                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
-                        ) {
-                            Text("SMA", fontFamily = CodeNextFont)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ProfileField(label = "Current Title", value = user.currentTitle)
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ProfileField(label = "Total XP", value = user.totalXp.toString())
-                Spacer(modifier = Modifier.height(16.dp))
-
-                user.joinedAt?.let { date ->
-                    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                    ProfileField(label = "Joined", value = dateFormat.format(date))
-                }
-            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Stats Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = PrimaryGreenLight
-            )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Text(
+                text = user.username.ifEmpty { "No username" },
+                fontFamily = JerseyFont,
+                fontSize = 32.sp,
+                color = PastelYellow
+            )
+
+            Text(
+                text = user.email,
+                fontFamily = JerseyFont,
+                fontSize = 16.sp,
+                color = MediumGreenSage
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ProfileActionButton(
+                icon = Icons.Outlined.Edit,
+                text = "Edit Profile",
+                onClick = onNavigateToEditProfile
+            )
+
+            ProfileActionButton(
+                icon = Icons.Outlined.Lock,
+                text = "Change Password",
+                onClick = onNavigateToChangePassword
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = { showLogoutDialog = true },
+            modifier = Modifier
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = PrimaryGreen
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = "Logout",
+                    tint = PastelYellow,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
                 Text(
-                    text = "Level Progress",
+                    text = "Logout",
                     fontFamily = JerseyFont,
                     fontSize = 28.sp,
-                    color = White,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Simple XP progress bar
-                LinearProgressIndicator(
-                    progress = { (user.totalXp % 100) / 100f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(16.dp),
-                    color = PastelYellow,
-                    trackColor = DarkForest,
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "${user.totalXp % 100} / 100 XP",
-                    fontFamily = PoppinsFont,
-                    fontSize = 16.sp,
-                    color = White
+                    color = PastelYellow
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
+
+    ConfirmationDialog(
+        title = "Logout",
+        message = "Are you sure you want to logout?",
+        confirmText = "Logout",
+        cancelText = "Cancel",
+        onConfirm = {
+            showLogoutDialog = false
+            scope.launch {
+                launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Logged out successfully!",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                kotlinx.coroutines.delay(500)
+                onLogout()
+            }
+        },
+        onDismiss = { showLogoutDialog = false },
+        showDialog = showLogoutDialog
+    )
 }
 
 @Composable
-private fun ProfileField(label: String, value: String) {
-    Column {
-        Text(
-            text = label,
-            fontFamily = PoppinsFont,
-            fontSize = 14.sp,
-            color = PastelYellow,
-            fontWeight = FontWeight.Bold
-        )
+private fun ProfileActionButton(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = androidx.compose.ui.graphics.Color.Transparent
+        ),
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = PrimaryGreen
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = text,
+                        tint = DarkForest,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
 
-        Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = text,
+                fontFamily = JerseyFont,
+                fontSize = 24.sp,
+                color = MediumGreenSage,
+                modifier = Modifier.weight(1f)
+            )
 
-        Text(
-            text = value,
-            fontFamily = PoppinsFont,
-            fontSize = 18.sp,
-            color = White
-        )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Navigate",
+                tint = MediumGreenSage,
+                modifier = Modifier.size(32.dp)
+            )
+        }
     }
 }
 
@@ -305,16 +403,25 @@ private fun ProfileField(label: String, value: String) {
 @Composable
 fun ProfileScreenPreview() {
     FaunaDexTheme {
-        ProfileContent(
-            user = User(
-                uid = "preview123",
-                email = "rafi@test.com",
-                username = "RaffiGamer",
-                educationLevel = "SMA",
-                currentTitle = "Petualang Pemula",
-                totalXp = 450,
-                joinedAt = Date()
-            )
+        ProfileScreenContent(
+            uiState = ProfileUiState.Success(
+                user = User(
+                    uid = "preview123",
+                    email = "rafi@test.com",
+                    username = "raf_0411",
+                    educationLevel = "SMA",
+                    currentTitle = "Petualang",
+                    totalXp = 450,
+                    joinedAt = Date()
+                )
+            ),
+            onNavigateToDashboard = {},
+            onNavigateToQuiz = {},
+            onRetry = {},
+            onLogout = {},
+            onUploadProfilePicture = {},
+            onNavigateToEditProfile = {},
+            onNavigateToChangePassword = {}
         )
     }
 }

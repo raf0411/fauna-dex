@@ -8,6 +8,8 @@ import android.app.faunadex.presentation.auth.login.LoginScreen
 import android.app.faunadex.presentation.auth.onboarding.OnboardingScreen
 import android.app.faunadex.presentation.auth.register.RegisterScreen
 import android.app.faunadex.presentation.dashboard.DashboardScreen
+import android.app.faunadex.presentation.profile.ChangePasswordScreen
+import android.app.faunadex.presentation.profile.EditProfileScreen
 import android.app.faunadex.presentation.profile.ProfileScreen
 
 @Composable
@@ -81,7 +83,43 @@ fun NavGraph(
         }
 
         composable(Screen.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToQuiz = {
+                    // TODO: Navigate to quiz when screen is implemented
+                },
+                onNavigateToOnboarding = {
+                    navController.navigate(Screen.Onboarding.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToEditProfile = {
+                    navController.navigate(Screen.EditProfile.route)
+                },
+                onNavigateToChangePassword = {
+                    navController.navigate(Screen.ChangePassword.route)
+                }
+            )
+        }
+
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.ChangePassword.route) {
+            ChangePasswordScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

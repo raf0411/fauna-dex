@@ -1,13 +1,19 @@
 package android.app.faunadex.presentation.profile
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.domain.repository.AuthRepository
 import android.app.faunadex.domain.repository.UserRepository
+import android.app.faunadex.domain.usecase.ChangePasswordUseCase
 import android.app.faunadex.domain.usecase.GetUserProfileUseCase
+import android.app.faunadex.domain.usecase.SignOutUseCase
+import android.app.faunadex.domain.usecase.UpdateUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +24,11 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val authRepository: AuthRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val signOutUseCase: SignOutUseCase,
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val changePasswordUseCase: ChangePasswordUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
@@ -79,6 +89,88 @@ class ProfileViewModel @Inject constructor(
     fun retry() {
         loadUserProfile()
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                signOutUseCase()
+                Log.d("ProfileViewModel", "User logged out successfully")
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Failed to logout", e)
+            }
+        }
+    }
+
+    fun uploadProfilePicture(imageUri: Uri) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is ProfileUiState.Success) {
+                val currentUser = authRepository.getCurrentUser()
+                if (currentUser != null) {
+                    _uiState.value = ProfileUiState.Loading
+
+                    val result = userRepository.uploadProfilePicture(currentUser.uid, imageUri, context)
+
+                    result.onSuccess { base64Image ->
+                        Log.d("ProfileViewModel", "Profile picture uploaded as Base64")
+                        val updatedUser = currentState.user.copy(profilePictureUrl = base64Image)
+                        _uiState.value = ProfileUiState.Success(updatedUser)
+                    }.onFailure { exception ->
+                        Log.e("ProfileViewModel", "Failed to upload profile picture", exception)
+                        _uiState.value = ProfileUiState.Error(
+                            "Failed to upload profile picture: ${exception.message}"
+                        )
+                        // Restore previous state after a short delay
+                        kotlinx.coroutines.delay(2000)
+                        _uiState.value = currentState
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateProfile(username: String, educationLevel: String) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is ProfileUiState.Success) {
+                _uiState.value = ProfileUiState.Loading
+
+                val updatedUser = currentState.user.copy(
+                    username = username,
+                    educationLevel = educationLevel
+                )
+
+                val result = updateUserProfileUseCase(updatedUser)
+
+                result.onSuccess {
+                    Log.d("ProfileViewModel", "Profile updated successfully")
+                    _uiState.value = ProfileUiState.Success(updatedUser)
+                }.onFailure { exception ->
+                    Log.e("ProfileViewModel", "Failed to update profile", exception)
+                    _uiState.value = ProfileUiState.Error(
+                        "Failed to update profile: ${exception.message}"
+                    )
+                    // Restore previous state after a short delay
+                    kotlinx.coroutines.delay(2000)
+                    _uiState.value = currentState
+                }
+            }
+        }
+    }
+
+    fun changePassword(currentPassword: String, newPassword: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = changePasswordUseCase(currentPassword, newPassword)
+
+            result.onSuccess {
+                Log.d("ProfileViewModel", "Password changed successfully")
+                onSuccess()
+            }.onFailure { exception ->
+                Log.e("ProfileViewModel", "Failed to change password", exception)
+                onError(exception.message ?: "Failed to change password")
+            }
+        }
+    }
 }
 
 sealed class ProfileUiState {
@@ -86,4 +178,3 @@ sealed class ProfileUiState {
     data class Success(val user: User) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
 }
-

@@ -9,6 +9,9 @@ data class User(
     val email: String = "",
     val username: String = "",
 
+    @PropertyName("profile_picture_url")
+    val profilePictureUrl: String? = null,
+
     @PropertyName("education_level")
     val educationLevel: String = "",
 

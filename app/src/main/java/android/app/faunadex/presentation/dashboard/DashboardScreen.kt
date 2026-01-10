@@ -1,13 +1,18 @@
 package android.app.faunadex.presentation.dashboard
 
 import android.app.faunadex.domain.model.User
+import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.FaunaTopBar
+import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.ui.theme.DarkForest
+import android.app.faunadex.ui.theme.DarkGreenShade
 import android.app.faunadex.ui.theme.JerseyFont
 import android.app.faunadex.ui.theme.PastelYellow
 import android.app.faunadex.ui.theme.PrimaryGreen
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,9 +74,37 @@ fun DashboardScreenContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CustomTextField(
+                    label = "Search your Fauna...",
+                    value = "",
+                    onValueChange = {},
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = {
+                        Icon(
+                            modifier = Modifier.size(32.dp).padding(start = 6.dp),
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = DarkGreenShade
+                        )
+                    }
+                )
+
+                IconButton(
+                    onClick = { /* TODO: Handle filter click */ }
+                )
+            }
+
+            Spacer(Modifier.height(32.dp))
+
             Text(
                 text = "Dashboard",
                 fontSize = 64.sp,
@@ -79,8 +112,6 @@ fun DashboardScreenContent(
                 color = PastelYellow,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

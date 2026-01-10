@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
     lateinit var firebaseAuth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install splash screen before calling super.onCreate
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -51,7 +50,7 @@ fun FaunaDexApp(
     val startDestination = if (isUserLoggedIn) {
         Screen.Dashboard.route
     } else {
-        Screen.Login.route
+        Screen.Onboarding.route
     }
 
     NavGraph(

@@ -8,10 +8,15 @@ import javax.inject.Inject
 class SignUpUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(email: String, password: String): AuthResult<User> {
-        // Add validation logic here
-        if (email.isBlank() || password.isBlank()) {
-            return AuthResult.Error("Email and password cannot be empty")
+    suspend operator fun invoke(
+        email: String,
+        password: String,
+        username: String,
+        educationLevel: String
+    ): AuthResult<User> {
+        // Validation logic
+        if (email.isBlank() || password.isBlank() || username.isBlank() || educationLevel.isBlank()) {
+            return AuthResult.Error("All fields are required")
         }
         if (password.length < 6) {
             return AuthResult.Error("Password must be at least 6 characters")
@@ -19,7 +24,11 @@ class SignUpUseCase @Inject constructor(
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             return AuthResult.Error("Invalid email format")
         }
-        return authRepository.signUp(email, password)
+        if (username.length < 3) {
+            return AuthResult.Error("Username must be at least 3 characters")
+        }
+
+        return authRepository.signUp(email, password, username, educationLevel)
     }
 }
 

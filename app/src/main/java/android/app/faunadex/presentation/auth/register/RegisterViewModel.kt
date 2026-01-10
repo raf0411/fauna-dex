@@ -23,6 +23,10 @@ class RegisterViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(email = email, errorMessage = null)
     }
 
+    fun onUsernameChange(username: String) {
+        _uiState.value = _uiState.value.copy(username = username, errorMessage = null)
+    }
+
     fun onPasswordChange(password: String) {
         _uiState.value = _uiState.value.copy(password = password, errorMessage = null)
     }
@@ -31,8 +35,19 @@ class RegisterViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword, errorMessage = null)
     }
 
+    fun onEducationLevelChange(educationLevel: String) {
+        _uiState.value = _uiState.value.copy(educationLevel = educationLevel, errorMessage = null)
+    }
+
     fun signUp() {
         val state = _uiState.value
+
+        // Validate all required fields
+        if (state.email.isBlank() || state.username.isBlank() ||
+            state.password.isBlank() || state.educationLevel.isBlank()) {
+            _uiState.value = state.copy(errorMessage = "All fields are required")
+            return
+        }
 
         if (state.password != state.confirmPassword) {
             _uiState.value = state.copy(errorMessage = "Passwords do not match")
@@ -42,7 +57,12 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = signUpUseCase(state.email, state.password)) {
+            when (val result = signUpUseCase(
+                state.email,
+                state.password,
+                state.username,
+                state.educationLevel
+            )) {
                 is AuthResult.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -69,8 +89,10 @@ class RegisterViewModel @Inject constructor(
 
 data class RegisterUiState(
     val email: String = "",
+    val username: String = "",
     val password: String = "",
     val confirmPassword: String = "",
+    val educationLevel: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSignUpSuccessful: Boolean = false

@@ -125,7 +125,6 @@ fun FaunaCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Fauna Name - Dynamically sized
                     Text(
                         text = faunaName,
                         fontSize = when {
@@ -141,7 +140,6 @@ fun FaunaCard(
                         color = PastelYellow
                     )
 
-                    // Latin Name - Dynamically sized
                     Text(
                         text = latinName,
                         fontSize = when {
@@ -173,7 +171,6 @@ fun FaunaCardPreview() {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Preview with favorite
             FaunaCard(
                 faunaName = "Sumatran Tiger",
                 latinName = "Panthera tigris sumatrae",
@@ -181,7 +178,6 @@ fun FaunaCardPreview() {
                 onFavoriteClick = { isFavorite = !isFavorite }
             )
 
-            // Preview without favorite
             FaunaCard(
                 faunaName = "Komodo Dragon",
                 latinName = "Varanus komodoensis",

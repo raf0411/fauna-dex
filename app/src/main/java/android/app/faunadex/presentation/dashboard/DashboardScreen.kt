@@ -177,7 +177,6 @@ fun DashboardScreenContent(
                 }
             }
 
-            // Reset when search changes
             LaunchedEffect(searchQuery) {
                 loadedItemsCount = 10
                 lastLoadedCount = 10

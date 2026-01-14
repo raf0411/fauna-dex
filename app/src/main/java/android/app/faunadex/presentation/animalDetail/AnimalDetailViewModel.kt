@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.app.faunadex.domain.usecase.GetAnimalDetailUseCase
+import android.app.faunadex.domain.usecase.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AnimalDetailViewModel @Inject constructor(
     private val getAnimalDetailUseCase: GetAnimalDetailUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -22,6 +24,9 @@ class AnimalDetailViewModel @Inject constructor(
     val uiState: StateFlow<AnimalDetailUiState> = _uiState.asStateFlow()
 
     private val animalId: String? = savedStateHandle.get<String>("animalId")
+
+    val currentUserEducationLevel: String
+        get() = getCurrentUserUseCase()?.educationLevel ?: "SMA"
 
     init {
         loadAnimalDetail()

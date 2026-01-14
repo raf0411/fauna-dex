@@ -1,7 +1,9 @@
 package android.app.faunadex.presentation.animalDetail
 
 import android.app.faunadex.domain.model.Animal
+import android.app.faunadex.domain.model.EducationLevel
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.ui.theme.BlueOcean
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.PastelYellow
@@ -38,7 +40,9 @@ fun AnimalDetailScreen(
         topBar = {
             FaunaTopBarWithBack(
                 title = "Animal Detail",
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                showBadge = true,
+                level = EducationLevel("SMA", BlueOcean)
             )
         },
         containerColor = DarkForest
@@ -107,7 +111,9 @@ fun AnimalDetailScreenPreview() {
             topBar = {
                 FaunaTopBarWithBack(
                     title = "Animal Detail",
-                    onNavigateBack = {}
+                    onNavigateBack = {},
+                    showBadge = true,
+                    level = EducationLevel("SMA", BlueOcean)
                 )
             },
             containerColor = DarkForest

@@ -67,6 +67,7 @@ import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Icon
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -167,6 +168,27 @@ fun AnimalDetailContent(
             placeholder = painterResource(R.drawable.animal_dummy),
             error = painterResource(R.drawable.animal_dummy)
         )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            IconButton(
+                onClick = { /* TODO: Launch AR view */ },
+                icon = Icons.Outlined.ViewInAr,
+                size = 48.dp,
+                cornerRadius = 8.dp
+            )
+            Text(
+                text = "AR",
+                fontFamily = JerseyFont,
+                fontSize = 24.sp,
+                color = PastelYellow
+            )
+        }
 
         Surface(
             modifier = Modifier

@@ -2,6 +2,7 @@ package android.app.faunadex.presentation.components
 
 import android.app.faunadex.ui.theme.JerseyFont
 import android.app.faunadex.ui.theme.PastelYellow
+import android.app.faunadex.ui.theme.White
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,18 +81,18 @@ fun ConservationStatusBadge(
         modifier = modifier
             .background(
                 color = conservationStatus.color,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(16.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Text(
             text = if (showFullName) conservationStatus.fullName else conservationStatus.code,
-            fontSize = 14.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = if (conservationStatus == IUCNStatus.DD || conservationStatus == IUCNStatus.NE) {
                 Color.Black
             } else {
-                PastelYellow
+                White
             },
             fontFamily = JerseyFont
         )

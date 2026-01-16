@@ -38,10 +38,20 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import android.app.faunadex.R
+import android.app.faunadex.presentation.components.ConservationStatusBadge
+import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.ui.theme.JerseyFont
 import android.app.faunadex.ui.theme.MediumGreenSage
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun AnimalDetailScreen(
@@ -81,6 +91,7 @@ fun AnimalDetailScreen(
                 AnimalDetailContent(
                     animal = (uiState as AnimalDetailUiState.Success).animal,
                     userEducationLevel = userEducationLevel,
+                    onAudioClick = {},
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -103,10 +114,12 @@ fun AnimalDetailScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AnimalDetailContent(
     animal: Animal,
     userEducationLevel: String,
+    onAudioClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -139,24 +152,71 @@ fun AnimalDetailContent(
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = animal.name,
+                            fontFamily = PoppinsFont,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PastelYellow
+                        )
+
+                        if (shouldShowContent(userEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
+                            Spacer(Modifier.height(4.dp))
+
+                            Text(
+                                text = animal.scientificName,
+                                fontFamily = PoppinsFont,
+                                fontSize = 16.sp,
+                                fontStyle = FontStyle.Italic,
+                                color = MediumGreenSage
+                            )
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ConservationStatusBadge(
+                                status = animal.conservationStatus,
+                                showFullName = true
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onAudioClick,
+                        icon = Icons.AutoMirrored.Outlined.VolumeUp
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
                 Text(
-                    text = animal.name,
-                    fontFamily = PoppinsFont,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PastelYellow
+                    text = animal.description,
+                    fontSize = 18.sp,
+                    color = MediumGreenSage,
+                    fontFamily = JerseyFont,
+                    textAlign = TextAlign.Justify
                 )
 
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(32.dp))
 
-                if (shouldShowContent(userEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
-                    Text(
-                        text = animal.scientificName,
-                        fontFamily = PoppinsFont,
-                        fontSize = 16.sp,
-                        fontStyle = FontStyle.Italic,
-                        color = MediumGreenSage
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+
                 }
             }
         }
@@ -186,10 +246,11 @@ fun AnimalDetailScreenPreview() {
                     scientificName = "Varanus komodoensis",
                     category = "Reptile",
                     habitat = "Grasslands and forests",
-                    description = "The largest living lizard species",
+                    description = "Gajah adalah hewan darat terbesar. Belalainya berguna untuk mengambil makanan dan minum air.",
                     conservationStatus = "Vulnerable"
                 ),
-                userEducationLevel = "SD" // Preview with SD level to test visibility
+                onAudioClick = {},
+                userEducationLevel = "SD"
             )
         }
     }

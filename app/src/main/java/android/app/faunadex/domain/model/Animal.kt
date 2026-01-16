@@ -42,6 +42,27 @@ data class Animal(
     val length: String = "",
 
     @PropertyName("special_title")
-    val specialTitle: String = ""
+    val specialTitle: String = "",
+
+    @PropertyName("endemic_status")
+    val endemicStatus: String = "",
+
+    @PropertyName("population_trend")
+    val populationTrend: String = "",
+
+    @PropertyName("activity_period")
+    val activityPeriod: String = "",
+
+    @PropertyName("is_protected")
+    val isProtected: Boolean = false,
+
+    @PropertyName("protection_type")
+    val protectionType: String = "Protected by Law",
+
+    @PropertyName("size_category")
+    val sizeCategory: String = "",
+
+    @PropertyName("rarity_level")
+    val rarityLevel: String = ""
 )
 

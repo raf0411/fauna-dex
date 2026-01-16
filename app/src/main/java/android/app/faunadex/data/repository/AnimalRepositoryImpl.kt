@@ -35,7 +35,14 @@ class AnimalRepositoryImpl @Inject constructor(
                     lifespan = document.getString("lifespan") ?: "",
                     weight = document.getString("weight") ?: "",
                     length = document.getString("length") ?: "",
-                    specialTitle = document.getString("special_title") ?: ""
+                    specialTitle = document.getString("special_title") ?: "",
+                    endemicStatus = document.getString("endemic_status") ?: "",
+                    populationTrend = document.getString("population_trend") ?: "",
+                    activityPeriod = document.getString("activity_period") ?: "",
+                    isProtected = document.getBoolean("is_protected") ?: false,
+                    protectionType = document.getString("protection_type") ?: "Protected by Law",
+                    sizeCategory = document.getString("size_category") ?: "",
+                    rarityLevel = document.getString("rarity_level") ?: ""
                 )
 
                 Log.d("AnimalRepositoryImpl", "Animal object created - name: '${animal.name}'")
@@ -68,7 +75,14 @@ class AnimalRepositoryImpl @Inject constructor(
                         lifespan = document.getString("lifespan") ?: "",
                         weight = document.getString("weight") ?: "",
                         length = document.getString("length") ?: "",
-                        specialTitle = document.getString("special_title") ?: ""
+                        specialTitle = document.getString("special_title") ?: "",
+                        endemicStatus = document.getString("endemic_status") ?: "",
+                        populationTrend = document.getString("population_trend") ?: "",
+                        activityPeriod = document.getString("activity_period") ?: "",
+                        isProtected = document.getBoolean("is_protected") ?: false,
+                        protectionType = document.getString("protection_type") ?: "Protected by Law",
+                        sizeCategory = document.getString("size_category") ?: "",
+                        rarityLevel = document.getString("rarity_level") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)
@@ -105,7 +119,14 @@ class AnimalRepositoryImpl @Inject constructor(
                         lifespan = document.getString("lifespan") ?: "",
                         weight = document.getString("weight") ?: "",
                         length = document.getString("length") ?: "",
-                        specialTitle = document.getString("special_title") ?: ""
+                        specialTitle = document.getString("special_title") ?: "",
+                        endemicStatus = document.getString("endemic_status") ?: "",
+                        populationTrend = document.getString("population_trend") ?: "",
+                        activityPeriod = document.getString("activity_period") ?: "",
+                        isProtected = document.getBoolean("is_protected") ?: false,
+                        protectionType = document.getString("protection_type") ?: "Protected by Law",
+                        sizeCategory = document.getString("size_category") ?: "",
+                        rarityLevel = document.getString("rarity_level") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)

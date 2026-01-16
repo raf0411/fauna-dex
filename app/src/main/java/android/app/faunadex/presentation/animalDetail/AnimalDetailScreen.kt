@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -39,30 +39,36 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConservationStatusBadge
+import android.app.faunadex.presentation.components.EndemicStatusBadge
+import android.app.faunadex.presentation.components.PopulationTrendBadge
+import android.app.faunadex.presentation.components.ActivityPeriodBadge
+import android.app.faunadex.presentation.components.ProtectedStatusBadge
+import android.app.faunadex.presentation.components.RarityBadge
 import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.presentation.components.RibbonBadge
 import android.app.faunadex.ui.theme.JerseyFont
-import android.app.faunadex.ui.theme.MediumGreenPale
 import android.app.faunadex.ui.theme.MediumGreenSage
 import android.app.faunadex.ui.theme.PrimaryGreenLight
-import android.app.faunadex.ui.theme.PrimaryGreenPale
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.StarHalf
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.automirrored.outlined.HelpCenter
+import androidx.compose.ui.Alignment
 
 @Composable
 fun AnimalDetailScreen(
@@ -133,6 +139,8 @@ fun AnimalDetailContent(
     onAudioClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var selectedTab by remember { mutableStateOf(AnimalDetailTab.INFO) }
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -163,6 +171,105 @@ fun AnimalDetailContent(
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp)
             ) {
+                if (shouldShowContent(userEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
+                    TabIndicators(
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+                }
+
+
+                when (selectedTab) {
+                    AnimalDetailTab.INFO -> {
+                        InfoTabContent(
+                            animal = animal,
+                            userEducationLevel = userEducationLevel,
+                            onAudioClick = onAudioClick
+                        )
+                    }
+                    AnimalDetailTab.POPULATION -> {
+                        PopulationTabContent(animal = animal)
+                    }
+                    AnimalDetailTab.HABITAT -> {
+                        HabitatTabContent(animal = animal)
+                    }
+                }
+            }
+        }
+    }
+}
+
+enum class AnimalDetailTab(val title: String) {
+    INFO("Info"),
+    POPULATION("Population"),
+    HABITAT("Habitat")
+}
+
+@Composable
+fun TabIndicators(
+    selectedTab: AnimalDetailTab,
+    onTabSelected: (AnimalDetailTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        AnimalDetailTab.entries.forEach { tab ->
+            TabItem(
+                text = tab.title,
+                isSelected = selectedTab == tab,
+                onClick = { onTabSelected(tab) }
+            )
+        }
+    }
+}
+
+@Composable
+fun TabItem(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = text,
+            fontFamily = JerseyFont,
+            fontSize = 22.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) PastelYellow else MediumGreenSage
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier
+                .width(if (isSelected) 60.dp else 0.dp)
+                .height(3.dp)
+                .background(
+                    color = if (isSelected) PastelYellow else androidx.compose.ui.graphics.Color.Transparent,
+                    shape = RoundedCornerShape(2.dp)
+                )
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun InfoTabContent(
+    animal: Animal,
+    userEducationLevel: String,
+    onAudioClick: () -> Unit
+) {
+    Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -198,10 +305,53 @@ fun AnimalDetailContent(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            // Always show Conservation Status
                             ConservationStatusBadge(
                                 status = animal.conservationStatus,
                                 showFullName = true
                             )
+
+                            when (userEducationLevel) {
+                                "SD" -> {
+                                    if (animal.rarityLevel.isNotEmpty()) {
+                                        RarityBadge(rarityLevel = animal.rarityLevel)
+                                    }
+                                    if (animal.endemicStatus.isNotEmpty()) {
+                                        EndemicStatusBadge(status = animal.endemicStatus)
+                                    }
+                                }
+                                "SMP" -> {
+                                    if (animal.endemicStatus.isNotEmpty()) {
+                                        EndemicStatusBadge(status = animal.endemicStatus)
+                                    }
+                                    if (animal.populationTrend.isNotEmpty()) {
+                                        PopulationTrendBadge(trend = animal.populationTrend)
+                                    }
+                                    if (animal.isProtected) {
+                                        ProtectedStatusBadge(
+                                            isProtected = animal.isProtected,
+                                            protectionType = animal.protectionType
+                                        )
+                                    }
+                                }
+                                "SMA" -> {
+                                    if (animal.endemicStatus.isNotEmpty()) {
+                                        EndemicStatusBadge(status = animal.endemicStatus)
+                                    }
+                                    if (animal.populationTrend.isNotEmpty()) {
+                                        PopulationTrendBadge(trend = animal.populationTrend)
+                                    }
+                                    if (animal.activityPeriod.isNotEmpty()) {
+                                        ActivityPeriodBadge(period = animal.activityPeriod)
+                                    }
+                                    if (animal.isProtected) {
+                                        ProtectedStatusBadge(
+                                            isProtected = animal.isProtected,
+                                            protectionType = animal.protectionType
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -223,37 +373,102 @@ fun AnimalDetailContent(
 
                 Spacer(Modifier.height(32.dp))
 
-                if (shouldShowContent(userEducationLevel, minLevel = EducationLevelRequirement.SD)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        RibbonBadge(
-                            icon = if (animal.diet.contains("Carnivore", ignoreCase = true)) {
-                                Icons.Outlined.Pets
-                            } else {
-                                Icons.Outlined.Eco
-                            },
-                            text = animal.diet.ifEmpty { "Omnivore" },
-                            hexagonBackgroundColor = PrimaryGreenLight
-                        )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    when (userEducationLevel) {
+                        "SD" -> {
+                            RibbonBadge(
+                                icon = if (animal.diet.contains("Carnivore", ignoreCase = true)) {
+                                    Icons.Outlined.Pets
+                                } else {
+                                    Icons.Outlined.Eco
+                                },
+                                text = animal.diet.ifEmpty { "Omnivore" },
+                                hexagonBackgroundColor = PrimaryGreenLight
+                            )
 
-                        RibbonBadge(
-                            icon = Icons.Outlined.Star,
-                            text = animal.specialTitle.ifEmpty { "Unique" },
-                            hexagonBackgroundColor = PrimaryGreenLight
-                        )
+                            RibbonBadge(
+                                icon = Icons.Outlined.Star,
+                                text = animal.specialTitle.ifEmpty { "Unique" },
+                                hexagonBackgroundColor = PrimaryGreenLight
+                            )
+                        }
+                        "SMP" -> {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                IconButton(
+                                    onClick = {},
+                                    icon = Icons.AutoMirrored.Outlined.HelpCenter,
+                                    size = 50.dp,
+                                    cornerRadius = 8.dp
+                                )
+
+                                Text(
+                                    text = "Fun Fact",
+                                    fontFamily = JerseyFont,
+                                    color = MediumGreenSage,
+                                    fontSize = 20.sp
+                                )
+                            }
+                        }
+
                     }
                 }
             }
-        }
+}
+
+@Composable
+fun PopulationTabContent(animal: Animal) {
+    Column {
+        Text(
+            text = "Population Information",
+            fontFamily = PoppinsFont,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = PastelYellow
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            text = "Population data and statistics for ${animal.name} will be displayed here.",
+            fontSize = 16.sp,
+            color = MediumGreenSage,
+            fontFamily = PoppinsFont
+        )
+    }
+}
+
+@Composable
+fun HabitatTabContent(animal: Animal) {
+    Column {
+        Text(
+            text = "Habitat Information",
+            fontFamily = PoppinsFont,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = PastelYellow
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            text = animal.habitat,
+            fontSize = 16.sp,
+            color = MediumGreenSage,
+            fontFamily = PoppinsFont
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun AnimalDetailScreenPreview() {
+fun AnimalDetailScreenSDPreview() {
     FaunaDexTheme {
         Scaffold(
             topBar = {
@@ -276,10 +491,89 @@ fun AnimalDetailScreenPreview() {
                     habitat = "Grasslands and forests",
                     description = "Gajah adalah hewan darat terbesar. Belalainya berguna untuk mengambil makanan dan minum air.",
                     conservationStatus = "Vulnerable",
-                    diet = "Carnivore"
+                    diet = "Carnivore",
+                    endemicStatus = "Endemic",
+                    rarityLevel = "Rare"
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SD"
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AnimalDetailScreenSMPPreview() {
+    FaunaDexTheme {
+        Scaffold(
+            topBar = {
+                FaunaTopBarWithBack(
+                    title = "Animal Detail",
+                    onNavigateBack = {},
+                    showBadge = true,
+                    level = EducationLevel("SMP", PrimaryBlue)
+                )
+            },
+            containerColor = DarkForest
+        ) { paddingValues ->
+            AnimalDetailContent(
+                modifier = Modifier.padding(paddingValues),
+                animal = Animal(
+                    id = "1",
+                    name = "Komodo Dragon",
+                    scientificName = "Varanus komodoensis",
+                    category = "Reptile",
+                    habitat = "Grasslands and forests",
+                    description = "Gajah adalah hewan darat terbesar. Belalainya berguna untuk mengambil makanan dan minum air.",
+                    conservationStatus = "Vulnerable",
+                    diet = "Carnivore",
+                    endemicStatus = "Endemic",
+                    populationTrend = "Decreasing",
+                    isProtected = true,
+                    protectionType = "CITES Listed"
+                ),
+                onAudioClick = {},
+                userEducationLevel = "SMP"
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AnimalDetailScreenSMAPreview() {
+    FaunaDexTheme {
+        Scaffold(
+            topBar = {
+                FaunaTopBarWithBack(
+                    title = "Animal Detail",
+                    onNavigateBack = {},
+                    showBadge = true,
+                    level = EducationLevel("SMA", BlueOcean)
+                )
+            },
+            containerColor = DarkForest
+        ) { paddingValues ->
+            AnimalDetailContent(
+                modifier = Modifier.padding(paddingValues),
+                animal = Animal(
+                    id = "1",
+                    name = "Komodo Dragon",
+                    scientificName = "Varanus komodoensis",
+                    category = "Reptile",
+                    habitat = "Grasslands and forests",
+                    description = "Gajah adalah hewan darat terbesar. Belalainya berguna untuk mengambil makanan dan minum air.",
+                    conservationStatus = "Vulnerable",
+                    diet = "Carnivore",
+                    endemicStatus = "Endemic",
+                    populationTrend = "Decreasing",
+                    activityPeriod = "Diurnal",
+                    isProtected = true,
+                    protectionType = "National Park Species"
+                ),
+                onAudioClick = {},
+                userEducationLevel = "SMA"
             )
         }
     }

@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.components
 
+import android.R.attr.contentDescription
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.PrimaryGreen
@@ -34,6 +35,7 @@ fun IconButton(
     borderWidth: Dp = 3.dp,
     cornerRadius: Dp = 12.dp,
     size: Dp = 56.dp,
+    iconSize: Dp = 28.dp,
     contentDescription: String? = "Filter"
 ) {
     Surface(
@@ -58,7 +60,7 @@ fun IconButton(
                     imageVector = icon,
                     contentDescription = contentDescription,
                     tint = iconTint,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(iconSize)
                 )
             }
         }

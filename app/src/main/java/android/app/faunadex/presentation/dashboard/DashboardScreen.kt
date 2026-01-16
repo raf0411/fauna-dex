@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
 fun DashboardScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,7 +70,8 @@ fun DashboardScreen(
 
     DashboardScreenContent(
         uiState = uiState,
-        onNavigateToProfile = onNavigateToProfile
+        onNavigateToProfile = onNavigateToProfile,
+        onNavigateToAnimalDetail = onNavigateToAnimalDetail
     )
 }
 
@@ -77,6 +79,7 @@ fun DashboardScreen(
 fun DashboardScreenContent(
     uiState: DashboardUiState,
     onNavigateToProfile: () -> Unit,
+    onNavigateToAnimalDetail: (String) -> Unit,
     currentRoute: String = "dashboard"
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -269,14 +272,17 @@ fun DashboardScreenContent(
                 items(displayedFaunaList.size) { index ->
                     val (name, latinName, id) = displayedFaunaList[index]
 
-
                     FaunaCard(
                         faunaName = name,
                         latinName = latinName,
                         imageUrl = null,
                         isFavorite = id % 3 == 0,
                         onFavoriteClick = { /* TODO: Handle favorite toggle */ },
-                        onCardClick = { /* TODO: Navigate to fauna detail */ }
+                        onCardClick = {
+                            // TODO: Replace with actual animal ID from Firebase
+                            // For now, using the id from the list
+                            onNavigateToAnimalDetail(id.toString())
+                        }
                     )
                 }
 
@@ -356,7 +362,8 @@ fun DashboardScreenPreview() {
                 ),
                 isSignedOut = false
             ),
-            onNavigateToProfile = {}
+            onNavigateToProfile = {},
+            onNavigateToAnimalDetail = {}
         )
     }
 }

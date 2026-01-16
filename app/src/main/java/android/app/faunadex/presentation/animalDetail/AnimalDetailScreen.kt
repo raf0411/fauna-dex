@@ -40,15 +40,26 @@ import coil.compose.AsyncImage
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConservationStatusBadge
 import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.presentation.components.RibbonBadge
 import android.app.faunadex.ui.theme.JerseyFont
+import android.app.faunadex.ui.theme.MediumGreenPale
 import android.app.faunadex.ui.theme.MediumGreenSage
+import android.app.faunadex.ui.theme.PrimaryGreenLight
+import android.app.faunadex.ui.theme.PrimaryGreenPale
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.StarHalf
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Eco
+import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -213,10 +224,25 @@ fun AnimalDetailContent(
                 Spacer(Modifier.height(32.dp))
 
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    RibbonBadge(
+                        icon = if (animal.diet.contains("Carnivore", ignoreCase = true)) {
+                            Icons.Outlined.Pets
+                        } else {
+                            Icons.Outlined.Eco
+                        },
+                        text = animal.diet.ifEmpty { "Omnivore" },
+                        hexagonBackgroundColor = PrimaryGreenLight
+                    )
 
+                    RibbonBadge(
+                        icon = Icons.Outlined.Star,
+                        text = animal.specialTitle.ifEmpty { "Unique" },
+                        hexagonBackgroundColor = PrimaryGreenLight
+                    )
                 }
             }
         }
@@ -247,7 +273,8 @@ fun AnimalDetailScreenPreview() {
                     category = "Reptile",
                     habitat = "Grasslands and forests",
                     description = "Gajah adalah hewan darat terbesar. Belalainya berguna untuk mengambil makanan dan minum air.",
-                    conservationStatus = "Vulnerable"
+                    conservationStatus = "Vulnerable",
+                    diet = "Carnivore"
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SD"

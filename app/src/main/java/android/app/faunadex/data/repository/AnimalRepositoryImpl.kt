@@ -34,7 +34,8 @@ class AnimalRepositoryImpl @Inject constructor(
                     diet = document.getString("diet") ?: "",
                     lifespan = document.getString("lifespan") ?: "",
                     weight = document.getString("weight") ?: "",
-                    length = document.getString("length") ?: ""
+                    length = document.getString("length") ?: "",
+                    specialTitle = document.getString("special_title") ?: ""
                 )
 
                 Log.d("AnimalRepositoryImpl", "Animal object created - name: '${animal.name}'")
@@ -66,7 +67,8 @@ class AnimalRepositoryImpl @Inject constructor(
                         diet = document.getString("diet") ?: "",
                         lifespan = document.getString("lifespan") ?: "",
                         weight = document.getString("weight") ?: "",
-                        length = document.getString("length") ?: ""
+                        length = document.getString("length") ?: "",
+                        specialTitle = document.getString("special_title") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)
@@ -102,7 +104,8 @@ class AnimalRepositoryImpl @Inject constructor(
                         diet = document.getString("diet") ?: "",
                         lifespan = document.getString("lifespan") ?: "",
                         weight = document.getString("weight") ?: "",
-                        length = document.getString("length") ?: ""
+                        length = document.getString("length") ?: "",
+                        specialTitle = document.getString("special_title") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)

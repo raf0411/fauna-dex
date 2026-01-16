@@ -81,7 +81,7 @@ fun ConservationStatusBadge(
         modifier = modifier
             .background(
                 color = conservationStatus.color,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(24.dp)
             )
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {

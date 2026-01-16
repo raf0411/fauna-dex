@@ -39,6 +39,9 @@ data class Animal(
     val weight: String = "",
 
     @PropertyName("length")
-    val length: String = ""
+    val length: String = "",
+
+    @PropertyName("special_title")
+    val specialTitle: String = ""
 )
 

@@ -42,7 +42,13 @@ class AnimalRepositoryImpl @Inject constructor(
                     isProtected = document.getBoolean("is_protected") ?: false,
                     protectionType = document.getString("protection_type") ?: "Protected by Law",
                     sizeCategory = document.getString("size_category") ?: "",
-                    rarityLevel = document.getString("rarity_level") ?: ""
+                    rarityLevel = document.getString("rarity_level") ?: "",
+                    populationPast = (document.getLong("population_past") ?: 0).toInt(),
+                    populationPresent = (document.getLong("population_present") ?: 0).toInt(),
+                    latitude = document.getDouble("latitude") ?: 0.0,
+                    longitude = document.getDouble("longitude") ?: 0.0,
+                    country = document.getString("country") ?: "",
+                    city = document.getString("city") ?: ""
                 )
 
                 Log.d("AnimalRepositoryImpl", "Animal object created - name: '${animal.name}'")
@@ -82,7 +88,13 @@ class AnimalRepositoryImpl @Inject constructor(
                         isProtected = document.getBoolean("is_protected") ?: false,
                         protectionType = document.getString("protection_type") ?: "Protected by Law",
                         sizeCategory = document.getString("size_category") ?: "",
-                        rarityLevel = document.getString("rarity_level") ?: ""
+                        rarityLevel = document.getString("rarity_level") ?: "",
+                        populationPast = (document.getLong("population_past") ?: 0).toInt(),
+                        populationPresent = (document.getLong("population_present") ?: 0).toInt(),
+                        latitude = document.getDouble("latitude") ?: 0.0,
+                        longitude = document.getDouble("longitude") ?: 0.0,
+                        country = document.getString("country") ?: "",
+                        city = document.getString("city") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)
@@ -126,7 +138,13 @@ class AnimalRepositoryImpl @Inject constructor(
                         isProtected = document.getBoolean("is_protected") ?: false,
                         protectionType = document.getString("protection_type") ?: "Protected by Law",
                         sizeCategory = document.getString("size_category") ?: "",
-                        rarityLevel = document.getString("rarity_level") ?: ""
+                        rarityLevel = document.getString("rarity_level") ?: "",
+                        populationPast = (document.getLong("population_past") ?: 0).toInt(),
+                        populationPresent = (document.getLong("population_present") ?: 0).toInt(),
+                        latitude = document.getDouble("latitude") ?: 0.0,
+                        longitude = document.getDouble("longitude") ?: 0.0,
+                        country = document.getString("country") ?: "",
+                        city = document.getString("city") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)

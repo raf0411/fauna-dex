@@ -11,6 +11,8 @@ import android.app.faunadex.ui.theme.PastelYellow
 import android.app.faunadex.ui.theme.PoppinsFont
 import android.app.faunadex.ui.theme.PrimaryBlue
 import android.app.faunadex.ui.theme.White
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +63,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.Icon
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,9 +73,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.automirrored.outlined.HelpCenter
-import androidx.compose.ui.Alignment
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 
 @Composable
 fun AnimalDetailScreen(
@@ -170,7 +179,12 @@ fun AnimalDetailContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp)
+                    .padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        bottom = 24.dp,
+                        top = 16.dp
+                    )
             ) {
                 if (shouldShowContent(userEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
                     TabIndicators(
@@ -256,7 +270,7 @@ fun TabItem(
                 .width(if (isSelected) 60.dp else 0.dp)
                 .height(3.dp)
                 .background(
-                    color = if (isSelected) PastelYellow else androidx.compose.ui.graphics.Color.Transparent,
+                    color = if (isSelected) PastelYellow else Color.Transparent,
                     shape = RoundedCornerShape(2.dp)
                 )
         )
@@ -308,7 +322,6 @@ fun InfoTabContent(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Always show Conservation Status
                             ConservationStatusBadge(
                                 status = animal.conservationStatus,
                                 showFullName = true
@@ -423,7 +436,6 @@ fun InfoTabContent(
                 }
             }
 
-    // Fun Fact Dialog
     FunFactDialog(
         title = "Fun Fact",
         content = animal.funFact.ifEmpty { "No fun fact available for this animal yet." },
@@ -434,31 +446,215 @@ fun InfoTabContent(
 
 @Composable
 fun PopulationTabContent(animal: Animal) {
-    Column {
+    var startAnimation by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        startAnimation = true
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Text(
-            text = "Population Information",
+            text = "Population Status",
             fontFamily = PoppinsFont,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = PastelYellow
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
-        Text(
-            text = "Population data and statistics for ${animal.name} will be displayed here.",
-            fontSize = 16.sp,
-            color = MediumGreenSage,
-            fontFamily = PoppinsFont
+        PopulationBarChart(
+            pastPopulation = animal.populationPast,
+            presentPopulation = animal.populationPresent,
+            animate = startAnimation,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "IUCN Status",
+                fontFamily = PoppinsFont,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MediumGreenSage
+            )
+
+            ConservationStatusBadge(
+                status = animal.conservationStatus,
+                showFullName = true
+            )
+        }
+    }
+}
+
+@Composable
+fun PopulationBarChart(
+    pastPopulation: Int,
+    presentPopulation: Int,
+    animate: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val maxPopulation = maxOf(pastPopulation, presentPopulation)
+
+    val pastPercentage = if (maxPopulation > 0) pastPopulation.toFloat() / maxPopulation else 0f
+    val presentPercentage = if (maxPopulation > 0) presentPopulation.toFloat() / maxPopulation else 0f
+
+    val animatedPastPercentage by animateFloatAsState(
+        targetValue = if (animate) pastPercentage else 0f,
+        animationSpec = tween(
+            durationMillis = 1200,
+            delayMillis = 100
+        ),
+        label = "pastPercentageAnimation"
+    )
+
+    val animatedPresentPercentage by animateFloatAsState(
+        targetValue = if (animate) presentPercentage else 0f,
+        animationSpec = tween(
+            durationMillis = 1200,
+            delayMillis = 400 // Slight delay so present animates after past starts
+        ),
+        label = "presentPercentageAnimation"
+    )
+
+    // Animated population values for the text display
+    val animatedPastPopulation by remember {
+        derivedStateOf {
+            (pastPopulation * animatedPastPercentage / pastPercentage.coerceAtLeast(0.001f)).toInt()
+        }
+    }
+
+    val animatedPresentPopulation by remember {
+        derivedStateOf {
+            (presentPopulation * animatedPresentPercentage / presentPercentage.coerceAtLeast(0.001f)).toInt()
+        }
+    }
+
+    val declineRatio = if (pastPopulation > 0) {
+        presentPopulation.toFloat() / pastPopulation.toFloat()
+    } else {
+        1f
+    }
+
+    val presentColor = when {
+        declineRatio >= 0.8f -> Color(0xFF60C659)
+        declineRatio >= 0.5f -> Color(0xFFFFC107)
+        declineRatio >= 0.3f -> Color(0xFFFC7F3F)
+        else -> Color(0xFFD81E05)
+    }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        PopulationBar(
+            label = "Past",
+            population = animatedPastPopulation,
+            percentage = animatedPastPercentage,
+            color = Color(0xFF4CAF50)
+        )
+
+        PopulationBar(
+            label = "Present",
+            population = animatedPresentPopulation,
+            percentage = animatedPresentPercentage,
+            color = presentColor
         )
     }
 }
 
 @Composable
-fun HabitatTabContent(animal: Animal) {
-    Column {
+fun PopulationBar(
+    label: String,
+    population: Int,
+    percentage: Float,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text(
-            text = "Habitat Information",
+            text = label,
+            fontFamily = JerseyFont,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .background(
+                    color = color.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(8.dp)
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(percentage.coerceIn(0f, 1f))
+                    .background(
+                        color = color,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = formatPopulationNumber(population),
+                    fontFamily = PoppinsFont,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (percentage > 0.3f) White else color
+                )
+            }
+        }
+
+        Text(
+            text = formatPopulationNumber(population),
+            fontFamily = PoppinsFont,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MediumGreenSage
+        )
+    }
+}
+
+/**
+ * Format population number with thousands separator
+ */
+private fun formatPopulationNumber(population: Int): String {
+    return if (population == 0) {
+        "No data"
+    } else {
+        "%,d".format(population)
+    }
+}
+
+@Composable
+fun HabitatTabContent(animal: Animal) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Title
+        Text(
+            text = "Habitat",
             fontFamily = PoppinsFont,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
@@ -467,12 +663,184 @@ fun HabitatTabContent(animal: Animal) {
 
         Spacer(Modifier.height(16.dp))
 
-        Text(
-            text = animal.habitat,
-            fontSize = 16.sp,
-            color = MediumGreenSage,
-            fontFamily = PoppinsFont
+        // Map Placeholder (ready for Google Maps integration)
+        HabitatMapPlaceholder(
+            latitude = animal.latitude,
+            longitude = animal.longitude,
+            modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(Modifier.height(24.dp))
+
+        // Location Details
+        HabitatLocationInfo(
+            country = animal.country,
+            city = animal.city,
+            habitat = animal.habitat
+        )
+    }
+}
+
+/**
+ * Map placeholder component - designed for easy Google Maps integration
+ * TODO: Replace with actual Google Maps implementation
+ *
+ * To integrate Google Maps later:
+ * 1. Add Google Maps dependency in build.gradle
+ * 2. Replace this composable with GoogleMap composable
+ * 3. Use the latitude and longitude parameters for camera position
+ */
+@Composable
+fun HabitatMapPlaceholder(
+    latitude: Double,
+    longitude: Double,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(250.dp)
+            .background(
+                color = Color(0xFF2C3E2E), // Dark forest green
+                shape = RoundedCornerShape(16.dp)
+            )
+            .border(
+                width = 2.dp,
+                color = MediumGreenSage.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(16.dp)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Map icon placeholder
+            Icon(
+                imageVector = Icons.Outlined.Place,
+                contentDescription = "Map Location",
+                tint = MediumGreenSage,
+                modifier = Modifier.size(48.dp)
+            )
+
+            if (latitude != 0.0 && longitude != 0.0) {
+                Text(
+                    text = "Lat: ${String.format(java.util.Locale.US, "%.4f", latitude)}",
+                    fontFamily = PoppinsFont,
+                    fontSize = 14.sp,
+                    color = MediumGreenSage
+                )
+                Text(
+                    text = "Long: ${String.format(java.util.Locale.US, "%.4f", longitude)}",
+                    fontFamily = PoppinsFont,
+                    fontSize = 14.sp,
+                    color = MediumGreenSage
+                )
+            } else {
+                Text(
+                    text = "Map Preview",
+                    fontFamily = PoppinsFont,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MediumGreenSage
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Display location information (country, city, habitat description)
+ */
+@Composable
+fun HabitatLocationInfo(
+    country: String,
+    city: String,
+    habitat: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Location (Country & City)
+        if (country.isNotEmpty() || city.isNotEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Place,
+                        contentDescription = "Location",
+                        tint = PastelYellow,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Location",
+                        fontFamily = PoppinsFont,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PastelYellow
+                    )
+                }
+
+                Text(
+                    text = formatLocation(country, city),
+                    fontFamily = PoppinsFont,
+                    fontSize = 16.sp,
+                    color = MediumGreenSage,
+                    modifier = Modifier.padding(start = 28.dp)
+                )
+            }
+        }
+
+        // Habitat Description
+        if (habitat.isNotEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Eco,
+                        contentDescription = "Habitat",
+                        tint = PastelYellow,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Habitat Type",
+                        fontFamily = PoppinsFont,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PastelYellow
+                    )
+                }
+
+                Text(
+                    text = habitat,
+                    fontFamily = PoppinsFont,
+                    fontSize = 16.sp,
+                    color = MediumGreenSage,
+                    modifier = Modifier.padding(start = 28.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Format location string with country and city
+ */
+private fun formatLocation(country: String, city: String): String {
+    return when {
+        country.isNotEmpty() && city.isNotEmpty() -> "$city, $country"
+        country.isNotEmpty() -> country
+        city.isNotEmpty() -> city
+        else -> "Location not specified"
     }
 }
 
@@ -503,7 +871,13 @@ fun AnimalDetailScreenSDPreview() {
                     conservationStatus = "Vulnerable",
                     diet = "Carnivore",
                     endemicStatus = "Endemic",
-                    rarityLevel = "Rare"
+                    rarityLevel = "Rare",
+                    populationPast = 5000,
+                    populationPresent = 3000,
+                    latitude = -8.5569,
+                    longitude = 119.4869,
+                    country = "Indonesia",
+                    city = "Komodo National Park"
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SD"
@@ -542,7 +916,13 @@ fun AnimalDetailScreenSMPPreview() {
                     populationTrend = "Decreasing",
                     isProtected = true,
                     protectionType = "CITES Listed",
-                    funFact = "Komodo dragons can eat up to 80% of their body weight in one meal! They are also excellent swimmers and can dive up to 4.5 meters deep."
+                    funFact = "Komodo dragons can eat up to 80% of their body weight in one meal! They are also excellent swimmers and can dive up to 4.5 meters deep.",
+                    populationPast = 5000,
+                    populationPresent = 3000,
+                    latitude = -8.5569,
+                    longitude = 119.4869,
+                    country = "Indonesia",
+                    city = "Komodo National Park"
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SMP"
@@ -582,7 +962,13 @@ fun AnimalDetailScreenSMAPreview() {
                     activityPeriod = "Diurnal",
                     isProtected = true,
                     protectionType = "National Park Species",
-                    funFact = "Komodo dragons can eat up to 80% of their body weight in one meal! They are also excellent swimmers and can dive up to 4.5 meters deep. Female Komodo dragons can reproduce through parthenogenesis, meaning they can lay fertile eggs without mating with a male."
+                    funFact = "Komodo dragons can eat up to 80% of their body weight in one meal! They are also excellent swimmers and can dive up to 4.5 meters deep. Female Komodo dragons can reproduce through parthenogenesis, meaning they can lay fertile eggs without mating with a male.",
+                    populationPast = 5000,
+                    populationPresent = 3000,
+                    latitude = -8.5569,
+                    longitude = 119.4869,
+                    country = "Indonesia",
+                    city = "Komodo National Park"
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SMA"

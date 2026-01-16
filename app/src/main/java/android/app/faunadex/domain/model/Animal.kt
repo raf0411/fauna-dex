@@ -63,6 +63,24 @@ data class Animal(
     val sizeCategory: String = "",
 
     @PropertyName("rarity_level")
-    val rarityLevel: String = ""
+    val rarityLevel: String = "",
+
+    @PropertyName("population_past")
+    val populationPast: Int = 0,
+
+    @PropertyName("population_present")
+    val populationPresent: Int = 0,
+
+    @PropertyName("latitude")
+    val latitude: Double = 0.0,
+
+    @PropertyName("longitude")
+    val longitude: Double = 0.0,
+
+    @PropertyName("country")
+    val country: String = "",
+
+    @PropertyName("city")
+    val city: String = ""
 )
 

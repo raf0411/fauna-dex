@@ -46,6 +46,7 @@ import android.app.faunadex.presentation.components.ProtectedStatusBadge
 import android.app.faunadex.presentation.components.RarityBadge
 import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.presentation.components.RibbonBadge
+import android.app.faunadex.presentation.components.FunFactDialog
 import android.app.faunadex.ui.theme.JerseyFont
 import android.app.faunadex.ui.theme.MediumGreenSage
 import android.app.faunadex.ui.theme.PrimaryGreenLight
@@ -269,6 +270,8 @@ fun InfoTabContent(
     userEducationLevel: String,
     onAudioClick: () -> Unit
 ) {
+    var showFunFactDialog by remember { mutableStateOf(false) }
+
     Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -396,13 +399,13 @@ fun InfoTabContent(
                                 hexagonBackgroundColor = PrimaryGreenLight
                             )
                         }
-                        "SMP" -> {
+                        "SMP", "SMA" -> {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 IconButton(
-                                    onClick = {},
+                                    onClick = { showFunFactDialog = true },
                                     icon = Icons.AutoMirrored.Outlined.HelpCenter,
                                     size = 50.dp,
                                     cornerRadius = 8.dp
@@ -416,10 +419,17 @@ fun InfoTabContent(
                                 )
                             }
                         }
-
                     }
                 }
             }
+
+    // Fun Fact Dialog
+    FunFactDialog(
+        title = "Fun Fact",
+        content = animal.funFact.ifEmpty { "No fun fact available for this animal yet." },
+        onDismiss = { showFunFactDialog = false },
+        showDialog = showFunFactDialog
+    )
 }
 
 @Composable
@@ -531,7 +541,8 @@ fun AnimalDetailScreenSMPPreview() {
                     endemicStatus = "Endemic",
                     populationTrend = "Decreasing",
                     isProtected = true,
-                    protectionType = "CITES Listed"
+                    protectionType = "CITES Listed",
+                    funFact = "Komodo dragons can eat up to 80% of their body weight in one meal! They are also excellent swimmers and can dive up to 4.5 meters deep."
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SMP"
@@ -570,7 +581,8 @@ fun AnimalDetailScreenSMAPreview() {
                     populationTrend = "Decreasing",
                     activityPeriod = "Diurnal",
                     isProtected = true,
-                    protectionType = "National Park Species"
+                    protectionType = "National Park Species",
+                    funFact = "Komodo dragons can eat up to 80% of their body weight in one meal! They are also excellent swimmers and can dive up to 4.5 meters deep. Female Komodo dragons can reproduce through parthenogenesis, meaning they can lay fertile eggs without mating with a male."
                 ),
                 onAudioClick = {},
                 userEducationLevel = "SMA"

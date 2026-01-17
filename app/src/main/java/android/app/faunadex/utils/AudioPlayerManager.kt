@@ -89,7 +89,6 @@ class AudioPlayerManager private constructor(context: Context) {
             return
         }
 
-        // If same audio is already loaded, just toggle play/pause
         if (currentUrl == audioUrl && player.playbackState != Player.STATE_IDLE) {
             togglePlayPause()
             return
@@ -109,7 +108,10 @@ class AudioPlayerManager private constructor(context: Context) {
     }
 
     fun togglePlayPause() {
-        if (player.isPlaying) {
+        if (player.playbackState == Player.STATE_ENDED) {
+            player.seekTo(0)
+            player.play()
+        } else if (player.isPlaying) {
             player.pause()
         } else {
             player.play()

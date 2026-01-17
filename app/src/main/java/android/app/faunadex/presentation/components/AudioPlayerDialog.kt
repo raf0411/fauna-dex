@@ -121,7 +121,10 @@ fun AudioPlayerDialog(
                         AudioErrorContent(message = playbackState.message)
                     }
                     AudioPlaybackState.IDLE -> {
-                        AudioIdleContent()
+                        AudioIdleContent(
+                            onPlayClick = onPlayPauseClick,
+                            showPlayButton = duration > 0L // Show play button if audio was loaded before
+                        )
                     }
                     AudioPlaybackState.LOADING -> {
                         AudioLoadingContent()
@@ -143,18 +146,46 @@ fun AudioPlayerDialog(
 }
 
 @Composable
-private fun AudioIdleContent() {
+private fun AudioIdleContent(
+    onPlayClick: () -> Unit = {},
+    showPlayButton: Boolean = false
+) {
     Column(
         modifier = Modifier.padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Press play to start audio narration",
-            fontFamily = PoppinsFont,
-            fontSize = 14.sp,
-            color = MediumGreenSage,
-            textAlign = TextAlign.Center
-        )
+        if (showPlayButton) {
+            IconButton(
+                onClick = onPlayClick,
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(PastelYellow)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = "Play Again",
+                    tint = DarkForest,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Audio ended - Press play to listen again",
+                fontFamily = PoppinsFont,
+                fontSize = 14.sp,
+                color = MediumGreenSage,
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Text(
+                text = "Press play to start audio narration",
+                fontFamily = PoppinsFont,
+                fontSize = 14.sp,
+                color = MediumGreenSage,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

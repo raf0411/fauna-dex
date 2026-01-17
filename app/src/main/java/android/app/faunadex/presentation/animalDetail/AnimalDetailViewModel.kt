@@ -85,6 +85,10 @@ class AnimalDetailViewModel @Inject constructor(
         audioPlayerManager.stop()
     }
 
+    fun seekTo(position: Long) {
+        audioPlayerManager.seekTo(position)
+    }
+
     fun retry() {
         loadAnimalDetail()
     }

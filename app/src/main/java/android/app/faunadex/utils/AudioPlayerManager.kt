@@ -22,7 +22,7 @@ class AudioPlayerManager private constructor(context: Context) {
 
     private val player: ExoPlayer = ExoPlayer.Builder(context).build()
 
-    private val _playbackState = MutableStateFlow<AudioPlaybackState>(AudioPlaybackState.IDLE as AudioPlaybackState)
+    private val _playbackState = MutableStateFlow(AudioPlaybackState.IDLE as AudioPlaybackState)
     val playbackState: StateFlow<AudioPlaybackState> = _playbackState.asStateFlow()
 
     private val _currentPosition = MutableStateFlow(0L)

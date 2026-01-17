@@ -142,6 +142,7 @@ fun AnimalDetailScreen(
                     onAudioClick = { viewModel.playDescriptionAudio(animal.audioDescriptionUrl) },
                     onPlayPauseClick = { viewModel.togglePlayPause() },
                     onStopAudioClick = { viewModel.stopAudio() },
+                    onSeekTo = { position -> viewModel.seekTo(position) },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -175,6 +176,7 @@ fun AnimalDetailContent(
     onAudioClick: () -> Unit,
     onPlayPauseClick: () -> Unit,
     onStopAudioClick: () -> Unit,
+    onSeekTo: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf(AnimalDetailTab.INFO) }
@@ -279,6 +281,7 @@ fun AnimalDetailContent(
                 currentPosition = audioCurrentPosition,
                 duration = audioDuration,
                 onPlayPauseClick = onPlayPauseClick,
+                onSeekTo = onSeekTo,
                 onDismiss = {
                     showAudioDialog = false
                     onStopAudioClick()

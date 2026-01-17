@@ -34,7 +34,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,6 +60,7 @@ fun AudioPlayerDialog(
     currentPosition: Long,
     duration: Long,
     onPlayPauseClick: () -> Unit,
+    onSeekTo: (Long) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -134,7 +136,8 @@ fun AudioPlayerDialog(
                             isPlaying = playbackState == AudioPlaybackState.PLAYING,
                             currentPosition = currentPosition,
                             duration = duration,
-                            onPlayPauseClick = onPlayPauseClick
+                            onPlayPauseClick = onPlayPauseClick,
+                            onSeekTo = onSeekTo
                         )
                     }
                 }
@@ -244,13 +247,13 @@ private fun AudioPlayingContent(
     isPlaying: Boolean,
     currentPosition: Long,
     duration: Long,
-    onPlayPauseClick: () -> Unit
+    onPlayPauseClick: () -> Unit,
+    onSeekTo: (Long) -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Waveform animation when playing
         if (isPlaying) {
             AudioWaveformAnimation()
             Spacer(Modifier.height(32.dp))
@@ -258,7 +261,6 @@ private fun AudioPlayingContent(
             Spacer(Modifier.height(80.dp))
         }
 
-        // Play/Pause Button
         IconButton(
             onClick = onPlayPauseClick,
             modifier = Modifier
@@ -276,7 +278,6 @@ private fun AudioPlayingContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // Progress and Time
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -300,14 +301,18 @@ private fun AudioPlayingContent(
 
             Spacer(Modifier.height(8.dp))
 
-            LinearProgressIndicator(
-                progress = { if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = PastelYellow,
-                trackColor = MediumGreenSage.copy(alpha = 0.3f),
+            Slider(
+                value = if (duration > 0) currentPosition.toFloat() else 0f,
+                onValueChange = { newPosition ->
+                    onSeekTo(newPosition.toLong())
+                },
+                valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = PastelYellow,
+                    activeTrackColor = PastelYellow,
+                    inactiveTrackColor = MediumGreenSage.copy(alpha = 0.3f)
+                )
             )
         }
     }

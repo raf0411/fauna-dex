@@ -48,9 +48,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -71,7 +71,8 @@ fun DashboardScreen(
     DashboardScreenContent(
         uiState = uiState,
         onNavigateToProfile = onNavigateToProfile,
-        onNavigateToAnimalDetail = onNavigateToAnimalDetail
+        onNavigateToAnimalDetail = onNavigateToAnimalDetail,
+        viewModel = viewModel
     )
 }
 
@@ -80,6 +81,7 @@ fun DashboardScreenContent(
     uiState: DashboardUiState,
     onNavigateToProfile: () -> Unit,
     onNavigateToAnimalDetail: (String) -> Unit,
+    viewModel: DashboardViewModel? = null,
     currentRoute: String = "dashboard"
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -92,7 +94,9 @@ fun DashboardScreenContent(
     val coroutineScope = rememberCoroutineScope()
 
     var showFilterSheet by remember { mutableStateOf(false) }
-    var filterOptions by remember {
+
+    // Applied filters (used for actual filtering)
+    var appliedFilterOptions by remember {
         mutableStateOf(
             listOf(
                 FilterOption("mammal", "Mammals", false),
@@ -105,6 +109,9 @@ fun DashboardScreenContent(
             )
         )
     }
+
+    // Temporary filters (used in the bottom sheet before saving)
+    var tempFilterOptions by remember { mutableStateOf(appliedFilterOptions) }
 
     Scaffold(
         topBar = {
@@ -163,69 +170,89 @@ fun DashboardScreenContent(
                 )
 
                 IconButton(
-                    onClick = { showFilterSheet = true }
+                    onClick = {
+                        // Reset temp filters to current applied filters when opening
+                        tempFilterOptions = appliedFilterOptions
+                        showFilterSheet = true
+                    }
                 )
             }
 
             Spacer(Modifier.height(32.dp))
 
-            val allFaunaList = remember {
-                listOf(
-                    Triple("Sumatran Tiger", "Panthera tigris sumatrae", 0) to listOf("mammal", "endangered"),
-                    Triple("Komodo Dragon", "Varanus komodoensis", 1) to listOf("reptile", "endangered", "endemic"),
-                    Triple("Javan Rhinoceros", "Rhinoceros sondaicus", 2) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Orangutan", "Pongo pygmaeus", 3) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Bali Starling", "Leucopsar rothschildi", 4) to listOf("bird", "endangered", "endemic"),
-                    Triple("Proboscis Monkey", "Nasalis larvatus", 5) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Anoa", "Bubalus depressicornis", 6) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Cenderawasih", "Paradisaea apoda", 7) to listOf("bird", "endemic"),
-                    Triple("Maleo Bird", "Macrocephalon maleo", 8) to listOf("bird", "endangered", "endemic"),
-                    Triple("Tarsius", "Tarsius tarsier", 9) to listOf("mammal", "endemic"),
-                    Triple("Banteng", "Bos javanicus", 10) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Sun Bear", "Helarctos malayanus", 11) to listOf("mammal", "endangered"),
-                    Triple("Clouded Leopard", "Neofelis nebulosa", 12) to listOf("mammal", "endangered"),
-                    Triple("Slow Loris", "Nycticebus coucang", 13) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Malayan Tapir", "Tapirus indicus", 14) to listOf("mammal", "endangered"),
-                    Triple("Sunda Pangolin", "Manis javanica", 15) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Javan Hawk-Eagle", "Nisaetus bartelsi", 16) to listOf("bird", "endangered", "endemic"),
-                    Triple("Black Macaque", "Macaca nigra", 17) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Babirusa", "Babyrousa babyrussa", 18) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Javan Gibbon", "Hylobates moloch", 19) to listOf("mammal", "endangered", "endemic"),
-                    Triple("Asian Elephant", "Elephas maximus", 20) to listOf("mammal", "endangered"),
-                    Triple("Green Turtle", "Chelonia mydas", 21) to listOf("reptile", "endangered"),
-                    Triple("Whale Shark", "Rhincodon typus", 22) to listOf("fish", "endangered"),
-                    Triple("Manta Ray", "Mobula birostris", 23) to listOf("fish", "endangered"),
-                    Triple("Dugong", "Dugong dugon", 24) to listOf("mammal", "endangered"),
-                    Triple("Saltwater Crocodile", "Crocodylus porosus", 25) to listOf("reptile"),
-                    Triple("False Gharial", "Tomistoma schlegelii", 26) to listOf("reptile", "endangered", "endemic"),
-                    Triple("Rafflesia", "Rafflesia arnoldii", 27) to listOf("endemic"),
-                    Triple("Javan Warty Pig", "Sus verrucosus", 28) to listOf("mammal", "endemic"),
-                    Triple("Sumatran Rhino", "Dicerorhinus sumatrensis", 29) to listOf("mammal", "endangered", "endemic")
-                )
+            // DEBUG: Seed Sample Data Button (Remove after seeding)
+            if (uiState.animals.isEmpty() && !uiState.isLoading) {
+                androidx.compose.material3.Button(
+                    onClick = {
+                        viewModel?.seedSampleData()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = PrimaryGreen,
+                        contentColor = PastelYellow
+                    )
+                ) {
+                    Text("🌱 Add Sample Animals to Firebase")
+                }
+                Spacer(Modifier.height(16.dp))
             }
 
-            val selectedFilters = remember(filterOptions) {
-                filterOptions.filter { it.isSelected }.map { it.id }
+            val animals = uiState.animals
+
+            if (uiState.isLoading && animals.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryGreen)
+                }
+                return@Column
             }
 
-            val filteredFaunaList = remember(searchQuery, selectedFilters) {
-                var result = allFaunaList
+            if (uiState.error != null && animals.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = uiState.error,
+                        color = PastelYellow
+                    )
+                }
+                return@Column
+            }
+
+            val selectedFilters = remember(appliedFilterOptions) {
+                appliedFilterOptions.filter { it.isSelected }.map { it.id }
+            }
+
+            val filteredFaunaList = remember(animals, searchQuery, appliedFilterOptions) {
+                var result = animals
 
                 if (selectedFilters.isNotEmpty()) {
-                    result = result.filter { (_, tags) ->
-                        selectedFilters.any { filter -> tags.contains(filter) }
+                    result = result.filter { animal ->
+                        selectedFilters.any { filter ->
+                            when (filter) {
+                                "mammal", "bird", "reptile", "amphibian", "fish" ->
+                                    animal.category.equals(filter, ignoreCase = true)
+                                "endangered" ->
+                                    animal.conservationStatus in listOf("CR", "EN", "VU")
+                                "endemic" ->
+                                    animal.endemicStatus.contains("Endemic", ignoreCase = true)
+                                else -> false
+                            }
+                        }
                     }
                 }
 
                 if (searchQuery.isNotBlank()) {
-                    result = result.filter { (fauna, _) ->
-                        val (name, latinName, _) = fauna
-                        name.contains(searchQuery, ignoreCase = true) ||
-                                latinName.contains(searchQuery, ignoreCase = true)
+                    result = result.filter { animal ->
+                        animal.name.contains(searchQuery, ignoreCase = true) ||
+                            animal.scientificName.contains(searchQuery, ignoreCase = true)
                     }
                 }
 
-                result.map { it.first }
+                result
             }
 
             LaunchedEffect(searchQuery, selectedFilters) {
@@ -270,18 +297,16 @@ fun DashboardScreenContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(displayedFaunaList.size) { index ->
-                    val (name, latinName, id) = displayedFaunaList[index]
+                    val animal = displayedFaunaList[index]
 
                     FaunaCard(
-                        faunaName = name,
-                        latinName = latinName,
-                        imageUrl = null,
-                        isFavorite = id % 3 == 0,
+                        faunaName = animal.name,
+                        latinName = animal.scientificName,
+                        imageUrl = animal.imageUrl,
+                        isFavorite = false, // TODO: Implement favorites
                         onFavoriteClick = { /* TODO: Handle favorite toggle */ },
                         onCardClick = {
-                            // TODO: Replace with actual animal ID from Firebase
-                            // For now, using the id from the list
-                            onNavigateToAnimalDetail(id.toString())
+                            onNavigateToAnimalDetail(animal.id)
                         }
                     )
                 }
@@ -325,9 +350,9 @@ fun DashboardScreenContent(
             FilterBottomSheet(
                 title = "Filter Fauna",
                 description = "Select the filter categories you want to select to see on your home screen. You can update this anytime.",
-                filterOptions = filterOptions,
+                filterOptions = tempFilterOptions,
                 onFilterToggle = { filterId ->
-                    filterOptions = filterOptions.map { option ->
+                    tempFilterOptions = tempFilterOptions.map { option ->
                         if (option.id == filterId) {
                             option.copy(isSelected = !option.isSelected)
                         } else {
@@ -335,8 +360,14 @@ fun DashboardScreenContent(
                         }
                     }
                 },
-                onDismiss = { showFilterSheet = false },
+                onDismiss = {
+                    // Reset temp filters when dismissing without saving
+                    tempFilterOptions = appliedFilterOptions
+                    showFilterSheet = false
+                },
                 onSave = {
+                    // Apply the temp filters to the actual filters
+                    appliedFilterOptions = tempFilterOptions
                     showFilterSheet = false
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(

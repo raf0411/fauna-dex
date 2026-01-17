@@ -56,7 +56,8 @@ class AnimalRepositoryImpl @Inject constructor(
                     order = document.getString("order") ?: "",
                     family = document.getString("family") ?: "",
                     genus = document.getString("genus") ?: "",
-                    species = document.getString("species") ?: ""
+                    species = document.getString("species") ?: "",
+                    arModelUrl = document.getString("ar_model_url")
                 )
 
                 Log.d("AnimalRepositoryImpl", "Animal object created - name: '${animal.name}'")
@@ -110,7 +111,8 @@ class AnimalRepositoryImpl @Inject constructor(
                         order = document.getString("order") ?: "",
                         family = document.getString("family") ?: "",
                         genus = document.getString("genus") ?: "",
-                        species = document.getString("species") ?: ""
+                        species = document.getString("species") ?: "",
+                        arModelUrl = document.getString("ar_model_url")
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)
@@ -168,7 +170,8 @@ class AnimalRepositoryImpl @Inject constructor(
                         order = document.getString("order") ?: "",
                         family = document.getString("family") ?: "",
                         genus = document.getString("genus") ?: "",
-                        species = document.getString("species") ?: ""
+                        species = document.getString("species") ?: "",
+                        arModelUrl = document.getString("ar_model_url")
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)

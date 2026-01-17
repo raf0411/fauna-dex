@@ -105,6 +105,9 @@ data class Animal(
     val genus: String = "",
 
     @PropertyName("species")
-    val species: String = ""
+    val species: String = "",
+
+    @PropertyName("ar_model_url")
+    val arModelUrl: String? = null
 )
 

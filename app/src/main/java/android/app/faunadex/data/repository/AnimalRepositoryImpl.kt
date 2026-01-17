@@ -114,7 +114,9 @@ class AnimalRepositoryImpl @Inject constructor(
                         family = document.getString("family") ?: "",
                         genus = document.getString("genus") ?: "",
                         species = document.getString("species") ?: "",
-                        arModelUrl = document.getString("ar_model_url")
+                        arModelUrl = document.getString("ar_model_url"),
+                        audioDescriptionUrl = document.getString("audio_description_url") ?: "",
+                        audioFunFactUrl = document.getString("audio_fun_fact_url") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)
@@ -174,7 +176,9 @@ class AnimalRepositoryImpl @Inject constructor(
                         family = document.getString("family") ?: "",
                         genus = document.getString("genus") ?: "",
                         species = document.getString("species") ?: "",
-                        arModelUrl = document.getString("ar_model_url")
+                        arModelUrl = document.getString("ar_model_url"),
+                        audioDescriptionUrl = document.getString("audio_description_url") ?: "",
+                        audioFunFactUrl = document.getString("audio_fun_fact_url") ?: ""
                     )
                 } catch (e: Exception) {
                     Log.e("AnimalRepositoryImpl", "Error parsing animal document", e)

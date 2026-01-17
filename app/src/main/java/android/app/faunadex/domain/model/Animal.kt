@@ -111,6 +111,12 @@ data class Animal(
     val species: String = "",
 
     @PropertyName("ar_model_url")
-    val arModelUrl: String? = null
+    val arModelUrl: String? = null,
+
+    @PropertyName("audio_description_url")
+    val audioDescriptionUrl: String = "",
+
+    @PropertyName("audio_fun_fact_url")
+    val audioFunFactUrl: String = ""
 )
 

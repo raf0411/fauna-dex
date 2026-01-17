@@ -1,11 +1,13 @@
 package android.app.faunadex.presentation.animalDetail
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.app.faunadex.domain.usecase.GetAnimalDetailUseCase
 import android.app.faunadex.domain.usecase.GetCurrentUserUseCase
+import android.app.faunadex.utils.AudioPlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +19,7 @@ import javax.inject.Inject
 class AnimalDetailViewModel @Inject constructor(
     private val getAnimalDetailUseCase: GetAnimalDetailUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val application: Application,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -24,6 +27,11 @@ class AnimalDetailViewModel @Inject constructor(
     val uiState: StateFlow<AnimalDetailUiState> = _uiState.asStateFlow()
 
     private val animalId: String? = savedStateHandle.get<String>("animalId")
+
+    private val audioPlayerManager = AudioPlayerManager.getInstance(application)
+    val audioPlaybackState = audioPlayerManager.playbackState
+    val audioCurrentPosition = audioPlayerManager.currentPosition
+    val audioDuration = audioPlayerManager.duration
 
     val currentUserEducationLevel: String
         get() {
@@ -65,8 +73,25 @@ class AnimalDetailViewModel @Inject constructor(
         }
     }
 
+    fun playDescriptionAudio(audioUrl: String) {
+        audioPlayerManager.loadAndPlay(audioUrl)
+    }
+
+    fun togglePlayPause() {
+        audioPlayerManager.togglePlayPause()
+    }
+
+    fun stopAudio() {
+        audioPlayerManager.stop()
+    }
+
     fun retry() {
         loadAnimalDetail()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        audioPlayerManager.stop()
     }
 }
 

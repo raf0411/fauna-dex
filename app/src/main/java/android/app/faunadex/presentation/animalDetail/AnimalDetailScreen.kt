@@ -58,6 +58,8 @@ import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.presentation.components.RibbonBadge
 import android.app.faunadex.presentation.components.FunFactDialog
 import android.app.faunadex.presentation.components.AnimalDescriptionDialog
+import android.app.faunadex.presentation.components.AudioPlayerDialog
+import android.app.faunadex.utils.AudioPlaybackState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -92,6 +94,9 @@ fun AnimalDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userEducationLevel = viewModel.currentUserEducationLevel
+    val audioPlaybackState by viewModel.audioPlaybackState.collectAsState()
+    val audioCurrentPosition by viewModel.audioCurrentPosition.collectAsState()
+    val audioDuration by viewModel.audioDuration.collectAsState()
 
     Log.d("AnimalDetailScreen", "======================================")
     Log.d("AnimalDetailScreen", "Education Level in Screen: $userEducationLevel")
@@ -131,7 +136,12 @@ fun AnimalDetailScreen(
                 AnimalDetailContent(
                     animal = animal,
                     userEducationLevel = userEducationLevel,
-                    onAudioClick = {},
+                    audioPlaybackState = audioPlaybackState,
+                    audioCurrentPosition = audioCurrentPosition,
+                    audioDuration = audioDuration,
+                    onAudioClick = { viewModel.playDescriptionAudio(animal.audioDescriptionUrl) },
+                    onPlayPauseClick = { viewModel.togglePlayPause() },
+                    onStopAudioClick = { viewModel.stopAudio() },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -159,10 +169,16 @@ fun AnimalDetailScreen(
 fun AnimalDetailContent(
     animal: Animal,
     userEducationLevel: String,
+    audioPlaybackState: AudioPlaybackState,
+    audioCurrentPosition: Long,
+    audioDuration: Long,
     onAudioClick: () -> Unit,
+    onPlayPauseClick: () -> Unit,
+    onStopAudioClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf(AnimalDetailTab.INFO) }
+    var showAudioDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier.fillMaxSize()
@@ -236,7 +252,10 @@ fun AnimalDetailContent(
                         InfoTabContent(
                             animal = animal,
                             userEducationLevel = userEducationLevel,
-                            onAudioClick = onAudioClick
+                            onAudioClick = {
+                                showAudioDialog = true
+                                onAudioClick()
+                            }
                         )
                     }
                     AnimalDetailTab.POPULATION -> {
@@ -250,6 +269,21 @@ fun AnimalDetailContent(
                     }
                 }
             }
+        }
+
+        // Show audio player dialog when button is clicked
+        if (showAudioDialog) {
+            AudioPlayerDialog(
+                animalName = animal.name,
+                playbackState = audioPlaybackState,
+                currentPosition = audioCurrentPosition,
+                duration = audioDuration,
+                onPlayPauseClick = onPlayPauseClick,
+                onDismiss = {
+                    showAudioDialog = false
+                    onStopAudioClick()
+                }
+            )
         }
     }
 }
@@ -1168,7 +1202,12 @@ fun AnimalDetailScreenSDPreview() {
                     genus = "Varanus",
                     species = "V. komodoensis"
                 ),
+                audioPlaybackState = AudioPlaybackState.IDLE,
+                audioCurrentPosition = 0L,
+                audioDuration = 0L,
                 onAudioClick = {},
+                onPlayPauseClick = {},
+                onStopAudioClick = {},
                 userEducationLevel = "SD"
             )
         }
@@ -1221,7 +1260,12 @@ fun AnimalDetailScreenSMPPreview() {
                     genus = "Varanus",
                     species = "V. komodoensis"
                 ),
+                audioPlaybackState = AudioPlaybackState.IDLE,
+                audioCurrentPosition = 0L,
+                audioDuration = 0L,
                 onAudioClick = {},
+                onPlayPauseClick = {},
+                onStopAudioClick = {},
                 userEducationLevel = "SMP"
             )
         }
@@ -1275,7 +1319,12 @@ fun AnimalDetailScreenSMAPreview() {
                     genus = "Varanus",
                     species = "V. komodoensis"
                 ),
+                audioPlaybackState = AudioPlaybackState.IDLE,
+                audioCurrentPosition = 0L,
+                audioDuration = 0L,
                 onAudioClick = {},
+                onPlayPauseClick = {},
+                onStopAudioClick = {},
                 userEducationLevel = "SMA"
             )
         }

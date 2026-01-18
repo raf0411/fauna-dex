@@ -44,7 +44,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.AsyncImagePainter
 
 @Composable
 fun FaunaCard(
@@ -74,15 +75,31 @@ fun FaunaCard(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                AsyncImage(
+                SubcomposeAsyncImage(
                     model = imageUrl ?: R.drawable.animal_dummy,
                     contentDescription = faunaName,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.animal_dummy),
-                    error = painterResource(R.drawable.animal_dummy)
+                    error = {
+                        androidx.compose.foundation.Image(
+                            painter = painterResource(R.drawable.animal_dummy),
+                            contentDescription = faunaName,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    loading = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MediumGreenSage.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
+                        }
+                    }
                 )
 
                 IconButton(

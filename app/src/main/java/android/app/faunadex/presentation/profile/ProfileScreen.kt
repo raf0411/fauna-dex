@@ -4,6 +4,7 @@ import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.FaunaTopBar
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.presentation.components.ProfilePicture
 import android.app.faunadex.ui.theme.*
 import android.util.Log
@@ -143,11 +144,7 @@ private fun LoadingContent() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(64.dp),
-            color = PastelYellow,
-            strokeWidth = 6.dp
-        )
+        LoadingSpinner()
     }
 }
 

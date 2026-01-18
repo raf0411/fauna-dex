@@ -8,6 +8,7 @@ import android.app.faunadex.presentation.components.FaunaTopBar
 import android.app.faunadex.presentation.components.FilterBottomSheet
 import android.app.faunadex.presentation.components.FilterOption
 import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreenShade
 import android.app.faunadex.ui.theme.PastelYellow
@@ -28,7 +29,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -48,9 +48,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -99,6 +99,7 @@ fun DashboardScreenContent(
     var appliedFilterOptions by remember {
         mutableStateOf(
             listOf(
+                FilterOption("favorites", "My Favorites", false),
                 FilterOption("mammal", "Mammals", false),
                 FilterOption("bird", "Birds", false),
                 FilterOption("reptile", "Reptiles", false),
@@ -204,7 +205,7 @@ fun DashboardScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PrimaryGreen)
+                    LoadingSpinner()
                 }
                 return@Column
             }
@@ -226,13 +227,15 @@ fun DashboardScreenContent(
                 appliedFilterOptions.filter { it.isSelected }.map { it.id }
             }
 
-            val filteredFaunaList = remember(animals, searchQuery, appliedFilterOptions) {
+            val filteredFaunaList = remember(animals, searchQuery, appliedFilterOptions, uiState.favoriteAnimalIds) {
                 var result = animals
 
                 if (selectedFilters.isNotEmpty()) {
                     result = result.filter { animal ->
                         selectedFilters.any { filter ->
                             when (filter) {
+                                "favorites" ->
+                                    uiState.favoriteAnimalIds.contains(animal.id)
                                 "mammal", "bird", "reptile", "amphibian", "fish" ->
                                     animal.category.equals(filter, ignoreCase = true)
                                 "endangered" ->
@@ -303,8 +306,10 @@ fun DashboardScreenContent(
                         faunaName = animal.name,
                         latinName = animal.scientificName,
                         imageUrl = animal.imageUrl,
-                        isFavorite = false, // TODO: Implement favorites
-                        onFavoriteClick = { /* TODO: Handle favorite toggle */ },
+                        isFavorite = uiState.favoriteAnimalIds.contains(animal.id),
+                        onFavoriteClick = {
+                            viewModel?.toggleFavorite(animal.id)
+                        },
                         onCardClick = {
                             onNavigateToAnimalDetail(animal.id)
                         }
@@ -319,10 +324,7 @@ fun DashboardScreenContent(
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                color = PrimaryGreen
-                            )
+                            LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
                         }
                     }
                 }

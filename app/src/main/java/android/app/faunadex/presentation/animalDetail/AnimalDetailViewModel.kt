@@ -52,6 +52,8 @@ class AnimalDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AnimalDetailUiState.Loading
 
+            kotlinx.coroutines.delay(1500)
+
             if (animalId.isNullOrBlank()) {
                 Log.e("AnimalDetailViewModel", "Animal ID is null or blank")
                 _uiState.value = AnimalDetailUiState.Error("Animal ID not found")

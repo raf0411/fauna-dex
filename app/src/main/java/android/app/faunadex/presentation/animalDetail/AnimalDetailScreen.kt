@@ -3,6 +3,7 @@ package android.app.faunadex.presentation.animalDetail
 import android.app.faunadex.domain.model.Animal
 import android.app.faunadex.domain.model.EducationLevel
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.BlueOcean
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
@@ -30,7 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,7 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConservationStatusBadge
 import android.app.faunadex.presentation.components.EndemicStatusBadge
@@ -86,6 +87,14 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 
 @Composable
 fun AnimalDetailScreen(
@@ -122,11 +131,7 @@ fun AnimalDetailScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(64.dp),
-                        color = PastelYellow,
-                        strokeWidth = 6.dp
-                    )
+                    LoadingSpinner()
                 }
             }
             is AnimalDetailUiState.Success -> {
@@ -185,7 +190,7 @@ fun AnimalDetailContent(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = animal.imageUrl ?: R.drawable.animal_dummy,
             contentDescription = animal.name,
             modifier = Modifier
@@ -193,8 +198,24 @@ fun AnimalDetailContent(
                 .height(300.dp)
                 .align(Alignment.TopCenter),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(R.drawable.animal_dummy),
-            error = painterResource(R.drawable.animal_dummy)
+            error = {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(R.drawable.animal_dummy),
+                    contentDescription = animal.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            },
+            loading = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MediumGreenSage.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingSpinner(size = 48.dp, strokeWidth = 4.dp)
+                }
+            }
         )
 
         Column(
@@ -273,7 +294,6 @@ fun AnimalDetailContent(
             }
         }
 
-        // Show audio player dialog when button is clicked
         if (showAudioDialog) {
             AudioPlayerDialog(
                 animalName = animal.name,
@@ -811,47 +831,73 @@ fun HabitatMapPlaceholder(
     longitude: Double,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .height(250.dp)
-            .background(
-                color = Color(0xFF2C3E2E),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .border(
-                width = 2.dp,
-                color = MediumGreenSage.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Place,
-                contentDescription = "Map Location",
-                tint = MediumGreenSage,
-                modifier = Modifier.size(48.dp)
-            )
+    // Only show map if we have valid coordinates
+    if (latitude != 0.0 && longitude != 0.0) {
+        val animalLocation = LatLng(latitude, longitude)
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(animalLocation, 10f)
+        }
 
-            if (latitude != 0.0 && longitude != 0.0) {
-                Text(
-                    text = "Lat: ${String.format(java.util.Locale.US, "%.4f", latitude)}",
-                    fontFamily = PoppinsFont,
-                    fontSize = 14.sp,
-                    color = MediumGreenSage
+        Box(
+            modifier = modifier
+                .height(250.dp)
+                .border(
+                    width = 2.dp,
+                    color = MediumGreenSage.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .clip(RoundedCornerShape(16.dp))
+        ) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = false
+                ),
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = true,
+                    zoomGesturesEnabled = true,
+                    scrollGesturesEnabled = true,
+                    tiltGesturesEnabled = true,
+                    rotationGesturesEnabled = true,
+                    scrollGesturesEnabledDuringRotateOrZoom = true
+                )
+            ) {
+                Marker(
+                    state = MarkerState(position = animalLocation),
+                    title = "Animal Habitat",
+                    snippet = "Lat: ${String.format(java.util.Locale.US, "%.4f", latitude)}, Long: ${String.format(java.util.Locale.US, "%.4f", longitude)}"
+                )
+            }
+        }
+    } else {
+        // Fallback to placeholder if no coordinates
+        Box(
+            modifier = modifier
+                .height(250.dp)
+                .background(
+                    color = Color(0xFF2C3E2E),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .border(
+                    width = 2.dp,
+                    color = MediumGreenSage.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Place,
+                    contentDescription = "Map Location",
+                    tint = MediumGreenSage,
+                    modifier = Modifier.size(48.dp)
                 )
                 Text(
-                    text = "Long: ${String.format(java.util.Locale.US, "%.4f", longitude)}",
-                    fontFamily = PoppinsFont,
-                    fontSize = 14.sp,
-                    color = MediumGreenSage
-                )
-            } else {
-                Text(
-                    text = "Map Preview",
+                    text = "Location data not available",
                     fontFamily = PoppinsFont,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
@@ -1118,6 +1164,12 @@ fun TaxonomyRow(
         blue = (69 + (37 - 69) * gradientPosition) / 255f
     )
 
+    val valueFontSize = when {
+        value.length > 20 -> 14.sp
+        value.length > 15 -> 16.sp
+        else -> 20.sp
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1137,7 +1189,8 @@ fun TaxonomyRow(
                 fontFamily = JerseyFont,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (gradientPosition < 0.6f) DarkGreen else PrimaryGreenLight
+                color = if (gradientPosition < 0.6f) DarkGreen else PrimaryGreenLight,
+                maxLines = 1
             )
         }
 
@@ -1154,9 +1207,10 @@ fun TaxonomyRow(
             Text(
                 text = value,
                 fontFamily = JerseyFont,
-                fontSize = 20.sp,
+                fontSize = valueFontSize,
                 fontWeight = FontWeight.Medium,
-                color = PrimaryGreenLime
+                color = PrimaryGreenLime,
+                maxLines = 1
             )
         }
     }

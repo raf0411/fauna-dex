@@ -8,6 +8,7 @@ import android.app.faunadex.presentation.components.FaunaTopBar
 import android.app.faunadex.presentation.components.FilterBottomSheet
 import android.app.faunadex.presentation.components.FilterOption
 import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreenShade
 import android.app.faunadex.ui.theme.PastelYellow
@@ -28,7 +29,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -48,9 +48,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -204,7 +204,7 @@ fun DashboardScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PrimaryGreen)
+                    LoadingSpinner()
                 }
                 return@Column
             }
@@ -319,10 +319,7 @@ fun DashboardScreenContent(
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                color = PrimaryGreen
-                            )
+                            LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
                         }
                     }
                 }

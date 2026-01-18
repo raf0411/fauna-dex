@@ -3,6 +3,7 @@ package android.app.faunadex.presentation.animalDetail
 import android.app.faunadex.domain.model.Animal
 import android.app.faunadex.domain.model.EducationLevel
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.BlueOcean
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
@@ -31,7 +32,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,7 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConservationStatusBadge
 import android.app.faunadex.presentation.components.EndemicStatusBadge
@@ -131,11 +131,7 @@ fun AnimalDetailScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(64.dp),
-                        color = PastelYellow,
-                        strokeWidth = 6.dp
-                    )
+                    LoadingSpinner()
                 }
             }
             is AnimalDetailUiState.Success -> {
@@ -194,7 +190,7 @@ fun AnimalDetailContent(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = animal.imageUrl ?: R.drawable.animal_dummy,
             contentDescription = animal.name,
             modifier = Modifier
@@ -202,8 +198,24 @@ fun AnimalDetailContent(
                 .height(300.dp)
                 .align(Alignment.TopCenter),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(R.drawable.animal_dummy),
-            error = painterResource(R.drawable.animal_dummy)
+            error = {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(R.drawable.animal_dummy),
+                    contentDescription = animal.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            },
+            loading = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MediumGreenSage.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingSpinner(size = 48.dp, strokeWidth = 4.dp)
+                }
+            }
         )
 
         Column(
@@ -1152,6 +1164,12 @@ fun TaxonomyRow(
         blue = (69 + (37 - 69) * gradientPosition) / 255f
     )
 
+    val valueFontSize = when {
+        value.length > 20 -> 14.sp
+        value.length > 15 -> 16.sp
+        else -> 20.sp
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1171,7 +1189,8 @@ fun TaxonomyRow(
                 fontFamily = JerseyFont,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (gradientPosition < 0.6f) DarkGreen else PrimaryGreenLight
+                color = if (gradientPosition < 0.6f) DarkGreen else PrimaryGreenLight,
+                maxLines = 1
             )
         }
 
@@ -1188,9 +1207,10 @@ fun TaxonomyRow(
             Text(
                 text = value,
                 fontFamily = JerseyFont,
-                fontSize = 20.sp,
+                fontSize = valueFontSize,
                 fontWeight = FontWeight.Medium,
-                color = PrimaryGreenLime
+                color = PrimaryGreenLime,
+                maxLines = 1
             )
         }
     }

@@ -39,6 +39,8 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+            kotlinx.coroutines.delay(1500)
+
             val result = animalRepository.getAllAnimals()
 
             result.onSuccess { animalList ->

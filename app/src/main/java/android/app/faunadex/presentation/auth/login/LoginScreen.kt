@@ -7,6 +7,7 @@ import android.app.faunadex.R
 import android.app.faunadex.presentation.components.AuthButton
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.LayeredHeader
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.AlmostBlack
 import android.app.faunadex.ui.theme.CodeNextFont
 import android.app.faunadex.ui.theme.DarkForest
@@ -203,11 +204,7 @@ internal fun LoginContent(
                     .background(AlmostBlack.copy(alpha = 0.7f)),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(64.dp),
-                    color = PastelYellow,
-                    strokeWidth = 6.dp
-                )
+                LoadingSpinner()
             }
         }
     }

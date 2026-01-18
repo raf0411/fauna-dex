@@ -5,6 +5,7 @@ import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.EducationLevelSelector
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -57,11 +58,7 @@ fun EditProfileScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(64.dp),
-                        color = PastelYellow,
-                        strokeWidth = 6.dp
-                    )
+                    LoadingSpinner()
                 }
             }
             is ProfileUiState.Success -> {

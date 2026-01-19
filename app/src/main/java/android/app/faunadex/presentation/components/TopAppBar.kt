@@ -1,13 +1,19 @@
 package android.app.faunadex.presentation.components
 
 import android.app.faunadex.ui.theme.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,18 +29,18 @@ import java.util.*
 data class TopAppBarUserData(
     val username: String,
     val profilePictureUrl: String? = null,
-    val educationLevel: String, // "SD", "SMP", or "SMA"
+    val educationLevel: String,
     val currentLevel: Int,
     val currentXp: Int,
-    val xpForNextLevel: Int
+    val xpForNextLevel: Int,
+    val completedQuizzes: Int = 0,
+    val totalQuizzes: Int = 0
 )
 
 @Composable
 fun TopAppBar(
     userData: TopAppBarUserData,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = DarkGreen,
-    contentColor: Color = PastelYellow,
     showProfilePicture: Boolean = true,
     showEducationBadge: Boolean = true,
     showLevelAndProgress: Boolean = true
@@ -44,7 +50,7 @@ fun TopAppBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(backgroundColor)
+            .background(DarkGreen)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
@@ -76,10 +82,10 @@ fun TopAppBar(
 
                     Text(
                         text = userData.username,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = PastelYellow,
-                        fontFamily = PoppinsFont
+                        fontFamily = JerseyFont
                     )
 
                     if (showEducationBadge) {
@@ -97,19 +103,23 @@ fun TopAppBar(
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     HexagonLevel(
-                        level = userData.currentLevel,
-                        backgroundColor = PrimaryGreen,
-                        textColor = PastelYellow
+                        level = userData.currentLevel
                     )
 
-                    // Quiz progress
-                    QuizProgress(
+                    XpProgress(
                         currentXp = userData.currentXp,
                         maxXp = userData.xpForNextLevel,
                         progressColor = PrimaryGreenLight,
+                        backgroundColor = DarkGreenShade
+                    )
+
+                    QuizProgress(
+                        completedQuizzes = userData.completedQuizzes,
+                        totalQuizzes = userData.totalQuizzes,
+                        progressColor = PastelYellow,
                         backgroundColor = DarkGreenShade
                     )
                 }
@@ -118,9 +128,6 @@ fun TopAppBar(
     }
 }
 
-/**
- * Profile picture component with circular shape
- */
 @Composable
 private fun ProfilePicture(
     profilePictureUrl: String?,
@@ -151,9 +158,6 @@ private fun ProfilePicture(
     }
 }
 
-/**
- * Compact education level badge
- */
 @Composable
 private fun EducationLevelBadgeCompact(
     educationLevel: String,
@@ -193,20 +197,25 @@ private fun EducationLevelBadgeCompact(
 @Composable
 private fun HexagonLevel(
     level: Int,
-    backgroundColor: Color,
-    textColor: Color,
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .size(64.dp)
-            .background(PrimaryGreenLight, HexagonShape())
-            .border(6.dp, DarkGreenTeal, HexagonShape()),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .offset(x = 3.dp, y = 4.dp)
+                .background(Black.copy(alpha = 0.6f), HexagonShape())
+        )
+
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .background(PrimaryGreenLight, HexagonShape())
+                .border(6.dp, DarkGreenTeal, HexagonShape()),
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = level.toString(),
@@ -221,10 +230,10 @@ private fun HexagonLevel(
 
 
 /**
- * Quiz progress indicator
+ * XP progress indicator
  */
 @Composable
-private fun QuizProgress(
+private fun XpProgress(
     currentXp: Int,
     maxXp: Int,
     progressColor: Color,
@@ -233,36 +242,135 @@ private fun QuizProgress(
 ) {
     val progress = if (maxXp > 0) currentXp.toFloat() / maxXp.toFloat() else 0f
 
+    var animate by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        animate = true
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (animate) progress else 0f,
+        animationSpec = tween(
+            durationMillis = 1000,
+            delayMillis = 300
+        ),
+        label = "xpProgressAnimation"
+    )
+
     Column(
-        modifier = modifier.width(56.dp),
+        modifier = modifier.width(64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Text(
-            text = "XP",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = PastelYellow.copy(alpha = 0.8f),
-            fontFamily = JerseyFont
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "XP",
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Medium,
+                color = PastelYellow.copy(alpha = 0.8f),
+                fontFamily = JerseyFont
+            )
+            Text(
+                text = "$currentXp/$maxXp",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = PastelYellow.copy(alpha = 0.7f),
+                fontFamily = JerseyFont
+            )
+        }
 
-        LinearProgressIndicator(
-            progress = { progress },
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(CircleShape),
-            color = progressColor,
-            trackColor = backgroundColor,
-        )
+                .height(6.dp)
+                .clip(CircleShape)
+                .background(backgroundColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animatedProgress)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(progressColor)
+            )
+        }
+    }
+}
 
-        Text(
-            text = "$currentXp/$maxXp",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = PastelYellow.copy(alpha = 0.7f),
-            fontFamily = JerseyFont
-        )
+/**
+ * Quiz completion progress indicator
+ */
+@Composable
+private fun QuizProgress(
+    completedQuizzes: Int,
+    totalQuizzes: Int,
+    progressColor: Color,
+    backgroundColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val progress = if (totalQuizzes > 0) completedQuizzes.toFloat() / totalQuizzes.toFloat() else 0f
+    val percentage = (progress * 100).toInt()
+
+    var animate by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        animate = true
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (animate) progress else 0f,
+        animationSpec = tween(
+            durationMillis = 1000,
+            delayMillis = 500
+        ),
+        label = "quizProgressAnimation"
+    )
+
+    Column(
+        modifier = modifier.width(64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Quiz",
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Medium,
+                color = PastelYellow.copy(alpha = 0.8f),
+                fontFamily = JerseyFont
+            )
+            Text(
+                text = "$percentage%",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = PastelYellow.copy(alpha = 0.7f),
+                fontFamily = JerseyFont
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(CircleShape)
+                .background(backgroundColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animatedProgress)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(progressColor)
+            )
+        }
     }
 }
 
@@ -286,7 +394,9 @@ fun TopAppBarPreview() {
                 educationLevel = "SMA",
                 currentLevel = 5,
                 currentXp = 450,
-                xpForNextLevel = 1000
+                xpForNextLevel = 1000,
+                completedQuizzes = 8,
+                totalQuizzes = 15
             )
         )
     }

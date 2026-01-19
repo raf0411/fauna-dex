@@ -3,9 +3,10 @@ package android.app.faunadex.presentation.profile
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaBottomBar
-import android.app.faunadex.presentation.components.FaunaTopBar
 import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.presentation.components.ProfilePicture
+import android.app.faunadex.presentation.components.TopAppBar
+import android.app.faunadex.presentation.components.TopAppBarUserData
 import android.app.faunadex.ui.theme.*
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -82,7 +83,24 @@ fun ProfileScreenContent(
 
     Scaffold(
         topBar = {
-            FaunaTopBar(backgroundColor = PrimaryGreen)
+            when (uiState) {
+                is ProfileUiState.Success -> {
+                    val user = uiState.user
+                    TopAppBar(
+                        userData = TopAppBarUserData(
+                            username = user.username,
+                            profilePictureUrl = user.profilePictureUrl,
+                            educationLevel = user.educationLevel,
+                            currentLevel = (user.totalXp / 1000) + 1,
+                            currentXp = user.totalXp % 1000,
+                            xpForNextLevel = 1000
+                        )
+                    )
+                }
+                else -> {
+                    // Show nothing or a loading state for top bar
+                }
+            }
         },
         bottomBar = {
             FaunaBottomBar(

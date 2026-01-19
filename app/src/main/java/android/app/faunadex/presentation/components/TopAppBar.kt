@@ -32,9 +32,7 @@ data class TopAppBarUserData(
     val educationLevel: String,
     val currentLevel: Int,
     val currentXp: Int,
-    val xpForNextLevel: Int,
-    val completedQuizzes: Int = 0,
-    val totalQuizzes: Int = 0
+    val xpForNextLevel: Int
 )
 
 @Composable
@@ -46,11 +44,13 @@ fun TopAppBar(
     showLevelAndProgress: Boolean = true
 ) {
     val greeting = getGreeting()
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .background(DarkGreen)
+            .padding(top = statusBarPadding)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
@@ -115,13 +115,6 @@ fun TopAppBar(
                         progressColor = PrimaryGreenLight,
                         backgroundColor = DarkGreenShade
                     )
-
-                    QuizProgress(
-                        completedQuizzes = userData.completedQuizzes,
-                        totalQuizzes = userData.totalQuizzes,
-                        progressColor = PastelYellow,
-                        backgroundColor = DarkGreenShade
-                    )
                 }
             }
         }
@@ -140,14 +133,43 @@ private fun ProfilePicture(
             modifier = modifier
                 .clip(CircleShape)
                 .border(2.dp, PastelYellow, CircleShape),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            error = {
+                // Show default avatar on error
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MediumGreenSage),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "👤",
+                        fontSize = 28.sp
+                    )
+                }
+            },
+            placeholder = {
+                // Show placeholder while loading
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MediumGreenSage),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "👤",
+                        fontSize = 28.sp
+                    )
+                }
+            }
         )
     } else {
+        // Default avatar when no URL provided
         Box(
             modifier = modifier
                 .clip(CircleShape)
                 .background(MediumGreenSage)
-                .border(2.dp, White, CircleShape),
+                .border(2.dp, PastelYellow, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -260,12 +282,11 @@ private fun XpProgress(
     Column(
         modifier = modifier.width(64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
         ) {
             Text(
                 text = "XP",
@@ -301,78 +322,6 @@ private fun XpProgress(
     }
 }
 
-/**
- * Quiz completion progress indicator
- */
-@Composable
-private fun QuizProgress(
-    completedQuizzes: Int,
-    totalQuizzes: Int,
-    progressColor: Color,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
-) {
-    val progress = if (totalQuizzes > 0) completedQuizzes.toFloat() / totalQuizzes.toFloat() else 0f
-    val percentage = (progress * 100).toInt()
-
-    var animate by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        animate = true
-    }
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = if (animate) progress else 0f,
-        animationSpec = tween(
-            durationMillis = 1000,
-            delayMillis = 500
-        ),
-        label = "quizProgressAnimation"
-    )
-
-    Column(
-        modifier = modifier.width(64.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Quiz",
-                fontSize = 8.sp,
-                fontWeight = FontWeight.Medium,
-                color = PastelYellow.copy(alpha = 0.8f),
-                fontFamily = JerseyFont
-            )
-            Text(
-                text = "$percentage%",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                color = PastelYellow.copy(alpha = 0.7f),
-                fontFamily = JerseyFont
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(CircleShape)
-                .background(backgroundColor)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(animatedProgress)
-                    .fillMaxHeight()
-                    .clip(CircleShape)
-                    .background(progressColor)
-            )
-        }
-    }
-}
 
 private fun getGreeting(): String {
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -394,9 +343,7 @@ fun TopAppBarPreview() {
                 educationLevel = "SMA",
                 currentLevel = 5,
                 currentXp = 450,
-                xpForNextLevel = 1000,
-                completedQuizzes = 8,
-                totalQuizzes = 15
+                xpForNextLevel = 1000
             )
         )
     }

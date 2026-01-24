@@ -1,6 +1,14 @@
 package android.app.faunadex.presentation.ar
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Bitmap
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.view.PixelCopy
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -47,6 +55,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
@@ -85,6 +94,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
+import androidx.core.graphics.createBitmap
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -160,6 +170,18 @@ fun ArCameraContent(
     var isModelLoading by remember { mutableStateOf(false) }
     var arSceneViewRef by remember { mutableStateOf<ArSceneView?>(null) }
     var modelNodeRef by remember { mutableStateOf<ArModelNode?>(null) }
+
+    // Capture states
+    var showCaptureSuccess by remember { mutableStateOf(false) }
+    var isCapturing by remember { mutableStateOf(false) }
+
+    // Auto-hide capture success message after 3 seconds
+    LaunchedEffect(showCaptureSuccess) {
+        if (showCaptureSuccess) {
+            kotlinx.coroutines.delay(3000L)
+            showCaptureSuccess = false
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -284,6 +306,19 @@ fun ArCameraContent(
                 modelNodeRef = null
                 isModelPlaced = false
                 onClearAnimals()
+            },
+            showCaptureSuccess = showCaptureSuccess,
+            isCapturing = isCapturing,
+            onCapture = {
+                arSceneViewRef?.let { arView ->
+                    isCapturing = true
+                    captureArView(arView) { success ->
+                        isCapturing = false
+                        if (success) {
+                            showCaptureSuccess = true
+                        }
+                    }
+                }
             }
         )
     }
@@ -295,7 +330,10 @@ fun BoxScope.ArCameraOverlay(
     isModelPlaced: Boolean,
     sessionState: ArSessionState,
     onNavigateBack: () -> Unit,
-    onClearAnimals: () -> Unit
+    onClearAnimals: () -> Unit,
+    showCaptureSuccess: Boolean = false,
+    isCapturing: Boolean = false,
+    onCapture: () -> Unit = {}
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
@@ -342,26 +380,98 @@ fun BoxScope.ArCameraOverlay(
             )
         }
 
-        Surface(
-            color = if (planeCount > 0) PrimaryGreen.copy(alpha = 0.9f) else Color.Gray.copy(alpha = 0.7f),
-            shape = RoundedCornerShape(20.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            // Surface detection indicator
+            Surface(
+                color = if (planeCount > 0) PrimaryGreen.copy(alpha = 0.9f) else Color.Gray.copy(alpha = 0.7f),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (planeCount > 0) Icons.Default.CheckCircle else Icons.Default.CenterFocusWeak,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = if (planeCount > 0) "$planeCount Surface${if (planeCount > 1) "s" else ""}" else "Scanning...",
+                        color = White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = isModelPlaced) {
+                IconButton(
+                    onClick = onCapture,
+                    enabled = !isCapturing,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            if (isCapturing) Color.Gray.copy(alpha = 0.5f)
+                            else PrimaryGreen,
+                            RoundedCornerShape(10.dp)
+                        )
+                ) {
+                    if (isCapturing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = PastelYellow,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = "Capture",
+                            tint = PastelYellow,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // Capture success message
+    AnimatedVisibility(
+        visible = showCaptureSuccess,
+        modifier = Modifier
+            .align(Alignment.Center)
+    ) {
+        Surface(
+            color = PrimaryGreen.copy(alpha = 0.95f),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    imageVector = if (planeCount > 0) Icons.Default.CheckCircle else Icons.Default.CenterFocusWeak,
+                    imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
                     tint = White,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(48.dp)
                 )
                 Text(
-                    text = if (planeCount > 0) "$planeCount Surface${if (planeCount > 1) "s" else ""}" else "Scanning...",
+                    text = "Photo Captured!",
                     color = White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = JerseyFont
+                )
+                Text(
+                    text = "Saved to your gallery",
+                    color = White.copy(alpha = 0.8f),
+                    fontSize = 14.sp
                 )
             }
         }
@@ -582,7 +692,7 @@ fun BoxScope.ArCameraOverlay(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = if (isModelPlaced) "Model Active" else "Tap to Place",
+                    text = if (isModelPlaced) "Model Active" else "Tap a surface to Place",
                     color = PastelYellow,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -1133,5 +1243,98 @@ fun ArScreenPreview() {
                 placedAnimals = listOf()
             )
         )
+    }
+}
+
+@SuppressLint("UseKtx")
+private fun captureArView(arSceneView: ArSceneView, onResult: (Boolean) -> Unit) {
+    val bitmap = createBitmap(arSceneView.width, arSceneView.height)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        PixelCopy.request(
+            arSceneView,
+            bitmap,
+            { copyResult ->
+                if (copyResult == PixelCopy.SUCCESS) {
+                    val saved = saveBitmapToGallery(arSceneView.context, bitmap)
+                    onResult(saved)
+                } else {
+                    android.util.Log.e("AR_CAPTURE", "PixelCopy failed with result: $copyResult")
+                    onResult(false)
+                }
+            },
+            android.os.Handler(android.os.Looper.getMainLooper())
+        )
+    } else {
+        try {
+            arSceneView.isDrawingCacheEnabled = true
+            arSceneView.buildDrawingCache()
+            val drawingCache = arSceneView.drawingCache
+            if (drawingCache != null) {
+                val capturedBitmap = Bitmap.createBitmap(drawingCache)
+                arSceneView.isDrawingCacheEnabled = false
+                val saved = saveBitmapToGallery(arSceneView.context, capturedBitmap)
+                onResult(saved)
+            } else {
+                onResult(false)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AR_CAPTURE", "Capture failed: ${e.message}")
+            onResult(false)
+        }
+    }
+}
+
+private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Boolean {
+    val filename = "FaunaDex_AR_${System.currentTimeMillis()}.jpg"
+
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FaunaDex")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+
+            val uri = context.contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+            )
+
+            uri?.let {
+                context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream)
+                }
+
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                context.contentResolver.update(uri, contentValues, null, null)
+
+                android.util.Log.d("AR_CAPTURE", "Image saved to gallery: $uri")
+                true
+            } ?: false
+        } else {
+            val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val faunaDexDir = java.io.File(imagesDir, "FaunaDex")
+            if (!faunaDexDir.exists()) {
+                faunaDexDir.mkdirs()
+            }
+
+            val imageFile = java.io.File(faunaDexDir, filename)
+            java.io.FileOutputStream(imageFile).use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream)
+            }
+
+            val mediaScanIntent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            mediaScanIntent.data = android.net.Uri.fromFile(imageFile)
+            context.sendBroadcast(mediaScanIntent)
+
+            android.util.Log.d("AR_CAPTURE", "Image saved to: ${imageFile.absolutePath}")
+            true
+        }
+    } catch (e: Exception) {
+        android.util.Log.e("AR_CAPTURE", "Failed to save image: ${e.message}")
+        false
     }
 }

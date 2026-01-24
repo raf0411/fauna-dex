@@ -4,11 +4,12 @@ import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.FaunaCard
-import android.app.faunadex.presentation.components.FaunaTopBar
 import android.app.faunadex.presentation.components.FilterBottomSheet
 import android.app.faunadex.presentation.components.FilterOption
 import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.presentation.components.LoadingSpinner
+import android.app.faunadex.presentation.components.TopAppBar
+import android.app.faunadex.presentation.components.TopAppBarUserData
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreenShade
 import android.app.faunadex.ui.theme.PastelYellow
@@ -29,6 +30,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -57,6 +60,7 @@ import kotlinx.coroutines.launch
 fun DashboardScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToQuiz: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -71,6 +75,7 @@ fun DashboardScreen(
     DashboardScreenContent(
         uiState = uiState,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToQuiz = onNavigateToQuiz,
         onNavigateToAnimalDetail = onNavigateToAnimalDetail,
         viewModel = viewModel
     )
@@ -80,6 +85,7 @@ fun DashboardScreen(
 fun DashboardScreenContent(
     uiState: DashboardUiState,
     onNavigateToProfile: () -> Unit,
+    onNavigateToQuiz: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel? = null,
     currentRoute: String = "dashboard"
@@ -111,12 +117,23 @@ fun DashboardScreenContent(
         )
     }
 
-    // Temporary filters (used in the bottom sheet before saving)
     var tempFilterOptions by remember { mutableStateOf(appliedFilterOptions) }
 
     Scaffold(
         topBar = {
-            FaunaTopBar(backgroundColor = PrimaryGreen)
+            val user = uiState.user
+            if (user != null) {
+                TopAppBar(
+                    userData = TopAppBarUserData(
+                        username = user.username,
+                        profilePictureUrl = user.profilePictureUrl,
+                        educationLevel = user.educationLevel,
+                        currentLevel = (user.totalXp / 1000) + 1,
+                        currentXp = user.totalXp % 1000,
+                        xpForNextLevel = 1000
+                    )
+                )
+            }
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
@@ -133,7 +150,7 @@ fun DashboardScreenContent(
                 onNavigate = { route ->
                     when (route) {
                         "profile" -> onNavigateToProfile()
-                        "quiz" -> { /* TODO: Navigate to quiz */ }
+                        "quiz" -> onNavigateToQuiz()
                         "dashboard" -> { /* Already on dashboard */ }
                     }
                 }
@@ -172,7 +189,6 @@ fun DashboardScreenContent(
 
                 IconButton(
                     onClick = {
-                        // Reset temp filters to current applied filters when opening
                         tempFilterOptions = appliedFilterOptions
                         showFilterSheet = true
                     }
@@ -181,14 +197,13 @@ fun DashboardScreenContent(
 
             Spacer(Modifier.height(32.dp))
 
-            // DEBUG: Seed Sample Data Button (Remove after seeding)
             if (uiState.animals.isEmpty() && !uiState.isLoading) {
-                androidx.compose.material3.Button(
+                Button (
                     onClick = {
                         viewModel?.seedSampleData()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = PrimaryGreen,
                         contentColor = PastelYellow
                     )
@@ -363,12 +378,10 @@ fun DashboardScreenContent(
                     }
                 },
                 onDismiss = {
-                    // Reset temp filters when dismissing without saving
                     tempFilterOptions = appliedFilterOptions
                     showFilterSheet = false
                 },
                 onSave = {
-                    // Apply the temp filters to the actual filters
                     appliedFilterOptions = tempFilterOptions
                     showFilterSheet = false
                     coroutineScope.launch {

@@ -54,9 +54,12 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.Rotate90DegreesCw
+import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -171,11 +174,9 @@ fun ArCameraContent(
     var arSceneViewRef by remember { mutableStateOf<ArSceneView?>(null) }
     var modelNodeRef by remember { mutableStateOf<ArModelNode?>(null) }
 
-    // Capture states
     var showCaptureSuccess by remember { mutableStateOf(false) }
     var isCapturing by remember { mutableStateOf(false) }
 
-    // Auto-hide capture success message after 3 seconds
     LaunchedEffect(showCaptureSuccess) {
         if (showCaptureSuccess) {
             kotlinx.coroutines.delay(3000L)
@@ -224,7 +225,6 @@ fun ArCameraContent(
                         android.util.Log.d("AR_DEBUG", "Tap detected! isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
 
                         if (!isModelPlaced && !isModelLoading) {
-                            // Allow placement even with planeCount=0 if we have a valid hitResult
                             isModelLoading = true
                             android.util.Log.d("AR_DEBUG", "Starting model load...")
 
@@ -250,7 +250,14 @@ fun ArCameraContent(
                                         android.util.Log.e("AR_DEBUG", "Model load error: ${e.message}", e)
                                         isModelLoading = false
                                     }
-                                )
+                                ).apply {
+                                    isScaleEditable = true
+                                    isRotationEditable = true
+                                    isPositionEditable = true
+
+                                    minEditableScale = 0.2f
+                                    maxEditableScale = 5.0f
+                                }
 
                                 android.util.Log.d("AR_DEBUG", "Creating anchor...")
                                 newModelNode.anchor = hitResult.createAnchor()
@@ -339,12 +346,16 @@ fun BoxScope.ArCameraOverlay(
     val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
 
     var showSuccessMessage by remember { mutableStateOf(false) }
+    var showGestureHint by remember { mutableStateOf(false) }
 
     LaunchedEffect(isModelPlaced) {
         if (isModelPlaced) {
             showSuccessMessage = true
-            kotlinx.coroutines.delay(3000L)
+            kotlinx.coroutines.delay(2000L)
             showSuccessMessage = false
+            showGestureHint = true
+            kotlinx.coroutines.delay(5000L)
+            showGestureHint = false
         }
     }
 
@@ -384,7 +395,6 @@ fun BoxScope.ArCameraOverlay(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Surface detection indicator
             Surface(
                 color = if (planeCount > 0) PrimaryGreen.copy(alpha = 0.9f) else Color.Gray.copy(alpha = 0.7f),
                 shape = RoundedCornerShape(20.dp)
@@ -440,7 +450,6 @@ fun BoxScope.ArCameraOverlay(
         }
     }
 
-    // Capture success message
     AnimatedVisibility(
         visible = showCaptureSuccess,
         modifier = Modifier
@@ -638,6 +647,91 @@ fun BoxScope.ArCameraOverlay(
                         fontFamily = JerseyFont,
                         textAlign = TextAlign.Center
                     )
+                }
+            }
+        }
+    }
+
+    AnimatedVisibility(
+        visible = showGestureHint && isModelPlaced,
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(bottom = navigationBarPadding.calculateBottomPadding() + 100.dp)
+    ) {
+        Surface(
+            color = Color.Black.copy(alpha = 0.85f),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Interact with the model",
+                    color = PastelYellow,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = JerseyFont
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ZoomOutMap,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = "Pinch to\nZoom",
+                            color = White.copy(alpha = 0.8f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Rotate90DegreesCw,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = "Two-finger\nRotate",
+                            color = White.copy(alpha = 0.8f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenWith,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = "Drag to\nMove",
+                            color = White.copy(alpha = 0.8f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

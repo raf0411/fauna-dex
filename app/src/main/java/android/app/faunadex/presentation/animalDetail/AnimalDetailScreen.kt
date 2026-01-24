@@ -99,7 +99,7 @@ import com.google.maps.android.compose.MapUiSettings
 @Composable
 fun AnimalDetailScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToAr: () -> Unit = {},
+    onNavigateToAr: (String) -> Unit = {},
     viewModel: AnimalDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -149,7 +149,7 @@ fun AnimalDetailScreen(
                     onPlayPauseClick = { viewModel.togglePlayPause() },
                     onStopAudioClick = { viewModel.stopAudio() },
                     onSeekTo = { position -> viewModel.seekTo(position) },
-                    onNavigateToAr = onNavigateToAr,
+                    onNavigateToAr = { onNavigateToAr(animal.id) },
                     modifier = Modifier.padding(paddingValues)
                 )
             }

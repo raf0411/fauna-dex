@@ -72,18 +72,19 @@ class ArViewModel @Inject constructor(
     }
 
     fun loadAnimalForAr(animalId: String) {
+        Log.d("ArViewModel", "loadAnimalForAr called with animalId: $animalId")
         viewModelScope.launch {
             try {
                 val result = getAnimalDetailUseCase(animalId)
                 result.onSuccess { animal ->
                     _sessionState.value = _sessionState.value.copy(selectedAnimal = animal)
-                    Log.d("ArViewModel", "Animal loaded for AR: ${animal.name}")
+                    Log.d("ArViewModel", "Animal loaded for AR: ${animal.name}, scientificName: ${animal.scientificName}, id: ${animal.id}")
                 }.onFailure { e ->
-                    Log.e("ArViewModel", "Failed to load animal", e)
+                    Log.e("ArViewModel", "Failed to load animal for id: $animalId", e)
                     _uiState.value = ArUiState.Error("Failed to load animal: ${e.message}")
                 }
             } catch (e: Exception) {
-                Log.e("ArViewModel", "Error loading animal", e)
+                Log.e("ArViewModel", "Error loading animal for id: $animalId", e)
                 _uiState.value = ArUiState.Error("Error: ${e.message}")
             }
         }

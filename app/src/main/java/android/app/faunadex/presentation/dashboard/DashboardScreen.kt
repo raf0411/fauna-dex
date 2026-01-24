@@ -60,6 +60,7 @@ import kotlinx.coroutines.launch
 fun DashboardScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToQuiz: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -74,6 +75,7 @@ fun DashboardScreen(
     DashboardScreenContent(
         uiState = uiState,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToQuiz = onNavigateToQuiz,
         onNavigateToAnimalDetail = onNavigateToAnimalDetail,
         viewModel = viewModel
     )
@@ -83,6 +85,7 @@ fun DashboardScreen(
 fun DashboardScreenContent(
     uiState: DashboardUiState,
     onNavigateToProfile: () -> Unit,
+    onNavigateToQuiz: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel? = null,
     currentRoute: String = "dashboard"
@@ -147,7 +150,7 @@ fun DashboardScreenContent(
                 onNavigate = { route ->
                     when (route) {
                         "profile" -> onNavigateToProfile()
-                        "quiz" -> { /* TODO: Navigate to quiz */ }
+                        "quiz" -> onNavigateToQuiz()
                         "dashboard" -> { /* Already on dashboard */ }
                     }
                 }

@@ -15,6 +15,7 @@ import android.app.faunadex.presentation.dashboard.DashboardScreen
 import android.app.faunadex.presentation.profile.ChangePasswordScreen
 import android.app.faunadex.presentation.profile.EditProfileScreen
 import android.app.faunadex.presentation.profile.ProfileScreen
+import android.app.faunadex.presentation.quiz.QuizScreen
 
 @Composable
 fun NavGraph(
@@ -80,7 +81,20 @@ fun NavGraph(
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToQuiz = {
+                    navController.navigate(Screen.Quiz.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 onNavigateToAnimalDetail = { animalId ->
@@ -96,13 +110,14 @@ fun NavGraph(
                     type = NavType.StringType
                 }
             )
-        ) {
+        ) { backStackEntry ->
+            val animalId = backStackEntry.arguments?.getString("animalId") ?: ""
             AnimalDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToAr = {
-                    navController.navigate(Screen.AR.route)
+                onNavigateToAr = { id ->
+                    navController.navigate(Screen.AR.createRoute(id))
                 }
             )
         }
@@ -111,11 +126,21 @@ fun NavGraph(
             ProfileScreen(
                 onNavigateToDashboard = {
                     navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 onNavigateToQuiz = {
-                    // TODO: Navigate to quiz when screen is implemented
+                    navController.navigate(Screen.Quiz.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
                 onNavigateToOnboarding = {
                     navController.navigate(Screen.Onboarding.route) {
@@ -147,11 +172,44 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.AR.route) {
+        // Placeholder Quiz Screen - TODO: Implement actual Quiz feature
+        composable(Screen.Quiz.route) {
+            QuizScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.AR.route,
+            arguments = listOf(
+                navArgument("animalId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val animalId = backStackEntry.arguments?.getString("animalId")
             ArScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
+                animalId = animalId
             )
         }
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.FaunaDex" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.FaunaDex" parent="Theme.AppCompat.Light.NoActionBar" />
 
     <!-- Splash Screen Theme -->
     <style name="Theme.FaunaDex.Splash" parent="Theme.SplashScreen">

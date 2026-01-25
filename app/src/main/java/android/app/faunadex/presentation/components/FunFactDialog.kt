@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.components
 
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -42,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -166,7 +168,7 @@ fun FunFactDialog(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                    text = "Close",
+                                    text = stringResource(R.string.close),
                                     fontFamily = JerseyFont,
                                     fontSize = 24.sp,
                                     color = PastelYellow

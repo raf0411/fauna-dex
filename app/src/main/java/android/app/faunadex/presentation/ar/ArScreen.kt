@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.PixelCopy
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -84,6 +85,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -290,7 +292,7 @@ fun ArCameraContent(
                 ) {
                     CircularProgressIndicator(color = PrimaryGreenLime, strokeWidth = 4.dp)
                     Text(
-                        text = "Loading 3D Model...",
+                        text = stringResource(R.string.ar_loading_model),
                         color = PastelYellow,
                         fontSize = 18.sp,
                         fontFamily = JerseyFont,
@@ -411,7 +413,7 @@ fun BoxScope.ArCameraOverlay(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = if (planeCount > 0) "$planeCount Surface${if (planeCount > 1) "s" else ""}" else "Scanning...",
+                        text = if (planeCount > 0) "$planeCount ${stringResource(R.string.ar_surfaces_detected, planeCount, if (planeCount > 1) "s" else "")}" else stringResource(R.string.ar_scanning),
                         color = White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -471,14 +473,14 @@ fun BoxScope.ArCameraOverlay(
                     modifier = Modifier.size(48.dp)
                 )
                 Text(
-                    text = "Photo Captured!",
+                    text = stringResource(R.string.ar_photo_captured),
                     color = White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = JerseyFont
                 )
                 Text(
-                    text = "Saved to your gallery",
+                    text = stringResource(R.string.ar_saved_to_gallery),
                     color = White.copy(alpha = 0.8f),
                     fontSize = 14.sp
                 )
@@ -526,7 +528,7 @@ fun BoxScope.ArCameraOverlay(
                     ) {
 
                         Text(
-                            text = "Move camera to detect a plane surface",
+                            text = stringResource(R.string.ar_move_camera),
                             color = Color.Red,
                             fontSize = 18.sp,
                             textAlign = TextAlign.Center,
@@ -553,7 +555,7 @@ fun BoxScope.ArCameraOverlay(
                     ) {
                         sessionState.selectedAnimal?.let { animal ->
                             Text(
-                                text = "Ready to place: ${animal.name}",
+                                text = stringResource(R.string.ar_ready_to_place, animal.name),
                                 color = PrimaryGreenLime,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
@@ -561,14 +563,14 @@ fun BoxScope.ArCameraOverlay(
                         }
 
                         Text(
-                            text = "Tap to place the 3D model",
+                            text = stringResource(R.string.ar_tap_to_place),
                             color = White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Surface detected! Tap anywhere to place",
+                            text = stringResource(R.string.ar_surface_detected),
                             color = White.copy(alpha = 0.7f),
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center
@@ -611,7 +613,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Animal Placed!",
+                            text = stringResource(R.string.ar_animal_placed),
                             color = White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
@@ -668,7 +670,7 @@ fun BoxScope.ArCameraOverlay(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Interact with the model",
+                    text = stringResource(R.string.ar_interact_with_model),
                     color = PastelYellow,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -690,7 +692,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Pinch to\nZoom",
+                            text = stringResource(R.string.ar_pinch_zoom),
                             color = White.copy(alpha = 0.8f),
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
@@ -708,7 +710,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Two-finger\nRotate",
+                            text = stringResource(R.string.ar_two_finger_rotate),
                             color = White.copy(alpha = 0.8f),
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
@@ -726,7 +728,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Drag to\nMove",
+                            text = stringResource(R.string.ar_drag_to_move),
                             color = White.copy(alpha = 0.8f),
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
@@ -786,7 +788,7 @@ fun BoxScope.ArCameraOverlay(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = if (isModelPlaced) "Model Active" else "Tap a surface to Place",
+                    text = if (isModelPlaced) stringResource(R.string.ar_model_active) else stringResource(R.string.ar_tap_surface_to_place),
                     color = PastelYellow,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -927,7 +929,7 @@ fun BoxScope.ArTopBar(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "$planesDetected Surface${if (planesDetected > 1) "s" else ""} Found",
+                        text = stringResource(R.string.ar_surfaces_detected, planesDetected, if (planesDetected > 1) "s" else ""),
                         color = White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -951,7 +953,7 @@ fun BoxScope.ArLoadingState() {
             strokeWidth = 4.dp
         )
         Text(
-            text = "Initializing AR...",
+            text = stringResource(R.string.ar_initializing),
             color = White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium
@@ -979,9 +981,9 @@ fun BoxScope.ArPermissionRequired(
         )
         Text(
             text = if (showRationale) 
-                "Camera permission is required\nto use AR features" 
+                stringResource(R.string.camera_permission_fail)
             else 
-                "Grant Camera Permission",
+                stringResource(R.string.camera_permission_grant),
             color = White,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
@@ -1003,7 +1005,7 @@ fun BoxScope.ArPermissionRequired(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Grant Permission",
+                text = stringResource(R.string.ar_grant_permission),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1101,7 +1103,7 @@ fun BoxScope.ArAnimalPlacedInfo(animal: android.app.faunadex.domain.model.Animal
                 )
                 Column {
                     Text(
-                        text = "Animal Placed!",
+                        text = stringResource(R.string.ar_animal_placed),
                         color = White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -1134,7 +1136,7 @@ fun BoxScope.ArErrorState(message: String) {
             modifier = Modifier.size(80.dp)
         )
         Text(
-            text = "AR Error",
+            text = stringResource(R.string.ar_error),
             color = White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold

@@ -1,13 +1,19 @@
 package android.app.faunadex.presentation.profile
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.app.faunadex.R
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaBottomBar
+import android.app.faunadex.presentation.components.LanguageSelectionDialog
 import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.presentation.components.ProfilePicture
 import android.app.faunadex.presentation.components.TopAppBar
 import android.app.faunadex.presentation.components.TopAppBarUserData
 import android.app.faunadex.ui.theme.*
+import android.app.faunadex.utils.LanguageManager
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,18 +25,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -177,7 +187,7 @@ private fun ErrorContent(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Error",
+            text = stringResource(R.string.error),
             fontFamily = JerseyFont,
             fontSize = 32.sp,
             color = PastelYellow,
@@ -203,7 +213,7 @@ private fun ErrorContent(
             )
         ) {
             Text(
-                text = "Retry",
+                text = stringResource(R.string.retry),
                 fontFamily = PoppinsFont,
                 fontSize = 18.sp
             )
@@ -222,6 +232,13 @@ private fun ProfileContent(
     scope: kotlinx.coroutines.CoroutineScope
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var isLanguageLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    var currentLanguage by remember { mutableStateOf(LanguageManager.getLanguage(appContext)) }
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -239,7 +256,7 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Profile",
+            text = stringResource(R.string.profile),
             fontFamily = PoppinsFont,
             fontSize = 32.sp,
             color = PastelYellow,
@@ -264,7 +281,7 @@ private fun ProfileContent(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = user.username.ifEmpty { "No username" },
+                text = user.username.ifEmpty { stringResource(R.string.no_username) },
                 fontFamily = JerseyFont,
                 fontSize = 32.sp,
                 color = PastelYellow
@@ -286,14 +303,20 @@ private fun ProfileContent(
         ) {
             ProfileActionButton(
                 icon = Icons.Outlined.Edit,
-                text = "Edit Profile",
+                text = stringResource(R.string.edit_profile),
                 onClick = onNavigateToEditProfile
             )
 
             ProfileActionButton(
                 icon = Icons.Outlined.Lock,
-                text = "Change Password",
+                text = stringResource(R.string.change_password),
                 onClick = onNavigateToChangePassword
+            )
+
+            ProfileActionButton(
+                icon = Icons.Outlined.Language,
+                text = stringResource(R.string.language),
+                onClick = { showLanguageDialog = true }
             )
         }
 
@@ -314,7 +337,7 @@ private fun ProfileContent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = "Logout",
+                    contentDescription = stringResource(R.string.logout),
                     tint = PastelYellow,
                     modifier = Modifier.size(24.dp)
                 )
@@ -322,7 +345,7 @@ private fun ProfileContent(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = "Logout",
+                    text = stringResource(R.string.logout),
                     fontFamily = JerseyFont,
                     fontSize = 28.sp,
                     color = PastelYellow
@@ -333,27 +356,68 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(16.dp))
     }
 
+    val logoutTitle = stringResource(R.string.logout)
+    val logoutMessage = stringResource(R.string.logout_confirmation)
+    val logoutConfirmText = stringResource(R.string.logout)
+    val cancelText = stringResource(R.string.cancel)
+    val loggedOutMessage = stringResource(R.string.logged_out_successfully)
+
     ConfirmationDialog(
-        title = "Logout",
-        message = "Are you sure you want to logout?",
-        confirmText = "Logout",
-        cancelText = "Cancel",
+        title = logoutTitle,
+        message = logoutMessage,
+        confirmText = logoutConfirmText,
+        cancelText = cancelText,
         onConfirm = {
             showLogoutDialog = false
             scope.launch {
                 launch {
                     snackbarHostState.showSnackbar(
-                        message = "Logged out successfully!",
+                        message = loggedOutMessage,
                         duration = SnackbarDuration.Short
                     )
                 }
-                kotlinx.coroutines.delay(500)
+                delay(500)
                 onLogout()
             }
         },
         onDismiss = { showLogoutDialog = false },
         showDialog = showLogoutDialog
     )
+
+    LanguageSelectionDialog(
+        currentLanguage = currentLanguage,
+        isLoading = isLanguageLoading,
+        onLanguageSelected = { selectedLanguage ->
+            Log.d("ProfileScreen", "onLanguageSelected: selected = $selectedLanguage, current = $currentLanguage")
+            if (selectedLanguage != currentLanguage) {
+                Log.d("ProfileScreen", "Language is different, applying change...")
+                isLanguageLoading = true
+                showLanguageDialog = false
+
+                val activity = context.findActivity()
+                if (activity != null) {
+                    LanguageManager.setLanguageAndRestart(activity, selectedLanguage)
+                } else {
+                    Log.e("ProfileScreen", "Could not find activity!")
+                    isLanguageLoading = false
+                }
+            } else {
+                Log.d("ProfileScreen", "Same language selected, closing dialog")
+                showLanguageDialog = false
+            }
+        },
+        onDismiss = { showLanguageDialog = false },
+        showDialog = showLanguageDialog
+    )
+}
+
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }
 
 @Composable
@@ -404,7 +468,7 @@ private fun ProfileActionButton(
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Navigate",
+                contentDescription = stringResource(R.string.navigate),
                 tint = MediumGreenSage,
                 modifier = Modifier.size(32.dp)
             )

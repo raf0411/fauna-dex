@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.profile
 
+import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,11 +30,12 @@ fun ChangePasswordScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val passwordChangedMessage = stringResource(R.string.password_changed_successfully)
 
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
-                title = "Change Password",
+                title = stringResource(R.string.change_password),
                 onNavigateBack = onNavigateBack
             )
         },
@@ -56,7 +59,7 @@ fun ChangePasswordScreen(
                         onSuccess()
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                message = "Password changed successfully!",
+                                message = passwordChangedMessage,
                                 duration = SnackbarDuration.Short
                             )
                             kotlinx.coroutines.delay(1000)
@@ -82,6 +85,22 @@ private fun ChangePasswordContent(
     var isLoading by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
 
+    val oldPasswordLabel = stringResource(R.string.old_password)
+    val newPasswordLabel = stringResource(R.string.new_password)
+    val confirmNewPasswordLabel = stringResource(R.string.confirm_new_password)
+    val saveLabel = stringResource(R.string.save)
+    val changePasswordTitle = stringResource(R.string.change_password)
+    val changePasswordMessage = stringResource(R.string.change_password_confirmation)
+    val confirmLabel = stringResource(R.string.confirm)
+    val cancelLabel = stringResource(R.string.cancel)
+    val passwordRequirementsLabel = stringResource(R.string.password_requirements)
+    val passwordMinCharsLabel = stringResource(R.string.password_min_chars)
+    val passwordRecommendationLabel = stringResource(R.string.password_recommendation)
+    val errorEnterCurrentPassword = stringResource(R.string.error_enter_current_password)
+    val errorEnterNewPassword = stringResource(R.string.error_enter_new_password)
+    val errorPasswordMinLength = stringResource(R.string.error_password_min_length)
+    val errorPasswordsNotMatch = stringResource(R.string.error_passwords_not_match)
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -92,7 +111,7 @@ private fun ChangePasswordContent(
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = "Old Password",
+            text = oldPasswordLabel,
             fontFamily = JerseyFont,
             fontSize = 24.sp,
             color = PastelYellow,
@@ -108,14 +127,14 @@ private fun ChangePasswordContent(
                 currentPassword = it
                 errorMessage = ""
             },
-            label = "Old Password",
+            label = oldPasswordLabel,
             isPassword = true
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "New Password",
+            text = newPasswordLabel,
             fontFamily = JerseyFont,
             fontSize = 24.sp,
             color = PastelYellow,
@@ -131,14 +150,14 @@ private fun ChangePasswordContent(
                 newPassword = it
                 errorMessage = ""
             },
-            label = "New Password",
+            label = newPasswordLabel,
             isPassword = true
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Confirm New Password",
+            text = confirmNewPasswordLabel,
             fontFamily = JerseyFont,
             fontSize = 24.sp,
             color = PastelYellow,
@@ -154,7 +173,7 @@ private fun ChangePasswordContent(
                 confirmPassword = it
                 errorMessage = ""
             },
-            label = "Confirm New Password",
+            label = confirmNewPasswordLabel,
             isPassword = true
         )
 
@@ -176,16 +195,16 @@ private fun ChangePasswordContent(
             onClick = {
                 when {
                     currentPassword.isBlank() -> {
-                        errorMessage = "Please enter your current password"
+                        errorMessage = errorEnterCurrentPassword
                     }
                     newPassword.isBlank() -> {
-                        errorMessage = "Please enter a new password"
+                        errorMessage = errorEnterNewPassword
                     }
                     newPassword.length < 6 -> {
-                        errorMessage = "Password must be at least 6 characters"
+                        errorMessage = errorPasswordMinLength
                     }
                     newPassword != confirmPassword -> {
-                        errorMessage = "Passwords do not match"
+                        errorMessage = errorPasswordsNotMatch
                     }
                     else -> {
                         // Show confirmation dialog
@@ -210,7 +229,7 @@ private fun ChangePasswordContent(
                 )
             } else {
                 Text(
-                    text = "Save",
+                    text = saveLabel,
                     fontFamily = JerseyFont,
                     fontSize = 24.sp,
                     color = PastelYellow
@@ -225,20 +244,20 @@ private fun ChangePasswordContent(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Password Requirements:",
+                text = passwordRequirementsLabel,
                 fontFamily = PoppinsFont,
                 fontSize = 12.sp,
                 color = MediumGreenSage,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "• At least 6 characters",
+                text = passwordMinCharsLabel,
                 fontFamily = PoppinsFont,
                 fontSize = 12.sp,
                 color = MediumGreenSage
             )
             Text(
-                text = "• Contains letters and numbers recommended",
+                text = passwordRecommendationLabel,
                 fontFamily = PoppinsFont,
                 fontSize = 12.sp,
                 color = MediumGreenSage
@@ -248,10 +267,10 @@ private fun ChangePasswordContent(
 
     // Confirmation Dialog
     ConfirmationDialog(
-        title = "Change Password",
-        message = "Are you sure you want to change your password?",
-        confirmText = "Confirm",
-        cancelText = "Cancel",
+        title = changePasswordTitle,
+        message = changePasswordMessage,
+        confirmText = confirmLabel,
+        cancelText = cancelLabel,
         onConfirm = {
             isLoading = true
             onChangePassword(

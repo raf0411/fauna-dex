@@ -66,6 +66,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
 
+    // AppCompat for locale handling
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
 

@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.components
 
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -21,12 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 data class BottomNavItem(
-    val label: String,
+    val labelResId: Int,
     val icon: ImageVector,
     val route: String
 )
@@ -39,17 +41,17 @@ fun FaunaBottomBar(
 ) {
     val items = listOf(
         BottomNavItem(
-            label = "Home",
+            labelResId = R.string.nav_home,
             icon = Icons.Outlined.Home,
             route = "dashboard"
         ),
         BottomNavItem(
-            label = "Quiz",
+            labelResId = R.string.nav_quiz,
             icon = Icons.Outlined.Quiz,
             route = "quiz"
         ),
         BottomNavItem(
-            label = "Profile",
+            labelResId = R.string.nav_profile,
             icon = Icons.Outlined.AccountCircle,
             route = "profile"
         )
@@ -66,19 +68,20 @@ fun FaunaBottomBar(
             tonalElevation = 0.dp
         ) {
             items.forEach { item ->
+                val label = stringResource(item.labelResId)
                 NavigationBarItem(
                     icon = {
                         Icon(
                             modifier = Modifier.size(24.dp),
                             imageVector = item.icon,
-                            contentDescription = item.label
+                            contentDescription = label
                         )
                     },
                     label = {
                         Text(
-                            text = item.label,
+                            text = label,
                             fontFamily = JerseyFont,
-                            fontSize = 12.sp
+                            fontSize = 16.sp
                         )
                     },
                     selected = currentRoute == item.route,

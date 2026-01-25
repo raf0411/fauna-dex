@@ -74,6 +74,7 @@ import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Icon
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -116,7 +117,7 @@ fun AnimalDetailScreen(
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
-                title = "Animal Detail",
+                title = stringResource(R.string.animal_detail),
                 onNavigateBack = onNavigateBack,
                 showBadge = true,
                 level = getEducationLevelWithColor(userEducationLevel)
@@ -235,7 +236,7 @@ fun AnimalDetailContent(
                 cornerRadius = 8.dp
             )
             Text(
-                text = "AR",
+                text = stringResource(R.string.ar),
                 fontFamily = JerseyFont,
                 fontSize = 24.sp,
                 color = PastelYellow
@@ -314,11 +315,11 @@ fun AnimalDetailContent(
     }
 }
 
-enum class AnimalDetailTab(val title: String) {
-    INFO("Info"),
-    POPULATION("Population"),
-    HABITAT("Habitat"),
-    TAXONOMY("Taxonomy")
+enum class AnimalDetailTab(val titleResId: Int) {
+    INFO(R.string.tab_info),
+    POPULATION(R.string.tab_population),
+    HABITAT(R.string.tab_habitat),
+    TAXONOMY(R.string.tab_taxonomy)
 }
 
 @Composable
@@ -342,7 +343,7 @@ fun TabIndicators(
     ) {
         availableTabs.forEach { tab ->
             TabItem(
-                text = tab.title,
+                text = stringResource(tab.titleResId),
                 isSelected = selectedTab == tab,
                 onClick = { onTabSelected(tab) },
                 isCompact = hasFourTabs
@@ -508,7 +509,7 @@ fun InfoTabContent(
             var showDescriptionDialog by remember { mutableStateOf(false) }
 
             Text(
-                text = "Read more...",
+                text = stringResource(R.string.read_more),
                 fontSize = 18.sp,
                 color = PastelYellow,
                 fontFamily = JerseyFont,
@@ -575,7 +576,7 @@ fun InfoTabContent(
                         )
 
                         Text(
-                            text = "Fun Fact",
+                            text = stringResource(R.string.fun_fact),
                             fontFamily = JerseyFont,
                             color = MediumGreenSage,
                             fontSize = 20.sp
@@ -589,9 +590,12 @@ fun InfoTabContent(
         }
     }
 
+    val funFactTitle = stringResource(R.string.fun_fact)
+    val noFunFactMessage = stringResource(R.string.no_fun_fact)
+
     FunFactDialog(
-        title = "Fun Fact",
-        content = animal.funFact.ifEmpty { "No fun fact available for this animal yet." },
+        title = funFactTitle,
+        content = animal.funFact.ifEmpty { noFunFactMessage },
         onDismiss = { showFunFactDialog = false },
         showDialog = showFunFactDialog
     )
@@ -609,7 +613,7 @@ fun PopulationTabContent(animal: Animal) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Population Status",
+            text = stringResource(R.string.population_status),
             fontFamily = PoppinsFont,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
@@ -633,7 +637,7 @@ fun PopulationTabContent(animal: Animal) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "IUCN Status",
+                text = stringResource(R.string.iucn_status),
                 fontFamily = PoppinsFont,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -703,22 +707,26 @@ fun PopulationBarChart(
         else -> Color(0xFFD81E05)
     }
 
+    val noDataText = stringResource(R.string.no_data)
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         PopulationBar(
-            label = "Past",
+            label = stringResource(R.string.past),
             population = animatedPastPopulation,
             percentage = animatedPastPercentage,
-            color = Color(0xFF4CAF50)
+            color = Color(0xFF4CAF50),
+            noDataText = noDataText
         )
 
         PopulationBar(
-            label = "Present",
+            label = stringResource(R.string.present),
             population = animatedPresentPopulation,
             percentage = animatedPresentPercentage,
-            color = presentColor
+            color = presentColor,
+            noDataText = noDataText
         )
     }
 }
@@ -729,6 +737,7 @@ fun PopulationBar(
     population: Int,
     percentage: Float,
     color: Color,
+    noDataText: String,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -769,7 +778,7 @@ fun PopulationBar(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = formatPopulationNumber(population),
+                    text = formatPopulationNumber(population, noDataText),
                     fontFamily = PoppinsFont,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -779,7 +788,7 @@ fun PopulationBar(
         }
 
         Text(
-            text = formatPopulationNumber(population),
+            text = formatPopulationNumber(population, noDataText),
             fontFamily = PoppinsFont,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
@@ -788,9 +797,9 @@ fun PopulationBar(
     }
 }
 
-private fun formatPopulationNumber(population: Int): String {
+private fun formatPopulationNumber(population: Int, noDataText: String): String {
     return if (population == 0) {
-        "No data"
+        noDataText
     } else {
         "%,d".format(population)
     }
@@ -802,7 +811,7 @@ fun HabitatTabContent(animal: Animal) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Habitat",
+            text = stringResource(R.string.habitat),
             fontFamily = PoppinsFont,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
@@ -819,11 +828,11 @@ fun HabitatTabContent(animal: Animal) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Location Details
         HabitatLocationInfo(
             country = animal.country,
             city = animal.city,
-            habitat = animal.habitat
+            habitat = animal.habitat,
+            locationNotSpecifiedText = stringResource(R.string.location_not_specified)
         )
     }
 }
@@ -867,7 +876,7 @@ fun HabitatMapPlaceholder(
             ) {
                 Marker(
                     state = MarkerState(position = animalLocation),
-                    title = "Animal Habitat",
+                    title = stringResource(R.string.animal_habitat),
                     snippet = "Lat: ${String.format(java.util.Locale.US, "%.4f", latitude)}, Long: ${String.format(java.util.Locale.US, "%.4f", longitude)}"
                 )
             }
@@ -898,7 +907,7 @@ fun HabitatMapPlaceholder(
                     modifier = Modifier.size(48.dp)
                 )
                 Text(
-                    text = "Location data not available",
+                    text = stringResource(R.string.location_data_not_available),
                     fontFamily = PoppinsFont,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
@@ -914,6 +923,7 @@ fun HabitatLocationInfo(
     country: String,
     city: String,
     habitat: String,
+    locationNotSpecifiedText: String,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -935,7 +945,7 @@ fun HabitatLocationInfo(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Location",
+                        text = stringResource(R.string.location),
                         fontFamily = PoppinsFont,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -944,7 +954,7 @@ fun HabitatLocationInfo(
                 }
 
                 Text(
-                    text = formatLocation(country, city),
+                    text = formatLocation(country, city, locationNotSpecifiedText),
                     fontFamily = PoppinsFont,
                     fontSize = 16.sp,
                     color = MediumGreenSage,
@@ -968,7 +978,7 @@ fun HabitatLocationInfo(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Habitat Type",
+                        text = stringResource(R.string.habitat_type),
                         fontFamily = PoppinsFont,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -988,12 +998,12 @@ fun HabitatLocationInfo(
     }
 }
 
-private fun formatLocation(country: String, city: String): String {
+private fun formatLocation(country: String, city: String, defaultText: String): String {
     return when {
         country.isNotEmpty() && city.isNotEmpty() -> "$city, $country"
         country.isNotEmpty() -> country
         city.isNotEmpty() -> city
-        else -> "Location not specified"
+        else -> defaultText
     }
 }
 
@@ -1003,7 +1013,7 @@ fun TaxonomyTabContent(animal: Animal) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Taxonomy Classification",
+            text = stringResource(R.string.taxonomy_classification),
             fontFamily = PoppinsFont,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
@@ -1055,7 +1065,7 @@ fun TaxonomyIndicatorColumn(
                 color = PrimaryGreenLight
             )
             Text(
-                text = "Less\nSpecific",
+                text = stringResource(R.string.less_specific),
                 fontFamily = PoppinsFont,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -1090,7 +1100,7 @@ fun TaxonomyIndicatorColumn(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "More\nSpecific",
+                text = stringResource(R.string.more_specific),
                 fontFamily = PoppinsFont,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,

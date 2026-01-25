@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.dashboard
 
+import android.app.faunadex.R
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaBottomBar
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -102,17 +104,26 @@ fun DashboardScreenContent(
     var showFilterSheet by remember { mutableStateOf(false) }
 
     // Applied filters (used for actual filtering)
+    val filterMyFavorites = stringResource(R.string.filter_my_favorites)
+    val filterMammals = stringResource(R.string.filter_mammals)
+    val filterBirds = stringResource(R.string.filter_birds)
+    val filterReptiles = stringResource(R.string.filter_reptiles)
+    val filterAmphibians = stringResource(R.string.filter_amphibians)
+    val filterFish = stringResource(R.string.filter_fish)
+    val filterEndangered = stringResource(R.string.filter_endangered)
+    val filterEndemic = stringResource(R.string.filter_endemic)
+
     var appliedFilterOptions by remember {
         mutableStateOf(
             listOf(
-                FilterOption("favorites", "My Favorites", false),
-                FilterOption("mammal", "Mammals", false),
-                FilterOption("bird", "Birds", false),
-                FilterOption("reptile", "Reptiles", false),
-                FilterOption("amphibian", "Amphibians", false),
-                FilterOption("fish", "Fish", false),
-                FilterOption("endangered", "Endangered Species", false),
-                FilterOption("endemic", "Endemic to Indonesia", false)
+                FilterOption("favorites", filterMyFavorites, false),
+                FilterOption("mammal", filterMammals, false),
+                FilterOption("bird", filterBirds, false),
+                FilterOption("reptile", filterReptiles, false),
+                FilterOption("amphibian", filterAmphibians, false),
+                FilterOption("fish", filterFish, false),
+                FilterOption("endangered", filterEndangered, false),
+                FilterOption("endemic", filterEndemic, false)
             )
         )
     }
@@ -173,7 +184,7 @@ fun DashboardScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CustomTextField(
-                    label = "Search your Fauna...",
+                    label = stringResource(R.string.search_your_fauna),
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.weight(1f),
@@ -181,7 +192,7 @@ fun DashboardScreenContent(
                         Icon(
                             modifier = Modifier.size(28.dp).padding(start = 6.dp),
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
+                            contentDescription = stringResource(R.string.search),
                             tint = DarkGreenShade
                         )
                     }
@@ -208,7 +219,7 @@ fun DashboardScreenContent(
                         contentColor = PastelYellow
                     )
                 ) {
-                    Text("🌱 Add Sample Animals to Firebase")
+                    Text(stringResource(R.string.add_sample_animals))
                 }
                 Spacer(Modifier.height(16.dp))
             }
@@ -353,7 +364,7 @@ fun DashboardScreenContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No more fauna to load",
+                                text = stringResource(R.string.no_more_fauna),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = PrimaryGreen
                             )
@@ -364,9 +375,13 @@ fun DashboardScreenContent(
         }
 
         if (showFilterSheet) {
+            val filterTitle = stringResource(R.string.filter_fauna)
+            val filterDescription = stringResource(R.string.filter_description)
+            val filterAppliedMessage = stringResource(R.string.filter_applied)
+
             FilterBottomSheet(
-                title = "Filter Fauna",
-                description = "Select the filter categories you want to select to see on your home screen. You can update this anytime.",
+                title = filterTitle,
+                description = filterDescription,
                 filterOptions = tempFilterOptions,
                 onFilterToggle = { filterId ->
                     tempFilterOptions = tempFilterOptions.map { option ->
@@ -386,7 +401,7 @@ fun DashboardScreenContent(
                     showFilterSheet = false
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
-                            message = "Filter has been applied"
+                            message = filterAppliedMessage
                         )
                     }
                 }

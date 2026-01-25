@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.components
 
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.JerseyFont
 import android.app.faunadex.ui.theme.MediumGreenSage
@@ -37,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -219,7 +221,7 @@ private fun FilterBottomSheetContent(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Save",
+                    text = stringResource(R.string.save),
                     fontFamily = JerseyFont,
                     fontSize = 24.sp,
                     color = PastelYellow

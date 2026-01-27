@@ -5,23 +5,30 @@ import com.google.firebase.firestore.PropertyName
 data class Animal(
     val id: String = "",
 
-    @PropertyName("name")
+    // Localized fields - populated based on user's language preference
     val name: String = "",
+    val category: String = "",
+    val habitat: String = "",
+    val description: String = "",
+    val longDescription: String = "",
+    val funFact: String = "",
+    val diet: String = "",
+    val lifespan: String = "",
+    val specialTitle: String = "",
+    val endemicStatus: String = "",
+    val populationTrend: String = "",
+    val activityPeriod: String = "",
+    val protectionType: String = "",
+    val sizeCategory: String = "",
+    val rarityLevel: String = "",
+    val country: String = "",
+    val city: String = "",
+    val audioDescriptionUrl: String = "",
+    val audioFunFactUrl: String = "",
 
+    // Non-localized fields - same for all languages
     @PropertyName("scientific_name")
     val scientificName: String = "",
-
-    @PropertyName("category")
-    val category: String = "",
-
-    @PropertyName("habitat")
-    val habitat: String = "",
-
-    @PropertyName("description")
-    val description: String = "",
-
-    @PropertyName("long_description")
-    val longDescription: String = "",
 
     @PropertyName("conservation_status")
     val conservationStatus: String = "",
@@ -29,44 +36,14 @@ data class Animal(
     @PropertyName("image_url")
     val imageUrl: String? = null,
 
-    @PropertyName("fun_fact")
-    val funFact: String = "",
-
-    @PropertyName("diet")
-    val diet: String = "",
-
-    @PropertyName("lifespan")
-    val lifespan: String = "",
-
     @PropertyName("weight")
     val weight: String = "",
 
     @PropertyName("length")
     val length: String = "",
 
-    @PropertyName("special_title")
-    val specialTitle: String = "",
-
-    @PropertyName("endemic_status")
-    val endemicStatus: String = "",
-
-    @PropertyName("population_trend")
-    val populationTrend: String = "",
-
-    @PropertyName("activity_period")
-    val activityPeriod: String = "",
-
     @PropertyName("is_protected")
     val isProtected: Boolean = false,
-
-    @PropertyName("protection_type")
-    val protectionType: String = "Protected by Law",
-
-    @PropertyName("size_category")
-    val sizeCategory: String = "",
-
-    @PropertyName("rarity_level")
-    val rarityLevel: String = "",
 
     @PropertyName("population_past")
     val populationPast: Int = 0,
@@ -79,12 +56,6 @@ data class Animal(
 
     @PropertyName("longitude")
     val longitude: Double = 0.0,
-
-    @PropertyName("country")
-    val country: String = "",
-
-    @PropertyName("city")
-    val city: String = "",
 
     @PropertyName("domain")
     val domain: String = "",
@@ -111,12 +82,6 @@ data class Animal(
     val species: String = "",
 
     @PropertyName("ar_model_url")
-    val arModelUrl: String? = null,
-
-    @PropertyName("audio_description_url")
-    val audioDescriptionUrl: String = "",
-
-    @PropertyName("audio_fun_fact_url")
-    val audioFunFactUrl: String = ""
+    val arModelUrl: String? = null
 )
 

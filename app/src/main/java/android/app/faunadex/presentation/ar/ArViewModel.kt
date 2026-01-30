@@ -72,20 +72,43 @@ class ArViewModel @Inject constructor(
     }
 
     fun loadAnimalForAr(animalId: String) {
-        Log.d("ArViewModel", "loadAnimalForAr called with animalId: $animalId")
+        Log.d("ArViewModel", "=== LOAD ANIMAL FOR AR ===")
+        Log.d("ArViewModel", "Requested animalId: '$animalId'")
+        Log.d("ArViewModel", "AnimalId length: ${animalId.length}")
+        Log.d("ArViewModel", "Is animalId blank?: ${animalId.isBlank()}")
+
         viewModelScope.launch {
             try {
+                Log.d("ArViewModel", "Calling getAnimalDetailUseCase with id: $animalId")
                 val result = getAnimalDetailUseCase(animalId)
+
                 result.onSuccess { animal ->
+                    Log.d("ArViewModel", "=== ANIMAL LOADED SUCCESSFULLY ===")
+                    Log.d("ArViewModel", "Animal name: ${animal.name}")
+                    Log.d("ArViewModel", "Animal scientificName: ${animal.scientificName}")
+                    Log.d("ArViewModel", "Animal id: ${animal.id}")
+                    Log.d("ArViewModel", "Animal AR Model URL: '${animal.arModelUrl}'")
+                    Log.d("ArViewModel", "Is AR URL null?: ${animal.arModelUrl == null}")
+                    Log.d("ArViewModel", "Is AR URL empty?: ${animal.arModelUrl?.isEmpty()}")
+                    Log.d("ArViewModel", "Is AR URL blank?: ${animal.arModelUrl?.isBlank()}")
+                    Log.d("ArViewModel", "AR URL length: ${animal.arModelUrl?.length ?: 0}")
+
+                    // Update the session state
                     _sessionState.value = _sessionState.value.copy(selectedAnimal = animal)
-                    Log.d("ArViewModel", "Animal loaded for AR: ${animal.name}, scientificName: ${animal.scientificName}, id: ${animal.id}")
-                    Log.d("ArViewModel", "AR Model URL: ${animal.arModelUrl ?: "No AR model URL available"}")
+                    Log.d("ArViewModel", "Session state updated with selected animal")
+
                 }.onFailure { e ->
-                    Log.e("ArViewModel", "Failed to load animal for id: $animalId", e)
+                    Log.e("ArViewModel", "=== FAILED TO LOAD ANIMAL ===")
+                    Log.e("ArViewModel", "Failed for id: '$animalId'", e)
+                    Log.e("ArViewModel", "Error message: ${e.message}")
+                    Log.e("ArViewModel", "Error class: ${e.javaClass.simpleName}")
                     _uiState.value = ArUiState.Error("Failed to load animal: ${e.message}")
                 }
             } catch (e: Exception) {
-                Log.e("ArViewModel", "Error loading animal for id: $animalId", e)
+                Log.e("ArViewModel", "=== EXCEPTION LOADING ANIMAL ===")
+                Log.e("ArViewModel", "Exception for id: '$animalId'", e)
+                Log.e("ArViewModel", "Exception message: ${e.message}")
+                Log.e("ArViewModel", "Exception class: ${e.javaClass.simpleName}")
                 _uiState.value = ArUiState.Error("Error: ${e.message}")
             }
         }

@@ -23,17 +23,25 @@ class AnimalRepositoryImpl @Inject constructor(
 
     override suspend fun getAnimalById(animalId: String): Result<Animal> {
         return try {
+            Log.d("AnimalRepositoryImpl", "=== GETTING ANIMAL BY ID ===")
+            Log.d("AnimalRepositoryImpl", "Requested animalId: '$animalId'")
+
             val document = animalsCollection.document(animalId).get().await()
             val lang = getLanguageSuffix()
 
             Log.d("AnimalRepositoryImpl", "Document exists: ${document.exists()}")
             Log.d("AnimalRepositoryImpl", "Using language: $lang")
-            Log.d("AnimalRepositoryImpl", "Document data: ${document.data}")
+
+            val rawArModelUrl = document.getString("ar_model_url")
+            Log.d("AnimalRepositoryImpl", "Raw ar_model_url from Firestore: '$rawArModelUrl'")
+            Log.d("AnimalRepositoryImpl", "Is ar_model_url null?: ${rawArModelUrl == null}")
+            Log.d("AnimalRepositoryImpl", "Is ar_model_url empty?: ${rawArModelUrl?.isEmpty()}")
+            Log.d("AnimalRepositoryImpl", "Is ar_model_url blank?: ${rawArModelUrl?.isBlank()}")
+            Log.d("AnimalRepositoryImpl", "ar_model_url length: ${rawArModelUrl?.length ?: 0}")
 
             if (document.exists()) {
                 val animal = Animal(
                     id = document.id,
-                    // Localized fields
                     name = document.getString("name_$lang") ?: "",
                     category = document.getString("category_$lang") ?: "",
                     habitat = document.getString("habitat_$lang") ?: "",
@@ -53,7 +61,6 @@ class AnimalRepositoryImpl @Inject constructor(
                     city = document.getString("city_$lang") ?: "",
                     audioDescriptionUrl = document.getString("audio_url_$lang") ?: "",
                     audioFunFactUrl = document.getString("audio_fun_fact_url_$lang") ?: "",
-                    // Non-localized fields
                     scientificName = document.getString("scientific_name") ?: "",
                     conservationStatus = document.getString("conservation_status") ?: "",
                     imageUrl = document.getString("image_url"),
@@ -75,13 +82,19 @@ class AnimalRepositoryImpl @Inject constructor(
                     arModelUrl = document.getString("ar_model_url")
                 )
 
-                Log.d("AnimalRepositoryImpl", "Animal object created - name: '${animal.name}', audio: '${animal.audioDescriptionUrl}'")
+                Log.d("AnimalRepositoryImpl", "=== ANIMAL OBJECT CREATED ===")
+                Log.d("AnimalRepositoryImpl", "Animal name: '${animal.name}'")
+                Log.d("AnimalRepositoryImpl", "Animal arModelUrl: '${animal.arModelUrl}'")
+                Log.d("AnimalRepositoryImpl", "Audio URL: '${animal.audioDescriptionUrl}'")
+
                 Result.success(animal)
             } else {
+                Log.e("AnimalRepositoryImpl", "Animal document does not exist for id: $animalId")
                 Result.failure(Exception("Animal not found"))
             }
         } catch (e: Exception) {
-            Log.e("AnimalRepositoryImpl", "Error getting animal", e)
+            Log.e("AnimalRepositoryImpl", "=== ERROR GETTING ANIMAL ===")
+            Log.e("AnimalRepositoryImpl", "Error for animalId: $animalId", e)
             Result.failure(e)
         }
     }
@@ -96,7 +109,6 @@ class AnimalRepositoryImpl @Inject constructor(
                 try {
                     Animal(
                         id = document.id,
-                        // Localized fields
                         name = document.getString("name_$lang") ?: "",
                         category = document.getString("category_$lang") ?: "",
                         habitat = document.getString("habitat_$lang") ?: "",
@@ -116,7 +128,6 @@ class AnimalRepositoryImpl @Inject constructor(
                         city = document.getString("city_$lang") ?: "",
                         audioDescriptionUrl = document.getString("audio_url_$lang") ?: "",
                         audioFunFactUrl = document.getString("audio_fun_fact_url_$lang") ?: "",
-                        // Non-localized fields
                         scientificName = document.getString("scientific_name") ?: "",
                         conservationStatus = document.getString("conservation_status") ?: "",
                         imageUrl = document.getString("image_url"),
@@ -163,7 +174,6 @@ class AnimalRepositoryImpl @Inject constructor(
                 try {
                     Animal(
                         id = document.id,
-                        // Localized fields
                         name = document.getString("name_$lang") ?: "",
                         category = document.getString("category_$lang") ?: "",
                         habitat = document.getString("habitat_$lang") ?: "",
@@ -183,7 +193,6 @@ class AnimalRepositoryImpl @Inject constructor(
                         city = document.getString("city_$lang") ?: "",
                         audioDescriptionUrl = document.getString("audio_url_$lang") ?: "",
                         audioFunFactUrl = document.getString("audio_fun_fact_url_$lang") ?: "",
-                        // Non-localized fields
                         scientificName = document.getString("scientific_name") ?: "",
                         conservationStatus = document.getString("conservation_status") ?: "",
                         imageUrl = document.getString("image_url"),

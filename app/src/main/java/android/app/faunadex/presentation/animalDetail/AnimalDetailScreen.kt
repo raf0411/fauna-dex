@@ -150,7 +150,7 @@ fun AnimalDetailScreen(
                     onPlayPauseClick = { viewModel.togglePlayPause() },
                     onStopAudioClick = { viewModel.stopAudio() },
                     onSeekTo = { position -> viewModel.seekTo(position) },
-                    onNavigateToAr = { onNavigateToAr(animal.id) },
+                    onNavigateToAr = onNavigateToAr,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -185,7 +185,7 @@ fun AnimalDetailContent(
     onPlayPauseClick: () -> Unit,
     onStopAudioClick: () -> Unit,
     onSeekTo: (Long) -> Unit = {},
-    onNavigateToAr: () -> Unit = {},
+    onNavigateToAr: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf(AnimalDetailTab.INFO) }
@@ -230,7 +230,14 @@ fun AnimalDetailContent(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             IconButton(
-                onClick = onNavigateToAr,
+                onClick = {
+                    Log.d("AnimalDetailScreen", "=== AR BUTTON CLICKED ===")
+                    Log.d("AnimalDetailScreen", "Animal ID: '${animal.id}'")
+                    Log.d("AnimalDetailScreen", "Animal Name: '${animal.name}'")
+                    Log.d("AnimalDetailScreen", "Animal AR URL: '${animal.arModelUrl}'")
+                    Log.d("AnimalDetailScreen", "Navigating to AR with ID: ${animal.id}")
+                    onNavigateToAr(animal.id)
+                },
                 icon = Icons.Outlined.ViewInAr,
                 size = 48.dp,
                 cornerRadius = 8.dp

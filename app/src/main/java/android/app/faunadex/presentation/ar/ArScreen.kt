@@ -76,6 +76,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,9 +109,13 @@ fun ArScreen(
     animalId: String? = null,
     viewModel: ArViewModel = hiltViewModel()
 ) {
+    android.util.Log.d("AR_SCREEN", "▶▶▶ ArScreen COMPOSING - animalId: $animalId")
+
     val uiState by viewModel.uiState.collectAsState()
     val sessionState by viewModel.sessionState.collectAsState()
     
+    android.util.Log.d("AR_SCREEN", "State collected - selectedAnimal: ${sessionState.selectedAnimal?.name}")
+
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA
     ) { isGranted ->
@@ -122,15 +127,37 @@ fun ArScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        animalId?.let { viewModel.loadAnimalForAr(it) }
+    LaunchedEffect(animalId) {
+        android.util.Log.d("AR_SCREEN", "=== ArScreen LaunchedEffect (Animal Loading) ===")
+        android.util.Log.d("AR_SCREEN", "AnimalId received: $animalId")
 
+        animalId?.let {
+            android.util.Log.d("AR_SCREEN", "Loading animal for AR with ID: $it")
+            viewModel.loadAnimalForAr(it)
+        } ?: android.util.Log.e("AR_SCREEN", "ERROR: AnimalId is NULL!")
+    }
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("AR_SCREEN", "=== Camera Permission Check ===")
         if (cameraPermissionState.status.isGranted) {
+            android.util.Log.d("AR_SCREEN", "Camera permission already granted")
             viewModel.onPermissionGranted()
             viewModel.startScanning()
         } else {
+            android.util.Log.d("AR_SCREEN", "Requesting camera permission")
             cameraPermissionState.launchPermissionRequest()
         }
+    }
+
+    LaunchedEffect(sessionState.selectedAnimal) {
+        android.util.Log.d("AR_SCREEN", "=== Selected Animal Changed ===")
+        android.util.Log.d("AR_SCREEN", "Animal: ${sessionState.selectedAnimal?.name}")
+        android.util.Log.d("AR_SCREEN", "Animal ID: ${sessionState.selectedAnimal?.id}")
+        android.util.Log.d("AR_SCREEN", "AR Model URL: ${sessionState.selectedAnimal?.arModelUrl}")
+        android.util.Log.d("AR_SCREEN", "Is URL null?: ${sessionState.selectedAnimal?.arModelUrl == null}")
+        android.util.Log.d("AR_SCREEN", "Is URL empty?: ${sessionState.selectedAnimal?.arModelUrl?.isEmpty()}")
+        android.util.Log.d("AR_SCREEN", "Is URL blank?: ${sessionState.selectedAnimal?.arModelUrl?.isBlank()}")
+        android.util.Log.d("AR_SCREEN", "URL length: ${sessionState.selectedAnimal?.arModelUrl?.length ?: 0}")
     }
 
     if (cameraPermissionState.status.isGranted &&
@@ -170,6 +197,8 @@ fun ArCameraContent(
     onAnimalPlaced: (android.app.faunadex.domain.model.Animal) -> Unit,
     onClearAnimals: () -> Unit
 ) {
+    val currentSessionState by rememberUpdatedState(sessionState)
+
     var planeCount by remember { mutableIntStateOf(0) }
     var isModelPlaced by remember { mutableStateOf(false) }
     var isModelLoading by remember { mutableStateOf(false) }
@@ -184,6 +213,13 @@ fun ArCameraContent(
             kotlinx.coroutines.delay(3000L)
             showCaptureSuccess = false
         }
+    }
+
+    // Log when the selected animal changes
+    LaunchedEffect(sessionState.selectedAnimal) {
+        android.util.Log.d("AR_CAMERA", "=== ArCameraContent - Animal Changed ===")
+        android.util.Log.d("AR_CAMERA", "Selected Animal: ${sessionState.selectedAnimal?.name}")
+        android.util.Log.d("AR_CAMERA", "AR Model URL: ${sessionState.selectedAnimal?.arModelUrl}")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -224,15 +260,32 @@ fun ArCameraContent(
                     }
 
                     onTapAr = { hitResult, _ ->
-                        android.util.Log.d("AR_DEBUG", "Tap detected! isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
+                        android.util.Log.d("AR_DEBUG", "=== TAP DETECTED ===")
+                        android.util.Log.d("AR_DEBUG", "isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
 
                         if (!isModelPlaced && !isModelLoading) {
                             isModelLoading = true
-                            android.util.Log.d("AR_DEBUG", "Starting model load...")
+                            android.util.Log.d("AR_DEBUG", "=== STARTING MODEL LOAD ===")
 
-                            val modelUrl = sessionState.selectedAnimal?.arModelUrl ?: DUMMY_MODEL_URL
-                            android.util.Log.d("AR_DEBUG", "Model URL: $modelUrl")
-                            android.util.Log.d("AR_DEBUG", "Animal: ${sessionState.selectedAnimal?.name}, AR URL from animal: ${sessionState.selectedAnimal?.arModelUrl}")
+                            android.util.Log.d("AR_DEBUG", "Using currentSessionState (latest)")
+                            android.util.Log.d("AR_DEBUG", "Selected Animal: ${currentSessionState.selectedAnimal?.name}")
+                            android.util.Log.d("AR_DEBUG", "Animal ID: ${currentSessionState.selectedAnimal?.id}")
+                            android.util.Log.d("AR_DEBUG", "Raw AR URL from animal: '${currentSessionState.selectedAnimal?.arModelUrl}'")
+                            android.util.Log.d("AR_DEBUG", "Is AR URL null?: ${currentSessionState.selectedAnimal?.arModelUrl == null}")
+                            android.util.Log.d("AR_DEBUG", "Is AR URL empty?: ${currentSessionState.selectedAnimal?.arModelUrl?.isEmpty()}")
+                            android.util.Log.d("AR_DEBUG", "Is AR URL blank?: ${currentSessionState.selectedAnimal?.arModelUrl?.isBlank()}")
+
+                            val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
+                            val modelUrl = if (!animalArUrl.isNullOrBlank()) {
+                                android.util.Log.d("AR_DEBUG", "✅ Using animal AR URL: $animalArUrl")
+                                animalArUrl
+                            } else {
+                                android.util.Log.w("AR_DEBUG", "❌ Animal AR URL is null or blank, using DUMMY_MODEL_URL")
+                                DUMMY_MODEL_URL
+                            }
+
+                            android.util.Log.d("AR_DEBUG", "Final Model URL to load: $modelUrl")
+                            android.util.Log.d("AR_DEBUG", "Is using dummy?: ${modelUrl == DUMMY_MODEL_URL}")
 
                             try {
                                 val newModelNode = ArModelNode(
@@ -242,15 +295,16 @@ fun ArCameraContent(
                                     scaleToUnits = 1.5f,
                                     centerOrigin = io.github.sceneview.math.Position(0f, 0f, 0f),
                                     onLoaded = {
-                                        android.util.Log.d("AR_DEBUG", "Model loaded successfully!")
+                                        android.util.Log.d("AR_DEBUG", "✓ Model loaded successfully from: $modelUrl")
                                         isModelLoading = false
                                         isModelPlaced = true
-                                        sessionState.selectedAnimal?.let { animal ->
+                                        currentSessionState.selectedAnimal?.let { animal ->
                                             onAnimalPlaced(animal)
                                         }
                                     },
                                     onError = { e ->
-                                        android.util.Log.e("AR_DEBUG", "Model load error: ${e.message}", e)
+                                        android.util.Log.e("AR_DEBUG", "✗ Model load FAILED for URL: $modelUrl")
+                                        android.util.Log.e("AR_DEBUG", "Error message: ${e.message}", e)
                                         isModelLoading = false
                                     }
                                 ).apply {
@@ -273,7 +327,7 @@ fun ArCameraContent(
                                 isModelLoading = false
                             }
                         } else {
-                            android.util.Log.d("AR_DEBUG", "Tap ignored - conditions not met")
+                            android.util.Log.d("AR_DEBUG", "Tap ignored - isModelPlaced: $isModelPlaced, isModelLoading: $isModelLoading")
                         }
                     }
                 }

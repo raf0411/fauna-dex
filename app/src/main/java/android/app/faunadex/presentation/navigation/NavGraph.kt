@@ -117,7 +117,12 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onNavigateToAr = { id ->
-                    navController.navigate(Screen.AR.createRoute(id))
+                    android.util.Log.d("NavGraph", "=== NAVIGATING TO AR ===")
+                    android.util.Log.d("NavGraph", "Received animal ID from detail screen: '$id'")
+                    android.util.Log.d("NavGraph", "Creating route: ${Screen.AR.createRoute(id)}")
+                    navController.navigate(Screen.AR.createRoute(id)) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -205,6 +210,10 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val animalId = backStackEntry.arguments?.getString("animalId")
+            android.util.Log.d("NavGraph", "=== AR SCREEN COMPOSABLE ===")
+            android.util.Log.d("NavGraph", "AnimalId from backStackEntry: '$animalId'")
+            android.util.Log.d("NavGraph", "Is animalId null?: ${animalId == null}")
+            android.util.Log.d("NavGraph", "Passing to ArScreen...")
             ArScreen(
                 onNavigateBack = {
                     navController.popBackStack()

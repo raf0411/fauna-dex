@@ -79,6 +79,7 @@ class ArViewModel @Inject constructor(
                 result.onSuccess { animal ->
                     _sessionState.value = _sessionState.value.copy(selectedAnimal = animal)
                     Log.d("ArViewModel", "Animal loaded for AR: ${animal.name}, scientificName: ${animal.scientificName}, id: ${animal.id}")
+                    Log.d("ArViewModel", "AR Model URL: ${animal.arModelUrl ?: "No AR model URL available"}")
                 }.onFailure { e ->
                     Log.e("ArViewModel", "Failed to load animal for id: $animalId", e)
                     _uiState.value = ArUiState.Error("Failed to load animal: ${e.message}")

@@ -161,14 +161,29 @@ def main():
 
     print("Fetching animals from Firestore...")
     animals_ref = db.collection('animals')
-    animals = animals_ref.stream()
+
+    # Fetch all animals at once to avoid stream timeout issues
+    animals_docs = animals_ref.get()
+    animal_list = []
+
+    for animal_doc in animals_docs:
+        animal_data = animal_doc.to_dict()
+        animal_data['id'] = animal_doc.id
+        animal_list.append(animal_data)
+
+    print(f"Found {len(animal_list)} animals to process\n")
 
     success_count = 0
     fail_count = 0
+    skipped_count = 0
 
-    for animal_doc in animals:
-        animal_data = animal_doc.to_dict()
-        animal_data['id'] = animal_doc.id
+    for animal_data in animal_list:
+        # Skip animals that already have both audio URLs
+        if animal_data.get('audio_url_en') and animal_data.get('audio_url_id'):
+            animal_name = animal_data.get('name', 'Unknown')
+            print(f"⏭ Skipping {animal_name} - already has audio for both languages")
+            skipped_count += 1
+            continue
 
         try:
             if process_animal(animal_data, temp_dir):
@@ -183,6 +198,7 @@ def main():
     print(f"Processing Complete!")
     print(f"Success: {success_count}")
     print(f"Failed: {fail_count}")
+    print(f"Skipped: {skipped_count} (already have audio)")
     print(f"{'='*60}")
 
     if success_count > 0:

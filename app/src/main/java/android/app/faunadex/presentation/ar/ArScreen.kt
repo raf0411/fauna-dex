@@ -230,8 +230,9 @@ fun ArCameraContent(
                             isModelLoading = true
                             android.util.Log.d("AR_DEBUG", "Starting model load...")
 
-                            val modelUrl = DUMMY_MODEL_URL
+                            val modelUrl = sessionState.selectedAnimal?.arModelUrl ?: DUMMY_MODEL_URL
                             android.util.Log.d("AR_DEBUG", "Model URL: $modelUrl")
+                            android.util.Log.d("AR_DEBUG", "Animal: ${sessionState.selectedAnimal?.name}, AR URL from animal: ${sessionState.selectedAnimal?.arModelUrl}")
 
                             try {
                                 val newModelNode = ArModelNode(

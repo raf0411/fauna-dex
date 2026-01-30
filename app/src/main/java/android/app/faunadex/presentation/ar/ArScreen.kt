@@ -159,7 +159,7 @@ fun ArScreen(
     }
 }
 
-private const val DUMMY_MODEL_URL = "https://ampugrpczxyluircynug.supabase.co/storage/v1/object/public/wildar-3d-models/models/dummy/komodo.glb"
+private const val DUMMY_MODEL_URL = "https://ampugrpczxyluircynug.supabase.co/storage/v1/object/public/wildar-3d-models/models/dummy/dummy_animal.glb"
 
 @Composable
 fun ArCameraContent(

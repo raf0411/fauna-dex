@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.quiz
 
+import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.JerseyFont
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,7 +69,7 @@ fun QuizScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Quiz Feature",
+                    text = stringResource(R.string.quiz_feature),
                     color = PastelYellow,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
@@ -77,7 +79,7 @@ fun QuizScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Coming Soon!",
+                    text = stringResource(R.string.coming_soon),
                     color = PrimaryGreen,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Medium,
@@ -87,7 +89,7 @@ fun QuizScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Test your knowledge about\nIndonesian wildlife",
+                    text = stringResource(R.string.quiz_description),
                     color = PastelYellow.copy(alpha = 0.7f),
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center

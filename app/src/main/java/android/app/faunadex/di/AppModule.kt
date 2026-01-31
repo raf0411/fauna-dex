@@ -6,11 +6,13 @@ import android.app.faunadex.data.repository.UserRepositoryImpl
 import android.app.faunadex.domain.repository.AnimalRepository
 import android.app.faunadex.domain.repository.AuthRepository
 import android.app.faunadex.domain.repository.UserRepository
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -42,6 +44,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAnimalRepository(
-        firestore: FirebaseFirestore
-    ): AnimalRepository = AnimalRepositoryImpl(firestore)
+        firestore: FirebaseFirestore,
+        @ApplicationContext context: Context
+    ): AnimalRepository = AnimalRepositoryImpl(firestore, context)
 }

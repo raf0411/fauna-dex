@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.components
 
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.MediumGreenSage
 import android.app.faunadex.ui.theme.PastelYellow
@@ -50,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -93,7 +95,7 @@ fun AudioPlayerDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Audio Narration",
+                            text = stringResource(R.string.audio_narration),
                             fontFamily = PoppinsFont,
                             fontSize = 14.sp,
                             color = MediumGreenSage
@@ -113,7 +115,7 @@ fun AudioPlayerDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = MediumGreenSage
                         )
                     }
@@ -170,14 +172,14 @@ private fun AudioIdleContent(
             ) {
                 Icon(
                     imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = "Play Again",
+                    contentDescription = stringResource(R.string.play_again),
                     tint = DarkForest,
                     modifier = Modifier.size(36.dp)
                 )
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Audio ended - Press play to listen again",
+                text = stringResource(R.string.audio_ended_play_again),
                 fontFamily = PoppinsFont,
                 fontSize = 14.sp,
                 color = MediumGreenSage,
@@ -185,7 +187,7 @@ private fun AudioIdleContent(
             )
         } else {
             Text(
-                text = "Press play to start audio narration",
+                text = stringResource(R.string.press_play_to_start),
                 fontFamily = PoppinsFont,
                 fontSize = 14.sp,
                 color = MediumGreenSage,
@@ -208,7 +210,7 @@ private fun AudioLoadingContent() {
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            text = "Loading audio...",
+            text = stringResource(R.string.loading_audio),
             fontFamily = PoppinsFont,
             fontSize = 14.sp,
             color = MediumGreenSage
@@ -228,7 +230,7 @@ private fun AudioErrorContent(message: String) {
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            text = "Audio Error",
+            text = stringResource(R.string.audio_error),
             fontFamily = PoppinsFont,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -283,7 +285,7 @@ private fun AudioPlayingContent(
             ) {
                 Icon(
                     imageVector = Icons.Filled.SkipPrevious,
-                    contentDescription = "Skip backward 10s",
+                    contentDescription = stringResource(R.string.skip_backward),
                     tint = PastelYellow,
                     modifier = Modifier.size(32.dp)
                 )
@@ -300,7 +302,7 @@ private fun AudioPlayingContent(
             ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
                     tint = DarkForest,
                     modifier = Modifier.size(36.dp)
                 )
@@ -317,7 +319,7 @@ private fun AudioPlayingContent(
             ) {
                 Icon(
                     imageVector = Icons.Filled.SkipNext,
-                    contentDescription = "Skip forward 10s",
+                    contentDescription = stringResource(R.string.skip_forward),
                     tint = PastelYellow,
                     modifier = Modifier.size(32.dp)
                 )

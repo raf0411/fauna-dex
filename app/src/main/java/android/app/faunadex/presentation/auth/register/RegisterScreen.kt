@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.layout.statusBarsPadding
 
 @Composable
 fun RegisterScreen(
@@ -83,9 +85,10 @@ internal fun RegisterContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
             ) {
                 LayeredHeader(
-                    text = "Register",
+                    text = stringResource(R.string.register),
                     fontSize = 28,
                     textColor = DarkGreenSage,
                     fontWeight = FontWeight.Normal
@@ -101,14 +104,14 @@ internal fun RegisterContent(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.app_logo),
-                        contentDescription = "WildAR Logo",
+                        contentDescription = stringResource(R.string.wildar_logo),
                         alignment = Alignment.Center
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Text(
-                        text = "Email",
+                        text = stringResource(R.string.email),
                         fontFamily = JerseyFont,
                         fontSize = 28.sp,
                         color = PastelYellow,
@@ -121,16 +124,16 @@ internal fun RegisterContent(
                     CustomTextField(
                         value = uiState.email,
                         onValueChange = onEmailChange,
-                        label = "Email",
+                        label = stringResource(R.string.email),
                         keyboardType = KeyboardType.Email,
                         enabled = !uiState.isLoading,
-                        isError = uiState.errorMessage != null
+                        isError = uiState.errorMessage != null || uiState.errorMessageResId != null
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Username",
+                        text = stringResource(R.string.username),
                         fontFamily = JerseyFont,
                         fontSize = 28.sp,
                         color = PastelYellow,
@@ -143,16 +146,16 @@ internal fun RegisterContent(
                     CustomTextField(
                         value = uiState.username,
                         onValueChange = onUsernameChange,
-                        label = "Username",
+                        label = stringResource(R.string.username),
                         keyboardType = KeyboardType.Text,
                         enabled = !uiState.isLoading,
-                        isError = uiState.errorMessage != null
+                        isError = uiState.errorMessage != null || uiState.errorMessageResId != null
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Password",
+                        text = stringResource(R.string.password),
                         fontFamily = JerseyFont,
                         fontSize = 28.sp,
                         color = PastelYellow,
@@ -165,17 +168,17 @@ internal fun RegisterContent(
                     CustomTextField(
                         value = uiState.password,
                         onValueChange = onPasswordChange,
-                        label = "Password",
+                        label = stringResource(R.string.password),
                         keyboardType = KeyboardType.Password,
                         isPassword = true,
                         enabled = !uiState.isLoading,
-                        isError = uiState.errorMessage != null
+                        isError = uiState.errorMessage != null || uiState.errorMessageResId != null
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Confirm Password",
+                        text = stringResource(R.string.confirm_password),
                         fontFamily = JerseyFont,
                         fontSize = 28.sp,
                         color = PastelYellow,
@@ -188,17 +191,17 @@ internal fun RegisterContent(
                     CustomTextField(
                         value = uiState.confirmPassword,
                         onValueChange = onConfirmPasswordChange,
-                        label = "Confirm Password",
+                        label = stringResource(R.string.confirm_password),
                         keyboardType = KeyboardType.Password,
                         isPassword = true,
                         enabled = !uiState.isLoading,
-                        isError = uiState.errorMessage != null
+                        isError = uiState.errorMessage != null || uiState.errorMessageResId != null
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Your Education Level",
+                        text = stringResource(R.string.your_education_level),
                         fontFamily = JerseyFont,
                         fontSize = 28.sp,
                         color = PastelYellow,
@@ -224,12 +227,22 @@ internal fun RegisterContent(
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
+                    } else if (uiState.errorMessageResId != null) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Text(
+                            text = stringResource(uiState.errorMessageResId),
+                            fontFamily = JerseyFont,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
 
                     AuthButton(
-                        text = "Submit",
+                        text = stringResource(R.string.submit),
                         onClick = onSignUpClick,
                         baseColor = PrimaryGreenLight,
                         shineColor = PrimaryGreenLime,
@@ -253,7 +266,7 @@ internal fun RegisterContent(
                         enabled = !uiState.isLoading
                     ) {
                         Text(
-                            text = "Already have an account? Login",
+                            text = stringResource(R.string.already_have_account),
                             color = PastelYellow
                         )
                     }

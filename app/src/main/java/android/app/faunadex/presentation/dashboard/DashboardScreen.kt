@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.dashboard
 
+import android.app.faunadex.R
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaBottomBar
@@ -30,8 +31,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,6 +38,8 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -81,6 +83,7 @@ fun DashboardScreen(
     )
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreenContent(
     uiState: DashboardUiState,
@@ -99,20 +102,31 @@ fun DashboardScreenContent(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+
     var showFilterSheet by remember { mutableStateOf(false) }
 
-    // Applied filters (used for actual filtering)
+    val filterMyFavorites = stringResource(R.string.filter_my_favorites)
+    val filterMammals = stringResource(R.string.filter_mammals)
+    val filterBirds = stringResource(R.string.filter_birds)
+    val filterReptiles = stringResource(R.string.filter_reptiles)
+    val filterAmphibians = stringResource(R.string.filter_amphibians)
+    val filterFish = stringResource(R.string.filter_fish)
+    val filterEndangered = stringResource(R.string.filter_endangered)
+    val filterEndemic = stringResource(R.string.filter_endemic)
+
     var appliedFilterOptions by remember {
         mutableStateOf(
             listOf(
-                FilterOption("favorites", "My Favorites", false),
-                FilterOption("mammal", "Mammals", false),
-                FilterOption("bird", "Birds", false),
-                FilterOption("reptile", "Reptiles", false),
-                FilterOption("amphibian", "Amphibians", false),
-                FilterOption("fish", "Fish", false),
-                FilterOption("endangered", "Endangered Species", false),
-                FilterOption("endemic", "Endemic to Indonesia", false)
+                FilterOption("favorites", filterMyFavorites, false),
+                FilterOption("mammal", filterMammals, false),
+                FilterOption("bird", filterBirds, false),
+                FilterOption("reptile", filterReptiles, false),
+                FilterOption("amphibian", filterAmphibians, false),
+                FilterOption("fish", filterFish, false),
+                FilterOption("endangered", filterEndangered, false),
+                FilterOption("endemic", filterEndemic, false)
             )
         )
     }
@@ -173,7 +187,7 @@ fun DashboardScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CustomTextField(
-                    label = "Search your Fauna...",
+                    label = stringResource(R.string.search_your_fauna),
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.weight(1f),
@@ -181,7 +195,7 @@ fun DashboardScreenContent(
                         Icon(
                             modifier = Modifier.size(28.dp).padding(start = 6.dp),
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
+                            contentDescription = stringResource(R.string.search),
                             tint = DarkGreenShade
                         )
                     }
@@ -197,21 +211,6 @@ fun DashboardScreenContent(
 
             Spacer(Modifier.height(32.dp))
 
-            if (uiState.animals.isEmpty() && !uiState.isLoading) {
-                Button (
-                    onClick = {
-                        viewModel?.seedSampleData()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryGreen,
-                        contentColor = PastelYellow
-                    )
-                ) {
-                    Text("🌱 Add Sample Animals to Firebase")
-                }
-                Spacer(Modifier.height(16.dp))
-            }
 
             val animals = uiState.animals
 
@@ -306,57 +305,72 @@ fun DashboardScreenContent(
                     }
             }
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel?.loadAnimals()
+                    // Reset loading state after a short delay
+                    coroutineScope.launch {
+                        kotlinx.coroutines.delay(1000)
+                        isRefreshing = false
+                    }
+                },
+                state = pullToRefreshState,
+                modifier = Modifier.fillMaxSize()
             ) {
-                items(displayedFaunaList.size) { index ->
-                    val animal = displayedFaunaList[index]
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(displayedFaunaList.size) { index ->
+                        val animal = displayedFaunaList[index]
 
-                    FaunaCard(
-                        faunaName = animal.name,
-                        latinName = animal.scientificName,
-                        imageUrl = animal.imageUrl,
-                        isFavorite = uiState.favoriteAnimalIds.contains(animal.id),
-                        onFavoriteClick = {
-                            viewModel?.toggleFavorite(animal.id)
-                        },
-                        onCardClick = {
-                            onNavigateToAnimalDetail(animal.id)
-                        }
-                    )
-                }
+                        FaunaCard(
+                            faunaName = animal.name,
+                            latinName = animal.scientificName,
+                            imageUrl = animal.imageUrl,
+                            isFavorite = uiState.favoriteAnimalIds.contains(animal.id),
+                            onFavoriteClick = {
+                                viewModel?.toggleFavorite(animal.id)
+                            },
+                            onCardClick = {
+                                onNavigateToAnimalDetail(animal.id)
+                            }
+                        )
+                    }
 
-                if (isLoadingMore && hasMoreItems) {
-                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
+                    if (isLoadingMore && hasMoreItems) {
+                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
+                            }
                         }
                     }
-                }
 
-                if (!hasMoreItems && displayedFaunaList.isNotEmpty()) {
-                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No more fauna to load",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PrimaryGreen
-                            )
+                    if (!hasMoreItems && displayedFaunaList.isNotEmpty()) {
+                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.no_more_fauna),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PrimaryGreen
+                                )
+                            }
                         }
                     }
                 }
@@ -364,9 +378,13 @@ fun DashboardScreenContent(
         }
 
         if (showFilterSheet) {
+            val filterTitle = stringResource(R.string.filter_fauna)
+            val filterDescription = stringResource(R.string.filter_description)
+            val filterAppliedMessage = stringResource(R.string.filter_applied)
+
             FilterBottomSheet(
-                title = "Filter Fauna",
-                description = "Select the filter categories you want to select to see on your home screen. You can update this anytime.",
+                title = filterTitle,
+                description = filterDescription,
                 filterOptions = tempFilterOptions,
                 onFilterToggle = { filterId ->
                     tempFilterOptions = tempFilterOptions.map { option ->
@@ -386,7 +404,7 @@ fun DashboardScreenContent(
                     showFilterSheet = false
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
-                            message = "Filter has been applied"
+                            message = filterAppliedMessage
                         )
                     }
                 }

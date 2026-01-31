@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.PixelCopy
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -75,6 +76,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,6 +86,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -106,9 +109,13 @@ fun ArScreen(
     animalId: String? = null,
     viewModel: ArViewModel = hiltViewModel()
 ) {
+    android.util.Log.d("AR_SCREEN", "▶▶▶ ArScreen COMPOSING - animalId: $animalId")
+
     val uiState by viewModel.uiState.collectAsState()
     val sessionState by viewModel.sessionState.collectAsState()
     
+    android.util.Log.d("AR_SCREEN", "State collected - selectedAnimal: ${sessionState.selectedAnimal?.name}")
+
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA
     ) { isGranted ->
@@ -120,15 +127,37 @@ fun ArScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        animalId?.let { viewModel.loadAnimalForAr(it) }
+    LaunchedEffect(animalId) {
+        android.util.Log.d("AR_SCREEN", "=== ArScreen LaunchedEffect (Animal Loading) ===")
+        android.util.Log.d("AR_SCREEN", "AnimalId received: $animalId")
 
+        animalId?.let {
+            android.util.Log.d("AR_SCREEN", "Loading animal for AR with ID: $it")
+            viewModel.loadAnimalForAr(it)
+        } ?: android.util.Log.e("AR_SCREEN", "ERROR: AnimalId is NULL!")
+    }
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("AR_SCREEN", "=== Camera Permission Check ===")
         if (cameraPermissionState.status.isGranted) {
+            android.util.Log.d("AR_SCREEN", "Camera permission already granted")
             viewModel.onPermissionGranted()
             viewModel.startScanning()
         } else {
+            android.util.Log.d("AR_SCREEN", "Requesting camera permission")
             cameraPermissionState.launchPermissionRequest()
         }
+    }
+
+    LaunchedEffect(sessionState.selectedAnimal) {
+        android.util.Log.d("AR_SCREEN", "=== Selected Animal Changed ===")
+        android.util.Log.d("AR_SCREEN", "Animal: ${sessionState.selectedAnimal?.name}")
+        android.util.Log.d("AR_SCREEN", "Animal ID: ${sessionState.selectedAnimal?.id}")
+        android.util.Log.d("AR_SCREEN", "AR Model URL: ${sessionState.selectedAnimal?.arModelUrl}")
+        android.util.Log.d("AR_SCREEN", "Is URL null?: ${sessionState.selectedAnimal?.arModelUrl == null}")
+        android.util.Log.d("AR_SCREEN", "Is URL empty?: ${sessionState.selectedAnimal?.arModelUrl?.isEmpty()}")
+        android.util.Log.d("AR_SCREEN", "Is URL blank?: ${sessionState.selectedAnimal?.arModelUrl?.isBlank()}")
+        android.util.Log.d("AR_SCREEN", "URL length: ${sessionState.selectedAnimal?.arModelUrl?.length ?: 0}")
     }
 
     if (cameraPermissionState.status.isGranted &&
@@ -157,7 +186,7 @@ fun ArScreen(
     }
 }
 
-private const val DUMMY_MODEL_URL = "https://ampugrpczxyluircynug.supabase.co/storage/v1/object/public/wildar-3d-models/models/dummy/model_dummy.glb"
+private const val DUMMY_MODEL_URL = "https://ampugrpczxyluircynug.supabase.co/storage/v1/object/public/wildar-3d-models/models/dummy/dummy_animal.glb"
 
 @Composable
 fun ArCameraContent(
@@ -168,6 +197,8 @@ fun ArCameraContent(
     onAnimalPlaced: (android.app.faunadex.domain.model.Animal) -> Unit,
     onClearAnimals: () -> Unit
 ) {
+    val currentSessionState by rememberUpdatedState(sessionState)
+
     var planeCount by remember { mutableIntStateOf(0) }
     var isModelPlaced by remember { mutableStateOf(false) }
     var isModelLoading by remember { mutableStateOf(false) }
@@ -182,6 +213,13 @@ fun ArCameraContent(
             kotlinx.coroutines.delay(3000L)
             showCaptureSuccess = false
         }
+    }
+
+    // Log when the selected animal changes
+    LaunchedEffect(sessionState.selectedAnimal) {
+        android.util.Log.d("AR_CAMERA", "=== ArCameraContent - Animal Changed ===")
+        android.util.Log.d("AR_CAMERA", "Selected Animal: ${sessionState.selectedAnimal?.name}")
+        android.util.Log.d("AR_CAMERA", "AR Model URL: ${sessionState.selectedAnimal?.arModelUrl}")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -222,14 +260,32 @@ fun ArCameraContent(
                     }
 
                     onTapAr = { hitResult, _ ->
-                        android.util.Log.d("AR_DEBUG", "Tap detected! isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
+                        android.util.Log.d("AR_DEBUG", "=== TAP DETECTED ===")
+                        android.util.Log.d("AR_DEBUG", "isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
 
                         if (!isModelPlaced && !isModelLoading) {
                             isModelLoading = true
-                            android.util.Log.d("AR_DEBUG", "Starting model load...")
+                            android.util.Log.d("AR_DEBUG", "=== STARTING MODEL LOAD ===")
 
-                            val modelUrl = DUMMY_MODEL_URL
-                            android.util.Log.d("AR_DEBUG", "Model URL: $modelUrl")
+                            android.util.Log.d("AR_DEBUG", "Using currentSessionState (latest)")
+                            android.util.Log.d("AR_DEBUG", "Selected Animal: ${currentSessionState.selectedAnimal?.name}")
+                            android.util.Log.d("AR_DEBUG", "Animal ID: ${currentSessionState.selectedAnimal?.id}")
+                            android.util.Log.d("AR_DEBUG", "Raw AR URL from animal: '${currentSessionState.selectedAnimal?.arModelUrl}'")
+                            android.util.Log.d("AR_DEBUG", "Is AR URL null?: ${currentSessionState.selectedAnimal?.arModelUrl == null}")
+                            android.util.Log.d("AR_DEBUG", "Is AR URL empty?: ${currentSessionState.selectedAnimal?.arModelUrl?.isEmpty()}")
+                            android.util.Log.d("AR_DEBUG", "Is AR URL blank?: ${currentSessionState.selectedAnimal?.arModelUrl?.isBlank()}")
+
+                            val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
+                            val modelUrl = if (!animalArUrl.isNullOrBlank()) {
+                                android.util.Log.d("AR_DEBUG", "✅ Using animal AR URL: $animalArUrl")
+                                animalArUrl
+                            } else {
+                                android.util.Log.w("AR_DEBUG", "❌ Animal AR URL is null or blank, using DUMMY_MODEL_URL")
+                                DUMMY_MODEL_URL
+                            }
+
+                            android.util.Log.d("AR_DEBUG", "Final Model URL to load: $modelUrl")
+                            android.util.Log.d("AR_DEBUG", "Is using dummy?: ${modelUrl == DUMMY_MODEL_URL}")
 
                             try {
                                 val newModelNode = ArModelNode(
@@ -239,15 +295,16 @@ fun ArCameraContent(
                                     scaleToUnits = 1.5f,
                                     centerOrigin = io.github.sceneview.math.Position(0f, 0f, 0f),
                                     onLoaded = {
-                                        android.util.Log.d("AR_DEBUG", "Model loaded successfully!")
+                                        android.util.Log.d("AR_DEBUG", "✓ Model loaded successfully from: $modelUrl")
                                         isModelLoading = false
                                         isModelPlaced = true
-                                        sessionState.selectedAnimal?.let { animal ->
+                                        currentSessionState.selectedAnimal?.let { animal ->
                                             onAnimalPlaced(animal)
                                         }
                                     },
                                     onError = { e ->
-                                        android.util.Log.e("AR_DEBUG", "Model load error: ${e.message}", e)
+                                        android.util.Log.e("AR_DEBUG", "✗ Model load FAILED for URL: $modelUrl")
+                                        android.util.Log.e("AR_DEBUG", "Error message: ${e.message}", e)
                                         isModelLoading = false
                                     }
                                 ).apply {
@@ -270,7 +327,7 @@ fun ArCameraContent(
                                 isModelLoading = false
                             }
                         } else {
-                            android.util.Log.d("AR_DEBUG", "Tap ignored - conditions not met")
+                            android.util.Log.d("AR_DEBUG", "Tap ignored - isModelPlaced: $isModelPlaced, isModelLoading: $isModelLoading")
                         }
                     }
                 }
@@ -290,7 +347,7 @@ fun ArCameraContent(
                 ) {
                     CircularProgressIndicator(color = PrimaryGreenLime, strokeWidth = 4.dp)
                     Text(
-                        text = "Loading 3D Model...",
+                        text = stringResource(R.string.ar_loading_model),
                         color = PastelYellow,
                         fontSize = 18.sp,
                         fontFamily = JerseyFont,
@@ -411,7 +468,7 @@ fun BoxScope.ArCameraOverlay(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = if (planeCount > 0) "$planeCount Surface${if (planeCount > 1) "s" else ""}" else "Scanning...",
+                        text = if (planeCount > 0) "$planeCount ${stringResource(R.string.ar_surfaces_detected, planeCount, if (planeCount > 1) "s" else "")}" else stringResource(R.string.ar_scanning),
                         color = White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -471,14 +528,14 @@ fun BoxScope.ArCameraOverlay(
                     modifier = Modifier.size(48.dp)
                 )
                 Text(
-                    text = "Photo Captured!",
+                    text = stringResource(R.string.ar_photo_captured),
                     color = White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = JerseyFont
                 )
                 Text(
-                    text = "Saved to your gallery",
+                    text = stringResource(R.string.ar_saved_to_gallery),
                     color = White.copy(alpha = 0.8f),
                     fontSize = 14.sp
                 )
@@ -526,7 +583,7 @@ fun BoxScope.ArCameraOverlay(
                     ) {
 
                         Text(
-                            text = "Move camera to detect a plane surface",
+                            text = stringResource(R.string.ar_move_camera),
                             color = Color.Red,
                             fontSize = 18.sp,
                             textAlign = TextAlign.Center,
@@ -553,7 +610,7 @@ fun BoxScope.ArCameraOverlay(
                     ) {
                         sessionState.selectedAnimal?.let { animal ->
                             Text(
-                                text = "Ready to place: ${animal.name}",
+                                text = stringResource(R.string.ar_ready_to_place, animal.name),
                                 color = PrimaryGreenLime,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
@@ -561,14 +618,14 @@ fun BoxScope.ArCameraOverlay(
                         }
 
                         Text(
-                            text = "Tap to place the 3D model",
+                            text = stringResource(R.string.ar_tap_to_place),
                             color = White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Surface detected! Tap anywhere to place",
+                            text = stringResource(R.string.ar_surface_detected),
                             color = White.copy(alpha = 0.7f),
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center
@@ -611,7 +668,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Animal Placed!",
+                            text = stringResource(R.string.ar_animal_placed),
                             color = White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
@@ -668,7 +725,7 @@ fun BoxScope.ArCameraOverlay(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Interact with the model",
+                    text = stringResource(R.string.ar_interact_with_model),
                     color = PastelYellow,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -690,7 +747,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Pinch to\nZoom",
+                            text = stringResource(R.string.ar_pinch_zoom),
                             color = White.copy(alpha = 0.8f),
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
@@ -708,7 +765,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Two-finger\nRotate",
+                            text = stringResource(R.string.ar_two_finger_rotate),
                             color = White.copy(alpha = 0.8f),
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
@@ -726,7 +783,7 @@ fun BoxScope.ArCameraOverlay(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Drag to\nMove",
+                            text = stringResource(R.string.ar_drag_to_move),
                             color = White.copy(alpha = 0.8f),
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
@@ -786,7 +843,7 @@ fun BoxScope.ArCameraOverlay(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = if (isModelPlaced) "Model Active" else "Tap a surface to Place",
+                    text = if (isModelPlaced) stringResource(R.string.ar_model_active) else stringResource(R.string.ar_tap_surface_to_place),
                     color = PastelYellow,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -927,7 +984,7 @@ fun BoxScope.ArTopBar(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "$planesDetected Surface${if (planesDetected > 1) "s" else ""} Found",
+                        text = stringResource(R.string.ar_surfaces_detected, planesDetected, if (planesDetected > 1) "s" else ""),
                         color = White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -951,7 +1008,7 @@ fun BoxScope.ArLoadingState() {
             strokeWidth = 4.dp
         )
         Text(
-            text = "Initializing AR...",
+            text = stringResource(R.string.ar_initializing),
             color = White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium
@@ -979,9 +1036,9 @@ fun BoxScope.ArPermissionRequired(
         )
         Text(
             text = if (showRationale) 
-                "Camera permission is required\nto use AR features" 
+                stringResource(R.string.camera_permission_fail)
             else 
-                "Grant Camera Permission",
+                stringResource(R.string.camera_permission_grant),
             color = White,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
@@ -1003,7 +1060,7 @@ fun BoxScope.ArPermissionRequired(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Grant Permission",
+                text = stringResource(R.string.ar_grant_permission),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1101,7 +1158,7 @@ fun BoxScope.ArAnimalPlacedInfo(animal: android.app.faunadex.domain.model.Animal
                 )
                 Column {
                     Text(
-                        text = "Animal Placed!",
+                        text = stringResource(R.string.ar_animal_placed),
                         color = White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -1134,7 +1191,7 @@ fun BoxScope.ArErrorState(message: String) {
             modifier = Modifier.size(80.dp)
         )
         Text(
-            text = "AR Error",
+            text = stringResource(R.string.ar_error),
             color = White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold

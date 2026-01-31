@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.components
 
+import android.app.faunadex.R
 import android.app.faunadex.ui.theme.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +49,7 @@ fun TopAppBar(
 ) {
     val greeting = getGreeting()
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val educationLevelLabel = stringResource(R.string.education_level_label)
 
     Box(
         modifier = modifier
@@ -94,7 +97,8 @@ fun TopAppBar(
                         Spacer(Modifier.height(8.dp))
 
                         EducationLevelBadgeCompact(
-                            educationLevel = userData.educationLevel
+                            educationLevel = userData.educationLevel,
+                            educationLevelLabel = educationLevelLabel
                         )
                     }
                 }
@@ -188,6 +192,7 @@ private fun ProfilePicture(
 @Composable
 private fun EducationLevelBadgeCompact(
     educationLevel: String,
+    educationLevelLabel: String,
     modifier: Modifier = Modifier
 ) {
     val badgeColor = when (educationLevel) {
@@ -205,7 +210,7 @@ private fun EducationLevelBadgeCompact(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = "Education Level:",
+            text = educationLevelLabel,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = PastelYellow,
@@ -328,12 +333,13 @@ private fun XpProgress(
 }
 
 
+@Composable
 private fun getGreeting(): String {
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     return when (hour) {
-        in 0..11 -> "Good morning"
-        in 12..17 -> "Good afternoon"
-        else -> "Good night"
+        in 0..11 -> stringResource(R.string.good_morning)
+        in 12..17 -> stringResource(R.string.good_afternoon)
+        else -> stringResource(R.string.good_night)
     }
 }
 

@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.profile
 
+import android.app.faunadex.R
 import android.app.faunadex.domain.model.User
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.CustomTextField
@@ -15,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,11 +33,12 @@ fun EditProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val profileUpdatedMessage = stringResource(R.string.profile_updated_successfully)
 
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
-                title = "Edit Profile",
+                title = stringResource(R.string.edit_profile),
                 onNavigateBack = onNavigateBack
             )
         },
@@ -68,7 +71,7 @@ fun EditProfileScreen(
                         viewModel.updateProfile(username, educationLevel)
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                message = "Profile updated successfully!",
+                                message = profileUpdatedMessage,
                                 duration = SnackbarDuration.Short
                             )
                             kotlinx.coroutines.delay(1000)
@@ -110,6 +113,16 @@ private fun EditProfileContent(
     var pendingUsername by remember { mutableStateOf("") }
     var pendingEducationLevel by remember { mutableStateOf("") }
 
+    val usernameLabel = stringResource(R.string.username)
+    val educationLevelLabel = stringResource(R.string.your_education_level)
+    val saveLabel = stringResource(R.string.save)
+    val editProfileTitle = stringResource(R.string.edit_profile)
+    val editProfileMessage = stringResource(R.string.edit_profile_confirmation)
+    val confirmLabel = stringResource(R.string.confirm)
+    val cancelLabel = stringResource(R.string.cancel)
+    val changingEducationTitle = stringResource(R.string.changing_education_level)
+    val educationChangeWarning = stringResource(R.string.education_level_change_warning)
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -120,7 +133,7 @@ private fun EditProfileContent(
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = "Username",
+            text = usernameLabel,
             fontFamily = JerseyFont,
             fontSize = 24.sp,
             color = PastelYellow,
@@ -133,13 +146,13 @@ private fun EditProfileContent(
         CustomTextField(
             value = username,
             onValueChange = { username = it },
-            label = "Username"
+            label = usernameLabel
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Your Education Level",
+            text = educationLevelLabel,
             fontFamily = JerseyFont,
             fontSize = 24.sp,
             color = PastelYellow,
@@ -173,7 +186,7 @@ private fun EditProfileContent(
             enabled = username.isNotBlank()
         ) {
             Text(
-                text = "Save",
+                text = saveLabel,
                 fontFamily = JerseyFont,
                 fontSize = 24.sp,
                 color = PastelYellow
@@ -184,10 +197,10 @@ private fun EditProfileContent(
     }
 
     ConfirmationDialog(
-        title = "Edit Profile",
-        message = "Are you sure you want to edit your profile?",
-        confirmText = "Confirm",
-        cancelText = "Cancel",
+        title = editProfileTitle,
+        message = editProfileMessage,
+        confirmText = confirmLabel,
+        cancelText = cancelLabel,
         onConfirm = {
             if (pendingEducationLevel != user.educationLevel) {
                 showEducationLevelDialog = true
@@ -200,10 +213,10 @@ private fun EditProfileContent(
     )
 
     ConfirmationDialog(
-        title = "Changing Education Level",
-        message = "This will change all of the quizzes and changes the animal detail content. Are you sure you want to edit your education level?",
-        confirmText = "Confirm",
-        cancelText = "Cancel",
+        title = changingEducationTitle,
+        message = educationChangeWarning,
+        confirmText = confirmLabel,
+        cancelText = cancelLabel,
         onConfirm = {
             onSave(pendingUsername, pendingEducationLevel)
             showEditProfileDialog = false

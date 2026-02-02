@@ -16,6 +16,7 @@ import android.app.faunadex.presentation.profile.ChangePasswordScreen
 import android.app.faunadex.presentation.profile.EditProfileScreen
 import android.app.faunadex.presentation.profile.ProfileScreen
 import android.app.faunadex.presentation.quiz.QuizScreen
+import android.app.faunadex.presentation.quiz.QuizDetailScreen
 
 @Composable
 fun NavGraph(
@@ -177,7 +178,6 @@ fun NavGraph(
             )
         }
 
-        // Placeholder Quiz Screen - TODO: Implement actual Quiz feature
         composable(Screen.Quiz.route) {
             QuizScreen(
                 onNavigateToDashboard = {
@@ -197,7 +197,27 @@ fun NavGraph(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                onNavigateToQuizDetail = { quizId ->
+                    navController.navigate(Screen.QuizDetail.createRoute(quizId))
                 }
+            )
+        }
+
+        composable(
+            route = Screen.QuizDetail.route,
+            arguments = listOf(
+                navArgument("quizId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val quizId = backStackEntry.arguments?.getString("quizId") ?: "1"
+            QuizDetailScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                quizId = quizId
             )
         }
 

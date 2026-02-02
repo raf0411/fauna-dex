@@ -1,6 +1,7 @@
 package android.app.faunadex.presentation.quiz
 
 import android.app.faunadex.R
+import android.app.faunadex.data.repository.QuizRepository
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.TopAppBar
 import android.app.faunadex.presentation.components.TopAppBarUserData
@@ -34,6 +35,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,41 +46,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.SubcomposeAsyncImage
 
 @Composable
 fun QuizScreen(
     onNavigateToDashboard: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    currentRoute: String = "quiz"
+    onNavigateToQuizDetail: (String) -> Unit = {},
+    currentRoute: String = "quiz",
+    viewModel: QuizViewModel = hiltViewModel()
 ) {
-    val mockUserData = TopAppBarUserData(
-        username = "User",
-        profilePictureUrl = null,
-        educationLevel = "SMA",
-        currentLevel = 1,
-        currentXp = 0,
-        xpForNextLevel = 1000
-    )
+    val uiState by viewModel.uiState.collectAsState()
 
     QuizScreenContent(
-        userData = mockUserData,
+        uiState = uiState,
         onNavigateToDashboard = onNavigateToDashboard,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToQuizDetail = onNavigateToQuizDetail,
         currentRoute = currentRoute
     )
 }
 
 @Composable
 fun QuizScreenContent(
-    userData: TopAppBarUserData,
+    uiState: QuizUiState,
     onNavigateToDashboard: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToQuizDetail: (String) -> Unit = {},
     currentRoute: String = "quiz"
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(userData = userData)
+            val user = uiState.user
+            if (user != null) {
+                TopAppBar(
+                    userData = TopAppBarUserData(
+                        username = user.username,
+                        profilePictureUrl = user.profilePictureUrl,
+                        educationLevel = user.educationLevel,
+                        currentLevel = (user.totalXp / 1000) + 1,
+                        currentXp = user.totalXp % 1000,
+                        xpForNextLevel = 1000
+                    )
+                )
+            }
         },
         bottomBar = {
             FaunaBottomBar(
@@ -94,15 +107,20 @@ fun QuizScreenContent(
         containerColor = DarkForest
     ) { paddingValues ->
         QuizContent(
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(paddingValues),
+            onNavigateToQuizDetail = onNavigateToQuizDetail
         )
     }
 }
 
 @Composable
 private fun QuizContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToQuizDetail: (String) -> Unit = {}
 ) {
+    val availableQuizzes = QuizRepository.getAvailableQuizzes()
+    val completedQuizzes = QuizRepository.getCompletedQuizzes()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -115,25 +133,18 @@ private fun QuizContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        QuizCardItem(
-            title = "Animal Habitats",
-            subtitle = "Learn about different habitats",
-            totalQuestions = 10,
-            imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e?w=400&h=250&fit=crop",
-            isCompleted = false,
-            onCardClick = {}
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        QuizCardItem(
-            title = "Species Classification",
-            subtitle = "Test your knowledge on species types",
-            totalQuestions = 15,
-            imageUrl = "https://images.unsplash.com/photo-1444080748397-f442aa95c3e5?w=400&h=250&fit=crop",
-            isCompleted = false,
-            onCardClick = {}
-        )
+        // Available Quizzes
+        availableQuizzes.forEach { quiz ->
+            QuizCardItem(
+                title = quiz.title,
+                subtitle = quiz.description.take(40) + "...",
+                totalQuestions = quiz.totalQuestions,
+                imageUrl = quiz.imageUrl,
+                isCompleted = false,
+                onCardClick = { onNavigateToQuizDetail(quiz.id) }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -141,25 +152,18 @@ private fun QuizContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        QuizCardItem(
-            title = "Endangered Animals",
-            subtitle = "Learn about endangered species",
-            totalQuestions = 8,
-            imageUrl = "https://images.unsplash.com/photo-1500463959177-e0869687df26?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-            isCompleted = true,
-            onCardClick = {}
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        QuizCardItem(
-            title = "Bird Species",
-            subtitle = "Identify different bird species",
-            totalQuestions = 12,
-            imageUrl = "https://images.unsplash.com/photo-1500463959177-e0869687df26?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-            isCompleted = true,
-            onCardClick = {}
-        )
+        // Completed Quizzes
+        completedQuizzes.forEach { quiz ->
+            QuizCardItem(
+                title = quiz.title,
+                subtitle = quiz.description.take(40) + "...",
+                totalQuestions = quiz.totalQuestions,
+                imageUrl = quiz.imageUrl,
+                isCompleted = true,
+                onCardClick = {}
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -317,13 +321,15 @@ private fun QuizCardItem(
 fun QuizScreenPreview() {
     FaunaDexTheme {
         QuizScreenContent(
-            userData = TopAppBarUserData(
-                username = "raf_0411",
-                profilePictureUrl = null,
-                educationLevel = "SMA",
-                currentLevel = 5,
-                currentXp = 450,
-                xpForNextLevel = 1000
+            uiState = QuizUiState(
+                user = android.app.faunadex.domain.model.User(
+                    uid = "1",
+                    username = "raf_0411",
+                    email = "raf@example.com",
+                    educationLevel = "SMA",
+                    profilePictureUrl = null,
+                    totalXp = 5450
+                )
             ),
             onNavigateToDashboard = {},
             onNavigateToProfile = {}

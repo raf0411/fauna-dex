@@ -1,6 +1,7 @@
 package android.app.faunadex.presentation.quiz
 
 import android.app.faunadex.R
+import android.app.faunadex.data.repository.QuizRepository
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.DarkForest
@@ -65,13 +66,7 @@ fun QuizDetailScreen(
     onNavigateBack: () -> Unit = {},
     quizId: String = "1"
 ) {
-    val mockQuiz = QuizDetail(
-        title = "Animal Habitats",
-        imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e?w=400&h=300&fit=crop",
-        totalQuestions = 10,
-        educationLevel = "SMP",
-        description = "Test your knowledge about different animal habitats around the world. Learn where various species live and what makes each habitat unique."
-    )
+    val quiz = QuizRepository.getQuizById(quizId) ?: QuizDetail()
 
     Scaffold(
         topBar = {
@@ -83,7 +78,7 @@ fun QuizDetailScreen(
         containerColor = DarkForest
     ) { paddingValues ->
         QuizDetailContent(
-            quiz = mockQuiz,
+            quiz = quiz,
             modifier = Modifier.padding(paddingValues)
         )
     }

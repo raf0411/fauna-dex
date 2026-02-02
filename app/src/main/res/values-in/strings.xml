@@ -88,6 +88,8 @@
     <string name="quiz_feature">Fitur Kuis</string>
     <string name="coming_soon">Segera Hadir!</string>
     <string name="quiz_description">Uji pengetahuanmu tentang\nsatwa liar Indonesia</string>
+    <string name="quiz_available">Kuis Tersedia</string>
+    <string name="quiz_completed">Kuis Selesai</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>

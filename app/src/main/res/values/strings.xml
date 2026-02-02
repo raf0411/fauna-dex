@@ -91,6 +91,10 @@
     <string name="quiz_available">Available Quizzes</string>
     <string name="quiz_completed">Completed Quizzes</string>
 
+    <!-- Quiz Detail Screen -->
+    <string name="quiz_title_animal">Fauna</string>
+    <string name="quiz_description_title">Description</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_quiz">Quiz</string>

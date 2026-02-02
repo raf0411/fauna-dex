@@ -91,6 +91,10 @@
     <string name="quiz_available">Kuis Tersedia</string>
     <string name="quiz_completed">Kuis Selesai</string>
 
+    <!-- Quiz Detail Screen -->
+    <string name="quiz_title_animal">Fauna</string>
+    <string name="quiz_description_title">Deskripsi</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>
     <string name="nav_quiz">Kuis</string>

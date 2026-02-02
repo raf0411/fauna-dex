@@ -230,7 +230,7 @@ private fun QuizInfoCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(80.dp),
+            .height(60.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = DarkGreen

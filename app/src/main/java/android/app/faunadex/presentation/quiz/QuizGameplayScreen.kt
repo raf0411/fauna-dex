@@ -32,8 +32,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -72,7 +74,8 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun QuizGameplayScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> }
 ) {
     Scaffold(
         topBar = {
@@ -84,6 +87,7 @@ fun QuizGameplayScreen(
         containerColor = DarkForest
     ) { paddingValues ->
         QuizGameplayContent(
+            onQuizCompleted = onQuizCompleted,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -92,13 +96,16 @@ fun QuizGameplayScreen(
 @SuppressLint("AutoboxingStateCreation")
 @Composable
 fun QuizGameplayContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> }
 ) {
     var selectedAnswer by remember { mutableStateOf<Int?>(null) }
     var isRevealed by remember { mutableStateOf(false) }
     var timeRemaining by remember { mutableIntStateOf(30) }
     var showConfetti by remember { mutableStateOf(false) }
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
+    var correctAnswersCount by remember { mutableIntStateOf(0) }
+    var wrongAnswersCount by remember { mutableIntStateOf(0) }
 
     val questions = listOf(
         "What is the scientific name of the Komodo Dragon?" to 0,
@@ -154,6 +161,7 @@ fun QuizGameplayContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -191,11 +199,22 @@ fun QuizGameplayContent(
                 onClick = {
                     if (!isRevealed && selectedAnswer != null) {
                         isRevealed = true
+
                         if (selectedAnswer == correctAnswerIndex) {
+                            correctAnswersCount++
                             showConfetti = true
+                        } else {
+                            wrongAnswersCount++
                         }
                     } else if (isRevealed) {
-                        resetForNextQuestion()
+                        if (currentQuestionIndex >= questions.size - 1) {
+                            val totalQuestions = questions.size
+                            val score = ((correctAnswersCount.toDouble() / totalQuestions) * 100).toInt()
+
+                            onQuizCompleted(score, correctAnswersCount, wrongAnswersCount, totalQuestions)
+                        } else {
+                            resetForNextQuestion()
+                        }
                     }
                 },
                 modifier = Modifier
@@ -214,7 +233,11 @@ fun QuizGameplayContent(
             ) {
                 Text(
                     text = if (isRevealed) {
-                        stringResource(R.string.next)
+                        if (currentQuestionIndex >= questions.size - 1) {
+                            stringResource(R.string.finish)
+                        } else {
+                            stringResource(R.string.next)
+                        }
                     } else {
                         stringResource(R.string.confirm)
                     },

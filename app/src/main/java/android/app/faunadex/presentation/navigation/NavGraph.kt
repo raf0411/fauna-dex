@@ -230,10 +230,27 @@ fun NavGraph(
                     type = NavType.StringType
                 }
             )
-        ) {
+        ) { backStackEntry ->
+            val quizId = backStackEntry.arguments?.getString("quizId") ?: ""
             QuizGameplayScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onQuizCompleted = { score, correctAnswers, wrongAnswers, totalQuestions ->
+                    val xpEarned = score
+
+                    navController.navigate(
+                        Screen.QuizResult.createRoute(
+                            quizId = quizId,
+                            score = score,
+                            correctAnswers = correctAnswers,
+                            wrongAnswers = wrongAnswers,
+                            totalQuestions = totalQuestions,
+                            xpEarned = xpEarned
+                        )
+                    ) {
+                        popUpTo(Screen.Quiz.route) { inclusive = false }
+                    }
                 }
             )
         }

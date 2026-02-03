@@ -127,6 +127,7 @@
 
     <!-- Quiz Gameplay Screen -->
     <string name="question">Pertanyaan</string>
+    <string name="finish">Selesai</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>

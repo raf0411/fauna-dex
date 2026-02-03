@@ -1,6 +1,7 @@
 package android.app.faunadex.presentation.quiz
 
 import android.app.faunadex.R
+import android.app.faunadex.domain.model.Quiz
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.DarkForest
@@ -110,7 +111,7 @@ fun QuizDetailScreen(
 
 @Composable
 private fun QuizDetailContent(
-    quiz: android.app.faunadex.domain.model.Quiz,
+    quiz: Quiz,
     onStartQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -327,7 +328,7 @@ private fun QuizInfoItem(
 @Composable
 fun QuizDetailScreenPreview() {
     FaunaDexTheme {
-        val sampleQuiz = android.app.faunadex.domain.model.Quiz(
+        val sampleQuiz = Quiz(
             id = "quiz_1",
             title = "Animal Habitats",
             imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e",

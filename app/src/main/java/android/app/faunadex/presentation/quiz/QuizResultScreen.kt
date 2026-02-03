@@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Replay
@@ -139,6 +141,7 @@ fun QuizResultContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -164,7 +167,7 @@ fun QuizResultContent(
                 wrongAnswers = wrongAnswers
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(64.dp))
 
             Row(
                 modifier = Modifier
@@ -208,6 +211,8 @@ fun QuizResultContent(
                     )
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
         }
 
         if (showConfetti) {

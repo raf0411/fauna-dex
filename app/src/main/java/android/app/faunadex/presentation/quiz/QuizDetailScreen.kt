@@ -1,7 +1,6 @@
 package android.app.faunadex.presentation.quiz
 
 import android.app.faunadex.R
-import android.app.faunadex.data.repository.QuizRepository
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.DarkForest
@@ -33,12 +32,15 @@ import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,43 +52,66 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.SubcomposeAsyncImage
-
-data class QuizDetail(
-    val id: String = "1",
-    val title: String = "Animal Habitats",
-    val imageUrl: String = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e?w=400&h=300&fit=crop",
-    val totalQuestions: Int = 10,
-    val educationLevel: String = "SMP",
-    val description: String = "Test your knowledge about different animal habitats around the world. Learn where various species live and what makes each habitat unique."
-)
 
 @Composable
 fun QuizDetailScreen(
     onNavigateBack: () -> Unit = {},
-    quizId: String = "1"
+    onStartQuiz: (String) -> Unit = {},
+    viewModel: QuizDetailViewModel = hiltViewModel()
 ) {
-    val quiz = QuizRepository.getQuizById(quizId) ?: QuizDetail()
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
-                title = quiz.title,
+                title = uiState.quiz?.title ?: stringResource(R.string.quiz_details),
                 onNavigateBack = onNavigateBack
             )
         },
         containerColor = DarkForest
     ) { paddingValues ->
-        QuizDetailContent(
-            quiz = quiz,
-            modifier = Modifier.padding(paddingValues)
-        )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryGreen)
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = uiState.error ?: stringResource(R.string.error_unknown),
+                        color = PastelYellow
+                    )
+                }
+            }
+            uiState.quiz != null -> {
+                QuizDetailContent(
+                    quiz = uiState.quiz!!,
+                    onStartQuiz = { onStartQuiz(uiState.quiz!!.id) },
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+        }
     }
 }
 
+
 @Composable
 private fun QuizDetailContent(
-    quiz: QuizDetail,
+    quiz: android.app.faunadex.domain.model.Quiz,
+    onStartQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -193,7 +218,7 @@ private fun QuizDetailContent(
                 Spacer(modifier = Modifier.height(50.dp))
 
                 IconButton(
-                    onClick = { /* TODO: Start Quiz */ },
+                    onClick = onStartQuiz,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .size(84.dp)
@@ -204,7 +229,7 @@ private fun QuizDetailContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start Quiz",
+                        contentDescription = stringResource(R.string.start_quiz),
                         tint = PastelYellow,
                         modifier = Modifier.size(48.dp)
                     )
@@ -241,7 +266,7 @@ private fun QuizInfoCard(
         ) {
             QuizInfoItem(
                 icon = Icons.Default.QuestionMark,
-                label = "Questions",
+                label = stringResource(R.string.questions),
                 value = totalQuestions.toString(),
                 backgroundColor = PrimaryGreenLight
             )
@@ -302,6 +327,33 @@ private fun QuizInfoItem(
 @Composable
 fun QuizDetailScreenPreview() {
     FaunaDexTheme {
-        QuizDetailScreen()
+        val sampleQuiz = android.app.faunadex.domain.model.Quiz(
+            id = "quiz_1",
+            title = "Animal Habitats",
+            imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e",
+            description = "Test your knowledge about different animal habitats around the world.",
+            totalQuestions = 10,
+            educationLevel = "SMP",
+            category = "Habitat",
+            difficulty = "easy",
+            xpReward = 100,
+            timeLimitSeconds = 30
+        )
+
+        Scaffold(
+            topBar = {
+                FaunaTopBarWithBack(
+                    title = sampleQuiz.title,
+                    onNavigateBack = {}
+                )
+            },
+            containerColor = DarkForest
+        ) { paddingValues ->
+            QuizDetailContent(
+                quiz = sampleQuiz,
+                onStartQuiz = {},
+                modifier = Modifier.padding(paddingValues)
+            )
+        }
     }
 }

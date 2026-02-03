@@ -8,7 +8,6 @@ import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.ErrorRedDark
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
-import android.app.faunadex.ui.theme.MediumGreen
 import android.app.faunadex.ui.theme.MediumGreenMint
 import android.app.faunadex.ui.theme.MediumGreenPale
 import android.app.faunadex.ui.theme.PastelYellow
@@ -61,7 +60,14 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun QuizResultScreen(
-    onNavigateBack: () -> Unit = {}
+    score: Int = 100,
+    totalQuestions: Int = 10,
+    correctAnswers: Int = 10,
+    wrongAnswers: Int = 0,
+    completionPercentage: Int = 100,
+    onNavigateBack: () -> Unit = {},
+    onPlayAgain: () -> Unit = {},
+    onNavigateHome: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -73,6 +79,13 @@ fun QuizResultScreen(
         containerColor = DarkForest
     ) { paddingValues ->
         QuizResultContent(
+            score = score,
+            totalQuestions = totalQuestions,
+            correctAnswers = correctAnswers,
+            wrongAnswers = wrongAnswers,
+            completionPercentage = completionPercentage,
+            onPlayAgain = onPlayAgain,
+            onNavigateHome = onNavigateHome,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -85,7 +98,9 @@ fun QuizResultContent(
     totalQuestions: Int = 10,
     correctAnswers: Int = 10,
     wrongAnswers: Int = 0,
-    completionPercentage: Int = 100
+    completionPercentage: Int = 100,
+    onPlayAgain: () -> Unit = {},
+    onNavigateHome: () -> Unit = {}
 ) {
     var showConfetti by remember { mutableStateOf(false) }
 
@@ -134,7 +149,7 @@ fun QuizResultContent(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "out of 100",
+                text = stringResource(R.string.out_of_100),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = PastelYellow
@@ -162,12 +177,13 @@ fun QuizResultContent(
                     verticalArrangement = Arrangement.Center
                 ) {
                     IconButton(
-                        onClick = { /* TODO Replay Quiz Feature */ },
-                        icon = Icons.Default.Replay
+                        onClick = onPlayAgain,
+                        icon = Icons.Default.Replay,
+                        iconTint = DarkForest
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Play Again",
+                        text = stringResource(R.string.play_again),
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,
@@ -179,12 +195,13 @@ fun QuizResultContent(
                     verticalArrangement = Arrangement.Center
                 ){
                     IconButton(
-                        onClick = { /* TODO Navigate back to Quiz Home */ },
-                        icon = Icons.Default.Home
+                        onClick = onNavigateHome,
+                        icon = Icons.Default.Home,
+                        iconTint = DarkForest
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Home",
+                        text = stringResource(R.string.nav_home),
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,
@@ -322,10 +339,10 @@ private fun GlowingScoreCircle(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Your Score",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MediumGreen
+                    text = stringResource(R.string.your_score),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PastelYellow
                 )
 
                 Text(
@@ -367,12 +384,12 @@ private fun QuizInfoBox(
             ) {
                 InfoItem(
                     count = "$completionPercentage%",
-                    label = "Completion",
+                    label = stringResource(R.string.completion),
                     color = MediumGreenMint
                 )
                 InfoItem(
                     count = correctAnswers.toString(),
-                    label = "Correct",
+                    label = stringResource(R.string.correct),
                     color = PrimaryGreenNeon
                 )
             }
@@ -382,12 +399,12 @@ private fun QuizInfoBox(
             ) {
                 InfoItem(
                     count = totalQuestions.toString(),
-                    label = "Total Questions",
+                    label = stringResource(R.string.total_questions),
                     color = MediumGreenPale
                 )
                 InfoItem(
                     count = wrongAnswers.toString(),
-                    label = "Wrong",
+                    label = stringResource(R.string.wrong),
                     color = ErrorRedDark
                 )
             }

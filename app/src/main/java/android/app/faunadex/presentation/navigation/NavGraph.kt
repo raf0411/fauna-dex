@@ -17,6 +17,8 @@ import android.app.faunadex.presentation.profile.EditProfileScreen
 import android.app.faunadex.presentation.profile.ProfileScreen
 import android.app.faunadex.presentation.quiz.QuizScreen
 import android.app.faunadex.presentation.quiz.QuizDetailScreen
+import android.app.faunadex.presentation.quiz.QuizGameplayScreen
+import android.app.faunadex.presentation.quiz.QuizResultScreen
 
 @Composable
 fun NavGraph(
@@ -112,7 +114,6 @@ fun NavGraph(
                 }
             )
         ) { backStackEntry ->
-            val animalId = backStackEntry.arguments?.getString("animalId") ?: ""
             AnimalDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -212,12 +213,66 @@ fun NavGraph(
                 }
             )
         ) { backStackEntry ->
-            val quizId = backStackEntry.arguments?.getString("quizId") ?: "1"
             QuizDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                quizId = quizId
+                onStartQuiz = { startQuizId ->
+                    navController.navigate(Screen.QuizGameplay.createRoute(startQuizId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.QuizGameplay.route,
+            arguments = listOf(
+                navArgument("quizId") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            QuizGameplayScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.QuizResult.route,
+            arguments = listOf(
+                navArgument("quizId") { type = NavType.StringType },
+                navArgument("score") { type = NavType.IntType },
+                navArgument("correctAnswers") { type = NavType.IntType },
+                navArgument("wrongAnswers") { type = NavType.IntType },
+                navArgument("totalQuestions") { type = NavType.IntType },
+                navArgument("xpEarned") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val args = backStackEntry.arguments
+            val quizId = args?.getString("quizId") ?: ""
+            QuizResultScreen(
+                score = args?.getInt("score") ?: 0,
+                totalQuestions = args?.getInt("totalQuestions") ?: 0,
+                correctAnswers = args?.getInt("correctAnswers") ?: 0,
+                wrongAnswers = args?.getInt("wrongAnswers") ?: 0,
+                completionPercentage = ((args?.getInt("correctAnswers") ?: 0).toDouble() /
+                    (args?.getInt("totalQuestions") ?: 1) * 100).toInt(),
+                onNavigateBack = {
+                    navController.navigate(Screen.Quiz.route) {
+                        popUpTo(Screen.Quiz.route) { inclusive = true }
+                    }
+                },
+                onPlayAgain = {
+                    navController.navigate(Screen.QuizGameplay.createRoute(quizId)) {
+                        popUpTo(Screen.Quiz.route) { inclusive = false }
+                    }
+                },
+                onNavigateHome = {
+                    navController.navigate(Screen.Quiz.route) {
+                        popUpTo(Screen.Quiz.route) { inclusive = true }
+                    }
+                }
             )
         }
 

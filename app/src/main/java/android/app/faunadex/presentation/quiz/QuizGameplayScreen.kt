@@ -116,7 +116,6 @@ fun QuizGameplayContent(
         }
     }
 
-    // Reset function for next question
     fun resetForNextQuestion() {
         selectedAnswer = null
         isRevealed = false
@@ -164,7 +163,7 @@ fun QuizGameplayContent(
                 timeRemaining = timeRemaining,
                 currentQuestion = currentQuestionIndex + 1,
                 totalQuestions = questions.size,
-                questionText = currentQuestion?.first ?: "Loading..."
+                questionText = currentQuestion?.first ?: stringResource(R.string.loading)
             )
 
             Spacer(Modifier.height(64.dp))
@@ -191,13 +190,11 @@ fun QuizGameplayContent(
             Button(
                 onClick = {
                     if (!isRevealed && selectedAnswer != null) {
-                        // Confirm answer
                         isRevealed = true
                         if (selectedAnswer == correctAnswerIndex) {
                             showConfetti = true
                         }
                     } else if (isRevealed) {
-                        // Go to next question
                         resetForNextQuestion()
                     }
                 },
@@ -210,10 +207,8 @@ fun QuizGameplayContent(
                 ),
                 shape = RoundedCornerShape(12.dp),
                 enabled = if (isRevealed) {
-                    // Enable "Next" button after reveal
                     true
                 } else {
-                    // Enable "Confirm" button only when answer is selected
                     selectedAnswer != null
                 }
             ) {
@@ -242,14 +237,14 @@ fun QuizGameplayContent(
                         damping = 0.9f,
                         spread = 360,
                         colors = listOf(
-                            0xFFBEDC7F, // PrimaryGreenLight
-                            0xFF89A257, // PrimaryGreen
-                            0xFFDBFB98, // PrimaryGreenLime
-                            0xFFEEFFCC, // PastelYellow
-                            0xFF71A8C6, // BlueLight
-                            0xFFFB3434, // ErrorRedBright
-                            0xFFA5B08D, // MediumGreenSage
-                            0xFF00A63D  // PrimaryGreenNeon
+                            0xFFBEDC7F,
+                            0xFF89A257,
+                            0xFFDBFB98,
+                            0xFFEEFFCC,
+                            0xFF71A8C6,
+                            0xFFFB3434,
+                            0xFFA5B08D,
+                            0xFF00A63D
                         ).map { it.toInt() },
                         emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
                         position = Position.Relative(0.5, 0.3)
@@ -301,7 +296,8 @@ fun QuestionBox(
 
                 Text(
                     text = buildAnnotatedString {
-                        append("Question ")
+                        append(stringResource(R.string.question))
+                        append(" ")
                         withStyle(
                             style = SpanStyle(
                                 fontSize = 20.sp,

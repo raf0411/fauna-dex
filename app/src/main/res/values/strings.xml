@@ -98,6 +98,35 @@
     <string name="quiz_gameplay">Quiz Gameplay</string>
     <string name="quiz_result">Quiz Result</string>
     <string name="result">Result</string>
+    <string name="quiz_details">Quiz Details</string>
+    <string name="start_quiz">Start Quiz</string>
+    <string name="questions">Questions</string>
+    <string name="error_unknown">Unknown error</string>
+
+    <!-- Quiz Result Screen -->
+    <string name="out_of_100">out of 100</string>
+    <string name="your_score">Your Score</string>
+    <string name="completion">Completion</string>
+    <string name="total_questions">Total Questions</string>
+    <string name="correct">Correct</string>
+    <string name="wrong">Wrong</string>
+
+    <!-- Quiz Screen -->
+    <string name="no_available_quizzes">No available quizzes at the moment</string>
+    <string name="questions_format">%d questions</string>
+
+    <!-- Quiz Errors -->
+    <string name="error_failed_load_quizzes">Failed to load quizzes</string>
+    <string name="error_quiz_not_found">Quiz not found</string>
+    <string name="error_user_not_logged_in">User not logged in</string>
+    <string name="error_failed_load_questions">Failed to load questions</string>
+    <string name="error_failed_submit_quiz">Failed to submit quiz</string>
+    <string name="error_failed_load_quiz_details">Failed to load quiz details</string>
+    <string name="error_question_not_found">Question not found</string>
+
+
+    <!-- Quiz Gameplay Screen -->
+    <string name="question">Question</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>

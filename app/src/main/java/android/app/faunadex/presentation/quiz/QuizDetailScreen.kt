@@ -71,7 +71,7 @@ fun QuizDetailScreen(
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
-                title = stringResource(R.string.quiz_feature),
+                title = quiz.title,
                 onNavigateBack = onNavigateBack
             )
         },

@@ -94,6 +94,7 @@
     <!-- Quiz Detail Screen -->
     <string name="quiz_title_animal">Fauna</string>
     <string name="quiz_description_title">Deskripsi</string>
+    <string name="quiz_gameplay">Permainan Kuis</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>

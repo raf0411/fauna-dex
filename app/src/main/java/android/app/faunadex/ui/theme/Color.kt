@@ -79,7 +79,12 @@ val BlackAlpha30 = Color(0x4D000000) // 30% alpha
 
 // Gradients
 val GreenGradient = Brush.horizontalGradient(
-    0.05f to MediumGreen,
+    0.5f to MediumGreen,
     1.0f to DarkSlate
+)
+
+val QuizGreenGradient = Brush.horizontalGradient(
+    0.0f to Color(0x800E4736),
+    1.0f to Color(0xFF09602C)
 )
 

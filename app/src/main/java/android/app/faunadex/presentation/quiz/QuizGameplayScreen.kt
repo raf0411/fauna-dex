@@ -5,13 +5,16 @@ import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.DarkGreenMoss
+import android.app.faunadex.ui.theme.ErrorRedDark
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
 import android.app.faunadex.ui.theme.MediumGreenSage
 import android.app.faunadex.ui.theme.PastelYellow
 import android.app.faunadex.ui.theme.PoppinsFont
+import android.app.faunadex.ui.theme.PrimaryGreen
 import android.app.faunadex.ui.theme.PrimaryGreenLight
 import android.app.faunadex.ui.theme.PrimaryGreenLime
+import android.app.faunadex.ui.theme.PrimaryGreenNeon
 import android.app.faunadex.ui.theme.QuizGreenGradient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +35,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -39,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +61,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 @Composable
 fun QuizGameplayScreen(
@@ -79,10 +87,24 @@ fun QuizGameplayContent(
     modifier: Modifier = Modifier
 ) {
     var selectedAnswer by remember { mutableStateOf<Int?>(null) }
+    var isRevealed by remember { mutableStateOf(false) }
+    var timeRemaining by remember { mutableStateOf(30) }
+
+    // For demo purposes, the correct answer is index 0 (Varanus komodoensis)
+    val correctAnswerIndex = 0
+
+    // Timer countdown - stops when answer is revealed
+    LaunchedEffect(isRevealed) {
+        while (timeRemaining > 0 && !isRevealed) {
+            delay(1000L)
+            timeRemaining--
+        }
+    }
 
     Box(
         modifier = modifier.fillMaxSize()
     ) {
+        // Background sections
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -115,9 +137,9 @@ fun QuizGameplayContent(
         ) {
             Spacer(Modifier.height(50.dp))
 
-            QuestionBox()
+            QuestionBox(timeRemaining = timeRemaining)
 
-            Spacer(Modifier.height(96.dp))
+            Spacer(Modifier.height(64.dp))
 
             AnswerOptionsList(
                 answers = listOf(
@@ -128,9 +150,41 @@ fun QuizGameplayContent(
                 ),
                 selectedAnswer = selectedAnswer,
                 onAnswerSelected = { index ->
-                    selectedAnswer = index
-                }
+                    if (!isRevealed) {
+                        selectedAnswer = index
+                    }
+                },
+                isRevealed = isRevealed,
+                correctAnswerIndex = correctAnswerIndex
             )
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    if (!isRevealed && selectedAnswer != null) {
+                        isRevealed = true
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryGreen,
+                    disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                enabled = selectedAnswer != null && !isRevealed
+            ) {
+                Text(
+                    text = stringResource(R.string.confirm),
+                    fontFamily = JerseyFont,
+                    fontSize = 24.sp,
+                    color = PastelYellow
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
@@ -240,6 +294,8 @@ fun AnswerOptionsList(
     answers: List<String>,
     selectedAnswer: Int?,
     onAnswerSelected: (Int) -> Unit,
+    isRevealed: Boolean,
+    correctAnswerIndex: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -250,7 +306,10 @@ fun AnswerOptionsList(
             AnswerOption(
                 answer = answer,
                 isSelected = selectedAnswer == index,
-                onClick = { onAnswerSelected(index) }
+                onClick = { onAnswerSelected(index) },
+                isRevealed = isRevealed,
+                isCorrect = index == correctAnswerIndex,
+                isWrong = isRevealed && selectedAnswer == index && index != correctAnswerIndex
             )
         }
     }
@@ -261,17 +320,40 @@ fun AnswerOption(
     answer: String,
     isSelected: Boolean,
     onClick: () -> Unit,
+    isRevealed: Boolean,
+    isCorrect: Boolean,
+    isWrong: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val borderColor = when {
+        isRevealed && isCorrect -> PrimaryGreenNeon
+        isRevealed && isWrong -> ErrorRedDark
+        isSelected -> DarkGreenMoss
+        else -> PrimaryGreenLime
+    }
+
+    val indicatorBgColor = when {
+        isRevealed && isWrong -> ErrorRedDark
+        isRevealed && isCorrect -> DarkGreenMoss
+        isSelected -> DarkGreenMoss
+        else -> androidx.compose.ui.graphics.Color.Transparent
+    }
+
+    val indicatorBorderColor = when {
+        isRevealed && isWrong -> androidx.compose.ui.graphics.Color.Transparent
+        isSelected || (isRevealed && isCorrect) -> androidx.compose.ui.graphics.Color.Transparent
+        else -> DarkForest
+    }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(enabled = !isRevealed, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         color = DarkGreen,
         border = BorderStroke(
             width = 2.dp,
-            color = if (isSelected) DarkGreenMoss else PrimaryGreenLime
+            color = borderColor
         )
     ) {
         Row(
@@ -294,32 +376,52 @@ fun AnswerOption(
                 modifier = Modifier
                     .size(28.dp)
                     .background(
-                        color = if (isSelected) DarkGreenMoss else androidx.compose.ui.graphics.Color.Transparent,
+                        color = indicatorBgColor,
                         shape = CircleShape
                     )
                     .border(
                         width = 3.dp,
-                        color = if (isSelected) androidx.compose.ui.graphics.Color.Transparent else DarkForest,
+                        color = indicatorBorderColor,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (isSelected) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "Selected",
-                        tint = PrimaryGreenLight,
-                        modifier = Modifier.size(20.dp)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(
-                                color = PrimaryGreenLight,
-                                shape = CircleShape
-                            )
-                    )
+                when {
+                    isRevealed && isWrong -> {
+                        // Show X icon for wrong answer
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Wrong",
+                            tint = PrimaryGreenLight,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    isRevealed && isCorrect -> {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Correct",
+                            tint = PrimaryGreenLight,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    isSelected -> {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Selected",
+                            tint = PrimaryGreenLight,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(
+                                    color = PrimaryGreenLight,
+                                    shape = CircleShape
+                                )
+                        )
+                    }
                 }
             }
         }

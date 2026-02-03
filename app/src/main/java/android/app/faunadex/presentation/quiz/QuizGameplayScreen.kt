@@ -1,5 +1,6 @@
 package android.app.faunadex.presentation.quiz
 
+import android.annotation.SuppressLint
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.ui.theme.DarkForest
@@ -47,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -62,6 +64,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun QuizGameplayScreen(
@@ -82,29 +89,45 @@ fun QuizGameplayScreen(
     }
 }
 
+@SuppressLint("AutoboxingStateCreation")
 @Composable
 fun QuizGameplayContent(
     modifier: Modifier = Modifier
 ) {
     var selectedAnswer by remember { mutableStateOf<Int?>(null) }
     var isRevealed by remember { mutableStateOf(false) }
-    var timeRemaining by remember { mutableStateOf(30) }
+    var timeRemaining by remember { mutableIntStateOf(30) }
+    var showConfetti by remember { mutableStateOf(false) }
+    var currentQuestionIndex by remember { mutableIntStateOf(0) }
 
-    // For demo purposes, the correct answer is index 0 (Varanus komodoensis)
-    val correctAnswerIndex = 0
+    val questions = listOf(
+        "What is the scientific name of the Komodo Dragon?" to 0,
+        "Which animal is the largest land mammal?" to 2,
+        "What is the fastest land animal?" to 1
+    )
 
-    // Timer countdown - stops when answer is revealed
-    LaunchedEffect(isRevealed) {
+    val currentQuestion = questions.getOrNull(currentQuestionIndex)
+    val correctAnswerIndex = currentQuestion?.second ?: 0
+
+    LaunchedEffect(isRevealed, currentQuestionIndex) {
         while (timeRemaining > 0 && !isRevealed) {
             delay(1000L)
             timeRemaining--
         }
     }
 
+    // Reset function for next question
+    fun resetForNextQuestion() {
+        selectedAnswer = null
+        isRevealed = false
+        timeRemaining = 30
+        showConfetti = false
+        currentQuestionIndex++
+    }
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // Background sections
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -137,7 +160,12 @@ fun QuizGameplayContent(
         ) {
             Spacer(Modifier.height(50.dp))
 
-            QuestionBox(timeRemaining = timeRemaining)
+            QuestionBox(
+                timeRemaining = timeRemaining,
+                currentQuestion = currentQuestionIndex + 1,
+                totalQuestions = questions.size,
+                questionText = currentQuestion?.first ?: "Loading..."
+            )
 
             Spacer(Modifier.height(64.dp))
 
@@ -163,7 +191,14 @@ fun QuizGameplayContent(
             Button(
                 onClick = {
                     if (!isRevealed && selectedAnswer != null) {
+                        // Confirm answer
                         isRevealed = true
+                        if (selectedAnswer == correctAnswerIndex) {
+                            showConfetti = true
+                        }
+                    } else if (isRevealed) {
+                        // Go to next question
+                        resetForNextQuestion()
                     }
                 },
                 modifier = Modifier
@@ -174,10 +209,20 @@ fun QuizGameplayContent(
                     disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f)
                 ),
                 shape = RoundedCornerShape(12.dp),
-                enabled = selectedAnswer != null && !isRevealed
+                enabled = if (isRevealed) {
+                    // Enable "Next" button after reveal
+                    true
+                } else {
+                    // Enable "Confirm" button only when answer is selected
+                    selectedAnswer != null
+                }
             ) {
                 Text(
-                    text = stringResource(R.string.confirm),
+                    text = if (isRevealed) {
+                        stringResource(R.string.next)
+                    } else {
+                        stringResource(R.string.confirm)
+                    },
                     fontFamily = JerseyFont,
                     fontSize = 24.sp,
                     color = PastelYellow
@@ -185,6 +230,37 @@ fun QuizGameplayContent(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+
+        if (showConfetti) {
+            KonfettiView(
+                modifier = Modifier.fillMaxSize(),
+                parties = listOf(
+                    Party(
+                        speed = 0f,
+                        maxSpeed = 30f,
+                        damping = 0.9f,
+                        spread = 360,
+                        colors = listOf(
+                            0xFFBEDC7F, // PrimaryGreenLight
+                            0xFF89A257, // PrimaryGreen
+                            0xFFDBFB98, // PrimaryGreenLime
+                            0xFFEEFFCC, // PastelYellow
+                            0xFF71A8C6, // BlueLight
+                            0xFFFB3434, // ErrorRedBright
+                            0xFFA5B08D, // MediumGreenSage
+                            0xFF00A63D  // PrimaryGreenNeon
+                        ).map { it.toInt() },
+                        emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+                        position = Position.Relative(0.5, 0.3)
+                    )
+                )
+            )
+
+            LaunchedEffect(showConfetti) {
+                delay(2000L)
+                showConfetti = false
+            }
         }
     }
 }
@@ -388,7 +464,6 @@ fun AnswerOption(
             ) {
                 when {
                     isRevealed && isWrong -> {
-                        // Show X icon for wrong answer
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Wrong",

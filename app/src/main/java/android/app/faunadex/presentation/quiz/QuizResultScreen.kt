@@ -39,6 +39,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +52,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun QuizResultScreen(
@@ -76,6 +87,13 @@ fun QuizResultContent(
     wrongAnswers: Int = 0,
     completionPercentage: Int = 100
 ) {
+    var showConfetti by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(300)
+        showConfetti = true
+    }
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -153,8 +171,7 @@ fun QuizResultContent(
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,
-
-                        )
+                    )
                 }
 
                 Column(
@@ -171,10 +188,96 @@ fun QuizResultContent(
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,
-
                     )
                 }
             }
+        }
+
+        if (showConfetti) {
+            KonfettiView(
+                modifier = Modifier.fillMaxSize(),
+                parties = listOf(
+                    Party(
+                        speed = 30f,
+                        maxSpeed = 50f,
+                        damping = 0.9f,
+                        angle = 270,
+                        spread = 90,
+                        colors = listOf(
+                            0xFFBEDC7F.toInt(),
+                            0xFF89A257.toInt(),
+                            0xFFDBFB98.toInt(),
+                            0xFFEEFFCC.toInt(),
+                            0xFFA8E6CF.toInt(),
+                            0xFFDCE775.toInt()
+                        ),
+                        emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(100),
+                        position = Position.Relative(0.5, 0.0)
+                    ),
+                    Party(
+                        speed = 25f,
+                        maxSpeed = 45f,
+                        damping = 0.9f,
+                        angle = 315,
+                        spread = 60,
+                        colors = listOf(
+                            0xFFBEDC7F.toInt(),
+                            0xFF89A257.toInt(),
+                            0xFFDBFB98.toInt(),
+                            0xFFEEFFCC.toInt(),
+                            0xFFA8E6CF.toInt()
+                        ),
+                        emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(80),
+                        position = Position.Relative(0.0, 0.0)
+                    ),
+                    Party(
+                        speed = 25f,
+                        maxSpeed = 45f,
+                        damping = 0.9f,
+                        angle = 225,
+                        spread = 60,
+                        colors = listOf(
+                            0xFFBEDC7F.toInt(),
+                            0xFF89A257.toInt(),
+                            0xFFDBFB98.toInt(),
+                            0xFFEEFFCC.toInt(),
+                            0xFFA8E6CF.toInt()
+                        ),
+                        emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(80),
+                        position = Position.Relative(1.0, 0.0)
+                    ),
+                    Party(
+                        speed = 20f,
+                        maxSpeed = 40f,
+                        damping = 0.9f,
+                        angle = 45,
+                        spread = 45,
+                        colors = listOf(
+                            0xFFBEDC7F.toInt(),
+                            0xFF89A257.toInt(),
+                            0xFFDBFB98.toInt(),
+                            0xFFEEFFCC.toInt()
+                        ),
+                        emitter = Emitter(duration = 2, TimeUnit.SECONDS).perSecond(60),
+                        position = Position.Relative(0.0, 1.0)
+                    ),
+                    Party(
+                        speed = 20f,
+                        maxSpeed = 40f,
+                        damping = 0.9f,
+                        angle = 135,
+                        spread = 45,
+                        colors = listOf(
+                            0xFFBEDC7F.toInt(),
+                            0xFF89A257.toInt(),
+                            0xFFDBFB98.toInt(),
+                            0xFFEEFFCC.toInt()
+                        ),
+                        emitter = Emitter(duration = 2, TimeUnit.SECONDS).perSecond(60),
+                        position = Position.Relative(1.0, 1.0)
+                    )
+                )
+            )
         }
     }
 }
@@ -188,7 +291,6 @@ private fun GlowingScoreCircle(
         modifier = modifier.size(280.dp),
         contentAlignment = Alignment.Center
     ) {
-        // First layer - Outermost circle (largest)
         Box(
             modifier = Modifier
                 .size(260.dp)
@@ -198,7 +300,6 @@ private fun GlowingScoreCircle(
                 )
         )
 
-        // Second layer - Middle circle (closer to third layer)
         Box(
             modifier = Modifier
                 .size(210.dp)
@@ -208,7 +309,6 @@ private fun GlowingScoreCircle(
                 )
         )
 
-        // Third layer - Inner circle (smallest)
         Box(
             modifier = Modifier
                 .size(180.dp)

@@ -5,6 +5,7 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
+    <string name="next">Next</string>
     <string name="close">Close</string>
     <string name="retry">Retry</string>
     <string name="error">Error</string>
@@ -88,6 +89,15 @@
     <string name="quiz_feature">Quiz Feature</string>
     <string name="coming_soon">Coming Soon!</string>
     <string name="quiz_description">Test your knowledge about\nIndonesian wildlife</string>
+    <string name="quiz_available">Available Quizzes</string>
+    <string name="quiz_completed">Completed Quizzes</string>
+
+    <!-- Quiz Detail Screen -->
+    <string name="quiz_title_animal">Fauna</string>
+    <string name="quiz_description_title">Description</string>
+    <string name="quiz_gameplay">Quiz Gameplay</string>
+    <string name="quiz_result">Quiz Result</string>
+    <string name="result">Result</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>

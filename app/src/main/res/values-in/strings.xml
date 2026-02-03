@@ -5,6 +5,7 @@
     <string name="save">Simpan</string>
     <string name="cancel">Batal</string>
     <string name="confirm">Konfirmasi</string>
+    <string name="next">Selanjutnya</string>
     <string name="close">Tutup</string>
     <string name="retry">Coba Lagi</string>
     <string name="error">Kesalahan</string>
@@ -88,6 +89,15 @@
     <string name="quiz_feature">Fitur Kuis</string>
     <string name="coming_soon">Segera Hadir!</string>
     <string name="quiz_description">Uji pengetahuanmu tentang\nsatwa liar Indonesia</string>
+    <string name="quiz_available">Kuis Tersedia</string>
+    <string name="quiz_completed">Kuis Selesai</string>
+
+    <!-- Quiz Detail Screen -->
+    <string name="quiz_title_animal">Fauna</string>
+    <string name="quiz_description_title">Deskripsi</string>
+    <string name="quiz_gameplay">Permainan Kuis</string>
+    <string name="quiz_result">Hasil Kuis</string>
+    <string name="result">Hasil</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>

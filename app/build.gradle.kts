@@ -96,6 +96,9 @@ dependencies {
     // Coil for image loading
     implementation(libs.coil.compose)
 
+    // Konfetti for confetti animations
+    implementation(libs.konfetti.compose)
+
     // Media3 ExoPlayer for audio playback
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)

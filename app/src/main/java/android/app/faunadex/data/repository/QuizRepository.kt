@@ -335,6 +335,8 @@ class QuizRepositoryImpl @Inject constructor(
                 titleEn = doc.getString("title_en") ?: "",
                 titleId = doc.getString("title_id") ?: "",
                 imageUrl = doc.getString("image_url") ?: "",
+                shortDescriptionEn = doc.getString("short_description_en") ?: "",
+                shortDescriptionId = doc.getString("short_description_id") ?: "",
                 descriptionEn = doc.getString("description_en") ?: "",
                 descriptionId = doc.getString("description_id") ?: "",
                 totalQuestions = (doc.get("total_questions") as? Long)?.toInt() ?: 0,

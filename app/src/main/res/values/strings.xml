@@ -124,10 +124,10 @@
     <string name="error_failed_load_quiz_details">Failed to load quiz details</string>
     <string name="error_question_not_found">Question not found</string>
 
-
     <!-- Quiz Gameplay Screen -->
     <string name="question">Question</string>
     <string name="finish">Finish</string>
+    <string name="quiz_replay">Play Again</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>

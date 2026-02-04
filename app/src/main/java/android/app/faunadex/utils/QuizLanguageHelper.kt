@@ -11,6 +11,11 @@ object QuizLanguageHelper {
         return quiz.getTitle(language)
     }
 
+    fun getQuizShortDescription(quiz: Quiz, context: Context): String {
+        val language = LanguageManager.getLanguage(context)
+        return quiz.getShortDescription(language)
+    }
+
     fun getQuizDescription(quiz: Quiz, context: Context): String {
         val language = LanguageManager.getLanguage(context)
         return quiz.getDescription(language)

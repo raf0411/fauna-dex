@@ -16,6 +16,12 @@ data class Quiz(
     @PropertyName("image_url")
     val imageUrl: String = "",
 
+    @PropertyName("short_description_en")
+    val shortDescriptionEn: String = "",
+
+    @PropertyName("short_description_id")
+    val shortDescriptionId: String = "",
+
     @PropertyName("description_en")
     val descriptionEn: String = "",
 
@@ -32,7 +38,7 @@ data class Quiz(
     val category: String = "",
 
     @PropertyName("difficulty")
-    val difficulty: String = "medium", // easy, medium, hard
+    val difficulty: String = "medium",
 
     @PropertyName("xp_reward")
     val xpReward: Int = 100,
@@ -50,7 +56,6 @@ data class Quiz(
     @PropertyName("created_at")
     val createdAt: Date? = null
 ) {
-    // Get title based on language
     fun getTitle(language: String): String {
         return when (language) {
             "id" -> titleId
@@ -58,7 +63,13 @@ data class Quiz(
         }
     }
 
-    // Get description based on language
+    fun getShortDescription(language: String): String {
+        return when (language) {
+            "id" -> shortDescriptionId
+            else -> shortDescriptionEn
+        }
+    }
+
     fun getDescription(language: String): String {
         return when (language) {
             "id" -> descriptionId

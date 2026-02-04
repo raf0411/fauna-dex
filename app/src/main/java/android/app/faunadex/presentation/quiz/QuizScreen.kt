@@ -168,7 +168,7 @@ private fun QuizContent(
             availableQuizzes.forEach { quiz ->
                 QuizCardItem(
                     title = QuizLanguageHelper.getQuizTitle(quiz, context),
-                    subtitle = QuizLanguageHelper.getQuizDescription(quiz, context).take(40) + "...",
+                    subtitle = QuizLanguageHelper.getQuizShortDescription(quiz, context),
                     totalQuestions = quiz.totalQuestions,
                     imageUrl = quiz.imageUrl,
                     isCompleted = false,
@@ -188,7 +188,7 @@ private fun QuizContent(
             completedQuizzes.forEach { quiz ->
                 QuizCardItem(
                     title = QuizLanguageHelper.getQuizTitle(quiz, context),
-                    subtitle = QuizLanguageHelper.getQuizDescription(quiz, context).take(40) + "...",
+                    subtitle = QuizLanguageHelper.getQuizShortDescription(quiz, context),
                     totalQuestions = quiz.totalQuestions,
                     imageUrl = quiz.imageUrl,
                     isCompleted = true,

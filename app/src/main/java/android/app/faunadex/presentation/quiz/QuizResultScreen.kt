@@ -186,7 +186,7 @@ fun QuizResultContent(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = stringResource(R.string.play_again),
+                        text = stringResource(R.string.quiz_replay),
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,

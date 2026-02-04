@@ -341,6 +341,8 @@ fun QuizDetailScreenPreview() {
             titleEn = "Animal Habitats",
             titleId = "Habitat Hewan",
             imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e",
+            shortDescriptionEn = "Test your knowledge about habitats",
+            shortDescriptionId = "Uji pengetahuan tentang habitat",
             descriptionEn = "Test your knowledge about different animal habitats around the world.",
             descriptionId = "Uji pengetahuan Anda tentang habitat hewan yang berbeda di seluruh dunia.",
             totalQuestions = 10,

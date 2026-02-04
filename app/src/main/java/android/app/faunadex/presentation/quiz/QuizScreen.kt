@@ -156,12 +156,12 @@ private fun QuizContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Available Quizzes
         if (availableQuizzes.isEmpty()) {
             Text(
                 text = stringResource(R.string.no_available_quizzes),
                 color = MediumGreenSage,
-                fontSize = 14.sp,
+                fontSize = 18.sp,
+                fontFamily = JerseyFont,
                 modifier = Modifier.padding(16.dp)
             )
         } else {

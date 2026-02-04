@@ -6,12 +6,21 @@ import java.util.Date
 
 data class Quiz(
     val id: String = "",
-    val title: String = "",
+
+    @PropertyName("title_en")
+    val titleEn: String = "",
+
+    @PropertyName("title_id")
+    val titleId: String = "",
 
     @PropertyName("image_url")
     val imageUrl: String = "",
 
-    val description: String = "",
+    @PropertyName("description_en")
+    val descriptionEn: String = "",
+
+    @PropertyName("description_id")
+    val descriptionId: String = "",
 
     @PropertyName("total_questions")
     val totalQuestions: Int = 0,
@@ -40,4 +49,20 @@ data class Quiz(
     @ServerTimestamp
     @PropertyName("created_at")
     val createdAt: Date? = null
-)
+) {
+    // Get title based on language
+    fun getTitle(language: String): String {
+        return when (language) {
+            "id" -> titleId
+            else -> titleEn
+        }
+    }
+
+    // Get description based on language
+    fun getDescription(language: String): String {
+        return when (language) {
+            "id" -> descriptionId
+            else -> descriptionEn
+        }
+    }
+}

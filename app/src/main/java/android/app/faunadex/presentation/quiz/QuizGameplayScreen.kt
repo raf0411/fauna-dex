@@ -3,6 +3,7 @@ package android.app.faunadex.presentation.quiz
 import android.annotation.SuppressLint
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.DarkGreenMoss
@@ -54,6 +55,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -153,6 +155,7 @@ fun QuizGameplayContent(
 ) {
     val currentQuestion = uiState.currentQuestion
     val isShowingConfetti = uiState.isRevealed && uiState.selectedAnswerIndex == currentQuestion?.correctAnswerIndex
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.isQuizCompleted) {
         if (uiState.isQuizCompleted) {
@@ -206,13 +209,13 @@ fun QuizGameplayContent(
                     timeRemaining = uiState.timeRemaining,
                     currentQuestion = uiState.currentQuestionIndex + 1,
                     totalQuestions = uiState.questions.size,
-                    questionText = currentQuestion.questionText
+                    questionText = QuizLanguageHelper.getQuestionText(currentQuestion, context)
                 )
 
                 Spacer(Modifier.height(64.dp))
 
                 AnswerOptionsList(
-                    answers = currentQuestion.options,
+                    answers = QuizLanguageHelper.getQuestionOptions(currentQuestion, context),
                     selectedAnswer = uiState.selectedAnswerIndex,
                     onAnswerSelected = { index -> onSelectAnswer(index) },
                     isRevealed = uiState.isRevealed,

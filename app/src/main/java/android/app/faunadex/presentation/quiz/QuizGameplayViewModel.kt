@@ -94,7 +94,7 @@ class QuizGameplayViewModel @Inject constructor(
                 onSuccess = { questions ->
                     android.util.Log.d("QuizGameplay", "Loaded ${questions.size} questions for quiz $quizId")
                     questions.forEach { q ->
-                        android.util.Log.d("QuizGameplay", "  - Question: ${q.id} - ${q.questionText.take(50)}")
+                        android.util.Log.d("QuizGameplay", "  - Question: ${q.id} - ${q.questionTextEn.take(50)}")
                     }
 
                     val user = getCurrentUserUseCase()

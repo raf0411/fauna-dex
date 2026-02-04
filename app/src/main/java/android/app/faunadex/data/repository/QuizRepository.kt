@@ -39,7 +39,7 @@ class QuizRepositoryImpl @Inject constructor(
 
             android.util.Log.d("QuizRepository", "Loaded ${quizzes.size} quizzes for education level: $educationLevel")
             quizzes.forEach { quiz ->
-                android.util.Log.d("QuizRepository", "  - Quiz: ${quiz.title}, totalQuestions=${quiz.totalQuestions}, level=${quiz.educationLevel}")
+                android.util.Log.d("QuizRepository", "  - Quiz: ${quiz.titleEn}, totalQuestions=${quiz.totalQuestions}, level=${quiz.educationLevel}")
             }
 
             Result.success(quizzes)
@@ -60,7 +60,7 @@ class QuizRepositoryImpl @Inject constructor(
             val quiz = parseQuizFromDocument(document)
                 ?: return Result.failure(Exception("Failed to parse quiz"))
 
-            android.util.Log.d("QuizRepository", "Loaded quiz: id=${quiz.id}, title=${quiz.title}, totalQuestions=${quiz.totalQuestions}, educationLevel=${quiz.educationLevel}")
+            android.util.Log.d("QuizRepository", "Loaded quiz: id=${quiz.id}, title=${quiz.titleEn}, totalQuestions=${quiz.totalQuestions}, educationLevel=${quiz.educationLevel}")
 
             Result.success(quiz)
         } catch (e: Exception) {
@@ -332,9 +332,11 @@ class QuizRepositoryImpl @Inject constructor(
         return try {
             Quiz(
                 id = doc.id,
-                title = doc.getString("title") ?: "",
+                titleEn = doc.getString("title_en") ?: "",
+                titleId = doc.getString("title_id") ?: "",
                 imageUrl = doc.getString("image_url") ?: "",
-                description = doc.getString("description") ?: "",
+                descriptionEn = doc.getString("description_en") ?: "",
+                descriptionId = doc.getString("description_id") ?: "",
                 totalQuestions = (doc.get("total_questions") as? Long)?.toInt() ?: 0,
                 educationLevel = doc.getString("education_level") ?: "",
                 category = doc.getString("category") ?: "",
@@ -356,11 +358,14 @@ class QuizRepositoryImpl @Inject constructor(
             Question(
                 id = doc.id,
                 quizId = doc.getString("quiz_id") ?: "",
-                questionText = doc.getString("question_text") ?: "",
+                questionTextEn = doc.getString("question_text_en") ?: "",
+                questionTextId = doc.getString("question_text_id") ?: "",
                 questionType = doc.getString("question_type") ?: "multiple_choice",
-                options = (doc.get("options") as? List<String>) ?: emptyList(),
+                optionsEn = (doc.get("options_en") as? List<String>) ?: emptyList(),
+                optionsId = (doc.get("options_id") as? List<String>) ?: emptyList(),
                 correctAnswerIndex = (doc.get("correct_answer_index") as? Long)?.toInt() ?: 0,
-                explanation = doc.getString("explanation") ?: "",
+                explanationEn = doc.getString("explanation_en") ?: "",
+                explanationId = doc.getString("explanation_id") ?: "",
                 difficulty = doc.getString("difficulty") ?: "medium",
                 orderIndex = (doc.get("order_index") as? Long)?.toInt() ?: 0
             )

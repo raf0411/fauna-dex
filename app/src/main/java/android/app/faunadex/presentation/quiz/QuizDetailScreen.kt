@@ -4,6 +4,7 @@ import android.app.faunadex.R
 import android.app.faunadex.domain.model.Quiz
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.LoadingSpinner
+import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.FaunaDexTheme
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,11 +65,16 @@ fun QuizDetailScreen(
     viewModel: QuizDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
-                title = uiState.quiz?.title ?: stringResource(R.string.quiz_details),
+                title = if (uiState.quiz != null) {
+                    QuizLanguageHelper.getQuizTitle(uiState.quiz!!, context)
+                } else {
+                    stringResource(R.string.quiz_details)
+                },
                 onNavigateBack = onNavigateBack
             )
         },
@@ -115,12 +122,13 @@ private fun QuizDetailContent(
     onStartQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         SubcomposeAsyncImage(
             model = quiz.imageUrl,
-            contentDescription = quiz.title,
+            contentDescription = QuizLanguageHelper.getQuizTitle(quiz, context),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)
@@ -135,7 +143,7 @@ private fun QuizDetailContent(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.animal_dummy),
-                        contentDescription = quiz.title,
+                        contentDescription = QuizLanguageHelper.getQuizTitle(quiz, context),
                         tint = PastelYellow,
                         modifier = Modifier.size(80.dp)
                     )
@@ -183,7 +191,7 @@ private fun QuizDetailContent(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = quiz.title,
+                    text = QuizLanguageHelper.getQuizTitle(quiz, context),
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = PastelYellow
@@ -208,7 +216,7 @@ private fun QuizDetailContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = quiz.description,
+                    text = QuizLanguageHelper.getQuizDescription(quiz, context),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     color = PastelYellow,
@@ -330,9 +338,11 @@ fun QuizDetailScreenPreview() {
     FaunaDexTheme {
         val sampleQuiz = Quiz(
             id = "quiz_1",
-            title = "Animal Habitats",
+            titleEn = "Animal Habitats",
+            titleId = "Habitat Hewan",
             imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e",
-            description = "Test your knowledge about different animal habitats around the world.",
+            descriptionEn = "Test your knowledge about different animal habitats around the world.",
+            descriptionId = "Uji pengetahuan Anda tentang habitat hewan yang berbeda di seluruh dunia.",
             totalQuestions = 10,
             educationLevel = "SMP",
             category = "Habitat",
@@ -344,7 +354,7 @@ fun QuizDetailScreenPreview() {
         Scaffold(
             topBar = {
                 FaunaTopBarWithBack(
-                    title = sampleQuiz.title,
+                    title = sampleQuiz.titleEn,
                     onNavigateBack = {}
                 )
             },

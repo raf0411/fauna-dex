@@ -4,6 +4,7 @@ import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.TopAppBar
 import android.app.faunadex.presentation.components.TopAppBarUserData
+import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -42,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -130,6 +132,8 @@ private fun QuizContent(
     isLoading: Boolean,
     onNavigateToQuizDetail: (String) -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     if (isLoading) {
         Box(
             modifier = modifier.fillMaxSize(),
@@ -163,8 +167,8 @@ private fun QuizContent(
         } else {
             availableQuizzes.forEach { quiz ->
                 QuizCardItem(
-                    title = quiz.title,
-                    subtitle = quiz.description.take(40) + "...",
+                    title = QuizLanguageHelper.getQuizTitle(quiz, context),
+                    subtitle = QuizLanguageHelper.getQuizDescription(quiz, context).take(40) + "...",
                     totalQuestions = quiz.totalQuestions,
                     imageUrl = quiz.imageUrl,
                     isCompleted = false,
@@ -181,11 +185,10 @@ private fun QuizContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Completed Quizzes
             completedQuizzes.forEach { quiz ->
                 QuizCardItem(
-                    title = quiz.title,
-                    subtitle = quiz.description.take(40) + "...",
+                    title = QuizLanguageHelper.getQuizTitle(quiz, context),
+                    subtitle = QuizLanguageHelper.getQuizDescription(quiz, context).take(40) + "...",
                     totalQuestions = quiz.totalQuestions,
                     imageUrl = quiz.imageUrl,
                     isCompleted = true,

@@ -29,14 +29,20 @@ class QuizViewModel @Inject constructor(
 
     init {
         loadUser()
-        loadQuizzes()
     }
 
     private fun loadUser() {
+        android.util.Log.d("QuizViewModel", "loadUser() called")
         val user = getCurrentUserUseCase()
         _uiState.value = _uiState.value.copy(user = user)
+        android.util.Log.d("QuizViewModel", "User loaded: ${user?.uid}")
 
-        user?.let { loadCompletedQuizzes(it.uid) }
+        user?.let {
+            android.util.Log.d("QuizViewModel", "Loading quizzes for education level: ${it.educationLevel}")
+            loadQuizzesByEducationLevel(it.educationLevel)
+            android.util.Log.d("QuizViewModel", "Loading completed quizzes for user: ${it.uid}")
+            loadCompletedQuizzes(it.uid)
+        }
     }
 
     fun loadQuizzes(educationLevel: String? = null) {
@@ -62,24 +68,58 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    private fun loadCompletedQuizzes(userId: String) {
+    private fun loadQuizzesByEducationLevel(educationLevel: String) {
         viewModelScope.launch {
-            val result = getUserCompletedQuizzesUseCase(userId)
+            android.util.Log.d("QuizViewModel", "loadQuizzesByEducationLevel($educationLevel) called")
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            val result = getQuizzesUseCase(educationLevel)
 
             result.fold(
-                onSuccess = { completedIds ->
-                    _uiState.value = _uiState.value.copy(completedQuizIds = completedIds)
+                onSuccess = { quizzes ->
+                    android.util.Log.d("QuizViewModel", "Loaded ${quizzes.size} quizzes for education level: $educationLevel")
+                    _uiState.value = _uiState.value.copy(
+                        quizzes = quizzes,
+                        isLoading = false
+                    )
                 },
                 onFailure = { exception ->
-                    println("Failed to load completed quizzes: ${exception.message}")
+                    android.util.Log.e("QuizViewModel", "Error loading quizzes: ${exception.message}")
+                    _uiState.value = _uiState.value.copy(
+                        error = exception.message ?: context.getString(R.string.error_failed_load_quizzes),
+                        isLoading = false
+                    )
                 }
             )
         }
     }
 
+    private fun loadCompletedQuizzes(userId: String) {
+        viewModelScope.launch {
+            android.util.Log.d("QuizViewModel", "loadCompletedQuizzes called for userId: $userId")
+            val result = getUserCompletedQuizzesUseCase(userId)
+
+            result.fold(
+                onSuccess = { completedIds ->
+                    android.util.Log.d("QuizViewModel", "Completed quizzes loaded: $completedIds")
+                    _uiState.value = _uiState.value.copy(completedQuizIds = completedIds)
+                    android.util.Log.d("QuizViewModel", "Current state completedQuizIds: ${_uiState.value.completedQuizIds}")
+                },
+                onFailure = { exception ->
+                    android.util.Log.e("QuizViewModel", "Failed to load completed quizzes: ${exception.message}")
+                }
+            )
+        }
+    }
+
+    fun refreshCompletedQuizzes() {
+        val userId = _uiState.value.user?.uid ?: return
+        loadCompletedQuizzes(userId)
+    }
+
     fun refresh() {
+        android.util.Log.d("QuizViewModel", "refresh() called")
         loadUser()
-        loadQuizzes()
     }
 }
 

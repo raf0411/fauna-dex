@@ -92,6 +92,11 @@ class QuizGameplayViewModel @Inject constructor(
 
             questionsResult.fold(
                 onSuccess = { questions ->
+                    android.util.Log.d("QuizGameplay", "Loaded ${questions.size} questions for quiz $quizId")
+                    questions.forEach { q ->
+                        android.util.Log.d("QuizGameplay", "  - Question: ${q.id} - ${q.questionText.take(50)}")
+                    }
+
                     val user = getCurrentUserUseCase()
                     if (user != null) {
                         val attemptResult = quizRepository.startQuizAttempt(user.uid, quizId)
@@ -116,6 +121,7 @@ class QuizGameplayViewModel @Inject constructor(
                     }
                 },
                 onFailure = { exception ->
+                    android.util.Log.e("QuizGameplay", "Error loading questions: ${exception.message}")
                     _uiState.value = _uiState.value.copy(
                         error = exception.message ?: context.getString(R.string.error_failed_load_questions),
                         isLoading = false
@@ -192,16 +198,25 @@ class QuizGameplayViewModel @Inject constructor(
 
     private fun submitQuiz() {
         viewModelScope.launch {
+            android.util.Log.d("QuizGameplay", "submitQuiz() called")
             val state = _uiState.value
             val user = getCurrentUserUseCase()
             val quiz = state.quiz
 
-            if (user == null || quiz == null) return@launch
+            if (user == null || quiz == null) {
+                android.util.Log.e("QuizGameplay", "submitQuiz failed - user or quiz is null")
+                return@launch
+            }
 
             val totalTimeTaken = ((System.currentTimeMillis() - quizStartTime) / 1000).toInt()
             val correctCount = state.correctAnswers
             val wrongCount = state.wrongAnswers
             val totalQuestions = state.questions.size
+
+            android.util.Log.d("QuizGameplay", "Quiz submission data:")
+            android.util.Log.d("QuizGameplay", "  - correctCount: $correctCount")
+            android.util.Log.d("QuizGameplay", "  - wrongCount: $wrongCount")
+            android.util.Log.d("QuizGameplay", "  - totalQuestions: $totalQuestions")
 
             val score = submitQuizUseCase.calculateScore(correctCount, totalQuestions)
             val xpEarned = submitQuizUseCase.calculateXpEarned(score, quiz.xpReward)
@@ -222,13 +237,17 @@ class QuizGameplayViewModel @Inject constructor(
                 isCompleted = true
             )
 
+            android.util.Log.d("QuizGameplay", "Attempting to submit: ${attempt}")
+
             val result = submitQuizUseCase(attempt, xpEarned)
 
             result.fold(
                 onSuccess = {
+                    android.util.Log.d("QuizGameplay", "Quiz submitted successfully!")
                     _uiState.value = state.copy(isQuizCompleted = true)
                 },
                 onFailure = { exception ->
+                    android.util.Log.e("QuizGameplay", "Failed to submit quiz: ${exception.message}")
                     _uiState.value = state.copy(
                         error = exception.message ?: context.getString(R.string.error_failed_submit_quiz)
                     )

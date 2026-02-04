@@ -17,20 +17,20 @@ import android.app.faunadex.ui.theme.PrimaryGreenLight
 import android.app.faunadex.ui.theme.PrimaryGreenLime
 import android.app.faunadex.ui.theme.PrimaryGreenNeon
 import android.app.faunadex.ui.theme.QuizGreenGradient
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -43,17 +43,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -65,7 +63,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import androidx.hilt.navigation.compose.hiltViewModel
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -75,8 +73,11 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun QuizGameplayScreen(
     onNavigateBack: () -> Unit = {},
-    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> }
+    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> },
+    viewModel: QuizGameplayViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
@@ -86,49 +87,82 @@ fun QuizGameplayScreen(
         },
         containerColor = DarkForest
     ) { paddingValues ->
-        QuizGameplayContent(
-            onQuizCompleted = onQuizCompleted,
-            modifier = Modifier.padding(paddingValues)
-        )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(60.dp),
+                            color = PrimaryGreen,
+                            strokeWidth = 4.dp
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "Loading questions...",
+                            color = PastelYellow,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JerseyFont
+                        )
+                    }
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(uiState.error ?: "Unknown error", color = ErrorRedDark)
+                }
+            }
+            else -> {
+                QuizGameplayContent(
+                    uiState = uiState,
+                    onSelectAnswer = { index -> viewModel.selectAnswer(index) },
+                    onConfirmAnswer = { viewModel.confirmAnswer() },
+                    onNextQuestion = { viewModel.nextQuestion() },
+                    onQuizCompleted = onQuizCompleted,
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+        }
     }
 }
 
 @SuppressLint("AutoboxingStateCreation")
 @Composable
 fun QuizGameplayContent(
-    modifier: Modifier = Modifier,
-    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> }
+    uiState: QuizGameplayUiState,
+    onSelectAnswer: (Int) -> Unit,
+    onConfirmAnswer: () -> Unit,
+    onNextQuestion: () -> Unit,
+    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> },
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
-    var selectedAnswer by remember { mutableStateOf<Int?>(null) }
-    var isRevealed by remember { mutableStateOf(false) }
-    var timeRemaining by remember { mutableIntStateOf(30) }
-    var showConfetti by remember { mutableStateOf(false) }
-    var currentQuestionIndex by remember { mutableIntStateOf(0) }
-    var correctAnswersCount by remember { mutableIntStateOf(0) }
-    var wrongAnswersCount by remember { mutableIntStateOf(0) }
+    val currentQuestion = uiState.currentQuestion
+    val isShowingConfetti = uiState.isRevealed && uiState.selectedAnswerIndex == currentQuestion?.correctAnswerIndex
 
-    val questions = listOf(
-        "What is the scientific name of the Komodo Dragon?" to 0,
-        "Which animal is the largest land mammal?" to 2,
-        "What is the fastest land animal?" to 1
-    )
-
-    val currentQuestion = questions.getOrNull(currentQuestionIndex)
-    val correctAnswerIndex = currentQuestion?.second ?: 0
-
-    LaunchedEffect(isRevealed, currentQuestionIndex) {
-        while (timeRemaining > 0 && !isRevealed) {
-            delay(1000L)
-            timeRemaining--
+    LaunchedEffect(uiState.isQuizCompleted) {
+        if (uiState.isQuizCompleted) {
+            onQuizCompleted(
+                ((uiState.correctAnswers.toDouble() / uiState.questions.size) * 100).toInt(),
+                uiState.correctAnswers,
+                uiState.wrongAnswers,
+                uiState.questions.size
+            )
         }
-    }
-
-    fun resetForNextQuestion() {
-        selectedAnswer = null
-        isRevealed = false
-        timeRemaining = 30
-        showConfetti = false
-        currentQuestionIndex++
     }
 
     Box(
@@ -167,54 +201,33 @@ fun QuizGameplayContent(
         ) {
             Spacer(Modifier.height(50.dp))
 
-            QuestionBox(
-                timeRemaining = timeRemaining,
-                currentQuestion = currentQuestionIndex + 1,
-                totalQuestions = questions.size,
-                questionText = currentQuestion?.first ?: stringResource(R.string.loading)
-            )
+            if (currentQuestion != null) {
+                QuestionBox(
+                    timeRemaining = uiState.timeRemaining,
+                    currentQuestion = uiState.currentQuestionIndex + 1,
+                    totalQuestions = uiState.questions.size,
+                    questionText = currentQuestion.questionText
+                )
 
-            Spacer(Modifier.height(64.dp))
+                Spacer(Modifier.height(64.dp))
 
-            AnswerOptionsList(
-                answers = listOf(
-                    "Varanus komodoensis",
-                    "Panthera tigris",
-                    "Elephas maximus",
-                    "Rhinoceros sondaicus"
-                ),
-                selectedAnswer = selectedAnswer,
-                onAnswerSelected = { index ->
-                    if (!isRevealed) {
-                        selectedAnswer = index
-                    }
-                },
-                isRevealed = isRevealed,
-                correctAnswerIndex = correctAnswerIndex
-            )
+                AnswerOptionsList(
+                    answers = currentQuestion.options,
+                    selectedAnswer = uiState.selectedAnswerIndex,
+                    onAnswerSelected = { index -> onSelectAnswer(index) },
+                    isRevealed = uiState.isRevealed,
+                    correctAnswerIndex = currentQuestion.correctAnswerIndex
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    if (!isRevealed && selectedAnswer != null) {
-                        isRevealed = true
-
-                        if (selectedAnswer == correctAnswerIndex) {
-                            correctAnswersCount++
-                            showConfetti = true
-                        } else {
-                            wrongAnswersCount++
-                        }
-                    } else if (isRevealed) {
-                        if (currentQuestionIndex >= questions.size - 1) {
-                            val totalQuestions = questions.size
-                            val score = ((correctAnswersCount.toDouble() / totalQuestions) * 100).toInt()
-
-                            onQuizCompleted(score, correctAnswersCount, wrongAnswersCount, totalQuestions)
-                        } else {
-                            resetForNextQuestion()
-                        }
+                    if (!uiState.isRevealed) {
+                        onConfirmAnswer()
+                    } else {
+                        onNextQuestion()
                     }
                 },
                 modifier = Modifier
@@ -225,15 +238,15 @@ fun QuizGameplayContent(
                     disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f)
                 ),
                 shape = RoundedCornerShape(12.dp),
-                enabled = if (isRevealed) {
+                enabled = if (uiState.isRevealed) {
                     true
                 } else {
-                    selectedAnswer != null
+                    uiState.selectedAnswerIndex != null
                 }
             ) {
                 Text(
-                    text = if (isRevealed) {
-                        if (currentQuestionIndex >= questions.size - 1) {
+                    text = if (uiState.isRevealed) {
+                        if (uiState.currentQuestionIndex >= uiState.questions.size - 1) {
                             stringResource(R.string.finish)
                         } else {
                             stringResource(R.string.next)
@@ -250,7 +263,7 @@ fun QuizGameplayContent(
             Spacer(Modifier.height(24.dp))
         }
 
-        if (showConfetti) {
+        if (isShowingConfetti) {
             KonfettiView(
                 modifier = Modifier.fillMaxSize(),
                 parties = listOf(
@@ -274,11 +287,6 @@ fun QuizGameplayContent(
                     )
                 )
             )
-
-            LaunchedEffect(showConfetti) {
-                delay(2000L)
-                showConfetti = false
-            }
         }
     }
 }

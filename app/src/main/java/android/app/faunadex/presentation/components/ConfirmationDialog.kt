@@ -132,7 +132,7 @@ fun ConfirmationDialog(
                                 Text(
                                     text = confirmText,
                                     fontFamily = JerseyFont,
-                                    fontSize = 20.sp,
+                                    fontSize = 19.sp,
                                     color = PastelYellow
                                 )
                             }

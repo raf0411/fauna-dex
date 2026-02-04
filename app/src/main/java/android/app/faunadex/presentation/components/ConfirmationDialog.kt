@@ -63,7 +63,6 @@ fun ConfirmationDialog(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Warning Icon
                         Image(
                             painter = painterResource(id = R.drawable.warning_icon),
                             contentDescription = "Warning",
@@ -112,7 +111,7 @@ fun ConfirmationDialog(
                                 Text(
                                     text = cancelText,
                                     fontFamily = JerseyFont,
-                                    fontSize = 22.sp,
+                                    fontSize = 20.sp,
                                     color = PastelYellow
                                 )
                             }
@@ -133,7 +132,7 @@ fun ConfirmationDialog(
                                 Text(
                                     text = confirmText,
                                     fontFamily = JerseyFont,
-                                    fontSize = 22.sp,
+                                    fontSize = 20.sp,
                                     color = PastelYellow
                                 )
                             }

@@ -5,6 +5,7 @@ import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.presentation.quiz.ShuffledQuestion
 import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
@@ -240,7 +241,7 @@ fun QuizGameplayContent(
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val currentQuestion = uiState.currentQuestion
-    val currentQuestionAnswer = currentQuestion?.let { uiState.userAnswers[it.id] }
+    val currentQuestionAnswer = currentQuestion?.let { uiState.userAnswers[it.originalQuestion.id] }
     val isShowingConfetti = uiState.isRevealed && currentQuestionAnswer?.isCorrect == true
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -301,17 +302,17 @@ fun QuizGameplayContent(
                     timeRemaining = uiState.timeRemaining,
                     currentQuestion = uiState.currentQuestionIndex + 1,
                     totalQuestions = uiState.questions.size,
-                    questionText = QuizLanguageHelper.getQuestionText(currentQuestion, context)
+                    questionText = QuizLanguageHelper.getQuestionText(currentQuestion.originalQuestion, context)
                 )
 
                 Spacer(Modifier.height(64.dp))
 
                 AnswerOptionsList(
-                    answers = QuizLanguageHelper.getQuestionOptions(currentQuestion, context),
+                    answers = QuizLanguageHelper.getQuestionOptions(currentQuestion.originalQuestion, context),
                     selectedAnswer = uiState.selectedAnswerIndex,
                     onAnswerSelected = { index -> onSelectAnswer(index) },
                     isRevealed = uiState.isRevealed,
-                    correctAnswerIndex = currentQuestion.correctAnswerIndex
+                    correctAnswerIndex = currentQuestion.shuffledCorrectAnswerIndex
                 )
             }
 
@@ -657,7 +658,12 @@ fun QuizGameplayScreenPreview() {
 
         val mockUiState = QuizGameplayUiState(
             quiz = null,
-            questions = listOf(mockQuestion),
+            questions = listOf(
+                ShuffledQuestion(
+                    originalQuestion = mockQuestion,
+                    shuffledCorrectAnswerIndex = 0
+                )
+            ),
             currentQuestionIndex = 0,
             selectedAnswerIndex = null,
             isRevealed = false,

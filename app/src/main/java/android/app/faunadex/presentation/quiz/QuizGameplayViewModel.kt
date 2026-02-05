@@ -24,9 +24,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 data class QuizGameplayUiState(
     val quiz: Quiz? = null,
-    val questions: List<Question> = emptyList(),
+    val questions: List<ShuffledQuestion> = emptyList(),
     val currentQuestionIndex: Int = 0,
     val selectedAnswerIndex: Int? = null,
     val isRevealed: Boolean = false,
@@ -40,7 +41,7 @@ data class QuizGameplayUiState(
     val canProceedToNext: Boolean = false,
     val countdown: Int? = null
 ) {
-    val currentQuestion: Question?
+    val currentQuestion: ShuffledQuestion?
         get() = questions.getOrNull(currentQuestionIndex)
 
     val correctAnswers: Int
@@ -112,9 +113,11 @@ class QuizGameplayViewModel @Inject constructor(
                         val attemptResult = quizRepository.startQuizAttempt(user.uid, quizId)
                         val attempt = attemptResult.getOrNull()
 
+                        val shuffledQuestions = shuffleQuestions(questions)
+
                         _uiState.value = _uiState.value.copy(
                             quiz = quiz,
-                            questions = questions,
+                            questions = shuffledQuestions,
                             attemptId = attempt?.id ?: "",
                             timeRemaining = quiz.timeLimitSeconds,
                             isLoading = false,
@@ -136,6 +139,28 @@ class QuizGameplayViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
+            )
+        }
+    }
+
+    private fun shuffleQuestions(questions: List<Question>): List<ShuffledQuestion> {
+        return questions.shuffled().map { question ->
+            val optionsCount = question.optionsEn.size
+            val indices = (0 until optionsCount).toList().shuffled()
+
+            val newCorrectIndex = indices.indexOf(question.correctAnswerIndex)
+
+            val shuffledOptionsEn = indices.map { question.optionsEn[it] }
+            val shuffledOptionsId = indices.map { question.optionsId[it] }
+
+            val shuffledQuestion = question.copy(
+                optionsEn = shuffledOptionsEn,
+                optionsId = shuffledOptionsId
+            )
+
+            ShuffledQuestion(
+                originalQuestion = shuffledQuestion,
+                shuffledCorrectAnswerIndex = newCorrectIndex
             )
         }
     }
@@ -196,7 +221,7 @@ class QuizGameplayViewModel @Inject constructor(
         val isCorrect = if (isTimeout) {
             false
         } else {
-            selectedIndex == currentQuestion.correctAnswerIndex
+            selectedIndex == currentQuestion.shuffledCorrectAnswerIndex
         }
 
         if (isCorrect) {
@@ -206,13 +231,13 @@ class QuizGameplayViewModel @Inject constructor(
         }
 
         val userAnswer = UserAnswer(
-            questionId = currentQuestion.id,
+            questionId = currentQuestion.originalQuestion.id,
             selectedAnswerIndex = selectedIndex,
             isCorrect = isCorrect,
             timeTakenSeconds = timeTaken
         )
 
-        val updatedAnswers = state.userAnswers + (currentQuestion.id to userAnswer)
+        val updatedAnswers = state.userAnswers + (currentQuestion.originalQuestion.id to userAnswer)
 
         _uiState.value = state.copy(
             isRevealed = true,

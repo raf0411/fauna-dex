@@ -12,7 +12,7 @@ class SoundEffectPlayer(private val context: Context) {
         try {
             mediaPlayer?.release()
             mediaPlayer = MediaPlayer.create(context, soundResId)?.apply {
-                setVolume(0.6f, 0.6f)
+                setVolume(0.9f, 0.9f)
                 setOnCompletionListener {
                     it.release()
                 }

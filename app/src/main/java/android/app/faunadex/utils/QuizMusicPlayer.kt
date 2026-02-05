@@ -17,7 +17,7 @@ class QuizMusicPlayer(
             if (mediaPlayer == null) {
                 mediaPlayer = MediaPlayer.create(context, musicResId)?.apply {
                     isLooping = true
-                    setVolume(0.4f, 0.4f) // Set to 40% volume for background music
+                    setVolume(0.2f, 0.2f)
                     isInitialized = true
                 }
             }

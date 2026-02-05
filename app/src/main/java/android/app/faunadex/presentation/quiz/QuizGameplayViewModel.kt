@@ -10,6 +10,7 @@ import android.app.faunadex.domain.usecase.GetQuizQuestionsUseCase
 import android.app.faunadex.domain.usecase.SubmitQuizUseCase
 import android.app.faunadex.domain.repository.QuizRepository
 import android.app.faunadex.utils.QuizMusicPlayer
+import android.app.faunadex.utils.SoundEffectPlayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -71,8 +72,8 @@ class QuizGameplayViewModel @Inject constructor(
     private var questionStartTime: Long = 0
     private var quizStartTime: Long = 0
 
-    // Music player for background music
     private val musicPlayer: QuizMusicPlayer = QuizMusicPlayer(context, R.raw.quiz_background_music)
+    private val soundEffectPlayer: SoundEffectPlayer = SoundEffectPlayer(context)
 
     init {
         loadQuizAndQuestions()
@@ -157,6 +158,7 @@ class QuizGameplayViewModel @Inject constructor(
 
     fun selectAnswer(index: Int) {
         if (!_uiState.value.isRevealed) {
+            soundEffectPlayer.play(R.raw.select_sound_effect)
             _uiState.value = _uiState.value.copy(selectedAnswerIndex = index)
         }
     }
@@ -168,6 +170,12 @@ class QuizGameplayViewModel @Inject constructor(
 
         val timeTaken = ((System.currentTimeMillis() - questionStartTime) / 1000).toInt()
         val isCorrect = selectedIndex == currentQuestion.correctAnswerIndex
+
+        if (isCorrect) {
+            soundEffectPlayer.play(R.raw.correct_sound_effect)
+        } else {
+            soundEffectPlayer.play(R.raw.wrong_sound_effect)
+        }
 
         val userAnswer = UserAnswer(
             questionId = currentQuestion.id,
@@ -295,7 +303,7 @@ class QuizGameplayViewModel @Inject constructor(
         super.onCleared()
         timerJob?.cancel()
 
-        // Release music player resources
         musicPlayer.release()
+        soundEffectPlayer.release()
     }
 }

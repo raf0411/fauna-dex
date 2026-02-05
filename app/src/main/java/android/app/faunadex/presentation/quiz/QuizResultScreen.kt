@@ -3,6 +3,7 @@ package android.app.faunadex.presentation.quiz
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.utils.SoundEffectPlayer
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.ErrorRedDark
@@ -40,6 +41,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -105,10 +108,19 @@ fun QuizResultContent(
     onNavigateHome: () -> Unit = {}
 ) {
     var showConfetti by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val soundEffectPlayer = remember { SoundEffectPlayer(context) }
 
     LaunchedEffect(Unit) {
+        soundEffectPlayer.play(R.raw.quiz_result_sound_effect)
         delay(300)
         showConfetti = true
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            soundEffectPlayer.release()
+        }
     }
 
     Box(

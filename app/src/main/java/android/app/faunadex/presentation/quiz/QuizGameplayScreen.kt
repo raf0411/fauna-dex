@@ -3,6 +3,7 @@ package android.app.faunadex.presentation.quiz
 import android.annotation.SuppressLint
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
@@ -14,6 +15,7 @@ import android.app.faunadex.ui.theme.MediumGreenSage
 import android.app.faunadex.ui.theme.PastelYellow
 import android.app.faunadex.ui.theme.PoppinsFont
 import android.app.faunadex.ui.theme.PrimaryGreen
+import android.app.faunadex.ui.theme.PrimaryGreenAlpha60
 import android.app.faunadex.ui.theme.PrimaryGreenLight
 import android.app.faunadex.ui.theme.PrimaryGreenLime
 import android.app.faunadex.ui.theme.PrimaryGreenNeon
@@ -38,6 +40,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
@@ -56,6 +60,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -109,7 +114,25 @@ fun QuizGameplayScreen(
         topBar = {
             FaunaTopBarWithBack(
                 title = stringResource(R.string.quiz_gameplay),
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.toggleMute() },
+                        modifier = Modifier.padding(end = 16.dp),
+                        icon = if (uiState.isMuted) {
+                            Icons.AutoMirrored.Filled.VolumeOff
+                        } else {
+                            Icons.AutoMirrored.Filled.VolumeUp
+                        },
+                        iconTint = PrimaryGreenLight,
+                        backgroundColor = PrimaryGreenAlpha60,
+                        borderColor = PrimaryGreenAlpha60,
+                        borderWidth = 0.dp,
+                        size = 48.dp,
+                        iconSize = 24.dp,
+                        contentDescription = if (uiState.isMuted) "Unmute" else "Mute"
+                    )
+                }
             )
         },
         containerColor = DarkForest
@@ -479,6 +502,7 @@ fun AnswerOption(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable(enabled = !isRevealed, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         color = DarkGreen,

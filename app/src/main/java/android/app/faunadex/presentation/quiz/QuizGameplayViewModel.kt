@@ -34,7 +34,8 @@ data class QuizGameplayUiState(
     val attemptId: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isQuizCompleted: Boolean = false
+    val isQuizCompleted: Boolean = false,
+    val isMuted: Boolean = false
 ) {
     val currentQuestion: Question?
         get() = questions.getOrNull(currentQuestionIndex)
@@ -208,8 +209,21 @@ class QuizGameplayViewModel @Inject constructor(
     }
 
     fun resumeMusic() {
-        if (!_uiState.value.isQuizCompleted) {
+        if (!_uiState.value.isQuizCompleted && !_uiState.value.isMuted) {
             musicPlayer.play()
+        }
+    }
+
+    fun toggleMute() {
+        val newMutedState = !_uiState.value.isMuted
+        _uiState.value = _uiState.value.copy(isMuted = newMutedState)
+
+        if (newMutedState) {
+            musicPlayer.pause()
+        } else {
+            if (!_uiState.value.isQuizCompleted) {
+                musicPlayer.play()
+            }
         }
     }
 

@@ -8,6 +8,7 @@ import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
+import androidx.activity.compose.BackHandler
 import android.app.faunadex.ui.theme.DarkGreenMoss
 import android.app.faunadex.ui.theme.ErrorRedDark
 import android.app.faunadex.ui.theme.FaunaDexTheme
@@ -95,6 +96,10 @@ fun QuizGameplayScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     var showQuitDialog by remember { mutableStateOf(false) }
 
+    BackHandler {
+        showQuitDialog = true
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -180,6 +185,22 @@ fun QuizGameplayScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(uiState.error ?: "Unknown error", color = ErrorRedDark)
+                }
+            }
+            uiState.countdown != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = uiState.countdown.toString(),
+                        fontFamily = JerseyFont,
+                        fontSize = 200.sp,
+                        color = PrimaryGreen,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
             else -> {

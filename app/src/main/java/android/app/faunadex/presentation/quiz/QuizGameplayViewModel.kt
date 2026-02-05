@@ -37,7 +37,8 @@ data class QuizGameplayUiState(
     val error: String? = null,
     val isQuizCompleted: Boolean = false,
     val isMuted: Boolean = false,
-    val canProceedToNext: Boolean = false
+    val canProceedToNext: Boolean = false,
+    val countdown: Int? = null
 ) {
     val currentQuestion: Question?
         get() = questions.getOrNull(currentQuestionIndex)
@@ -70,8 +71,10 @@ class QuizGameplayViewModel @Inject constructor(
     val uiState: StateFlow<QuizGameplayUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
+    private var countdownJob: Job? = null
     private var questionStartTime: Long = 0
     private var quizStartTime: Long = 0
+    private var musicStarted: Boolean = false
 
     private val musicPlayer: QuizMusicPlayer = QuizMusicPlayer(context, R.raw.quiz_background_music)
     private val soundEffectPlayer: SoundEffectPlayer = SoundEffectPlayer(context)
@@ -114,15 +117,11 @@ class QuizGameplayViewModel @Inject constructor(
                             questions = questions,
                             attemptId = attempt?.id ?: "",
                             timeRemaining = quiz.timeLimitSeconds,
-                            isLoading = false
+                            isLoading = false,
+                            countdown = 3
                         )
 
-                        quizStartTime = System.currentTimeMillis()
-                        questionStartTime = System.currentTimeMillis()
-                        startTimer()
-
-                        // Start background music
-                        musicPlayer.play()
+                        startCountdown()
                     } else {
                         _uiState.value = _uiState.value.copy(
                             error = context.getString(R.string.error_user_not_logged_in),
@@ -138,6 +137,29 @@ class QuizGameplayViewModel @Inject constructor(
                     )
                 }
             )
+        }
+    }
+
+    private fun startCountdown() {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            var count = 3
+            while (count > 0) {
+                _uiState.value = _uiState.value.copy(countdown = count)
+                delay(1000)
+                count--
+            }
+
+            _uiState.value = _uiState.value.copy(countdown = null)
+
+            quizStartTime = System.currentTimeMillis()
+            questionStartTime = System.currentTimeMillis()
+            startTimer()
+
+            if (!_uiState.value.isMuted) {
+                musicPlayer.play()
+                musicStarted = true
+            }
         }
     }
 
@@ -225,7 +247,7 @@ class QuizGameplayViewModel @Inject constructor(
     }
 
     fun resumeMusic() {
-        if (!_uiState.value.isQuizCompleted && !_uiState.value.isMuted) {
+        if (musicStarted && !_uiState.value.isQuizCompleted && !_uiState.value.isMuted) {
             musicPlayer.play()
         }
     }
@@ -237,7 +259,7 @@ class QuizGameplayViewModel @Inject constructor(
         if (newMutedState) {
             musicPlayer.pause()
         } else {
-            if (!_uiState.value.isQuizCompleted) {
+            if (musicStarted && !_uiState.value.isQuizCompleted) {
                 musicPlayer.play()
             }
         }
@@ -284,7 +306,7 @@ class QuizGameplayViewModel @Inject constructor(
                 isCompleted = true
             )
 
-            android.util.Log.d("QuizGameplay", "Attempting to submit: ${attempt}")
+            android.util.Log.d("QuizGameplay", "Attempting to submit: $attempt")
 
             val result = submitQuizUseCase(attempt, xpEarned)
 
@@ -310,6 +332,7 @@ class QuizGameplayViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        countdownJob?.cancel()
 
         musicPlayer.release()
         soundEffectPlayer.release()

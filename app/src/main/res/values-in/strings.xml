@@ -102,6 +102,10 @@
     <string name="start_quiz">Mulai Kuis</string>
     <string name="questions">Pertanyaan</string>
     <string name="error_unknown">Kesalahan tidak diketahui</string>
+    <string name="quit_quiz_title">Keluar dari Kuis?</string>
+    <string name="quit_quiz_message">Apakah Anda yakin ingin keluar? Semua progres Anda akan hilang dan tidak akan disimpan.</string>
+    <string name="quit">Keluar</string>
+    <string name="stay">Tidak</string>
 
     <!-- Quiz Result Screen -->
     <string name="out_of_100">dari 100</string>

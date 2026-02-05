@@ -36,7 +36,8 @@ data class QuizGameplayUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isQuizCompleted: Boolean = false,
-    val isMuted: Boolean = false
+    val isMuted: Boolean = false,
+    val canProceedToNext: Boolean = false
 ) {
     val currentQuestion: Question?
         get() = questions.getOrNull(currentQuestionIndex)
@@ -188,10 +189,16 @@ class QuizGameplayViewModel @Inject constructor(
 
         _uiState.value = state.copy(
             isRevealed = true,
-            userAnswers = updatedAnswers
+            userAnswers = updatedAnswers,
+            canProceedToNext = false
         )
 
         timerJob?.cancel()
+
+        viewModelScope.launch {
+            delay(1500)
+            _uiState.value = _uiState.value.copy(canProceedToNext = true)
+        }
     }
 
     fun nextQuestion() {
@@ -202,7 +209,8 @@ class QuizGameplayViewModel @Inject constructor(
                 currentQuestionIndex = state.currentQuestionIndex + 1,
                 selectedAnswerIndex = null,
                 isRevealed = false,
-                timeRemaining = state.quiz?.timeLimitSeconds ?: 30
+                timeRemaining = state.quiz?.timeLimitSeconds ?: 30,
+                canProceedToNext = false
             )
 
             questionStartTime = System.currentTimeMillis()

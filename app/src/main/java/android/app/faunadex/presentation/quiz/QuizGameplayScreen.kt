@@ -2,6 +2,7 @@ package android.app.faunadex.presentation.quiz
 
 import android.annotation.SuppressLint
 import android.app.faunadex.R
+import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.IconButton
 import android.app.faunadex.utils.QuizLanguageHelper
@@ -58,6 +59,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -89,6 +93,7 @@ fun QuizGameplayScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    var showQuitDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -114,7 +119,7 @@ fun QuizGameplayScreen(
         topBar = {
             FaunaTopBarWithBack(
                 title = stringResource(R.string.quiz_gameplay),
-                onNavigateBack = onNavigateBack,
+                onNavigateBack = { showQuitDialog = true },
                 actions = {
                     IconButton(
                         onClick = { viewModel.toggleMute() },
@@ -189,6 +194,18 @@ fun QuizGameplayScreen(
             }
         }
     }
+
+    ConfirmationDialog(
+        title = stringResource(R.string.quit_quiz_title),
+        message = stringResource(R.string.quit_quiz_message),
+        confirmText = stringResource(R.string.quit),
+        cancelText = stringResource(R.string.stay),
+        onConfirm = {
+            onNavigateBack()
+        },
+        onDismiss = { showQuitDialog = false },
+        showDialog = showQuitDialog
+    )
 }
 
 @SuppressLint("AutoboxingStateCreation")
@@ -204,6 +221,11 @@ fun QuizGameplayContent(
     val currentQuestion = uiState.currentQuestion
     val isShowingConfetti = uiState.isRevealed && uiState.selectedAnswerIndex == currentQuestion?.correctAnswerIndex
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(uiState.currentQuestionIndex) {
+        scrollState.animateScrollTo(0)
+    }
 
     LaunchedEffect(uiState.isQuizCompleted) {
         if (uiState.isQuizCompleted) {
@@ -246,7 +268,7 @@ fun QuizGameplayContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -290,7 +312,7 @@ fun QuizGameplayContent(
                 ),
                 shape = RoundedCornerShape(12.dp),
                 enabled = if (uiState.isRevealed) {
-                    true
+                    uiState.canProceedToNext
                 } else {
                     uiState.selectedAnswerIndex != null
                 }

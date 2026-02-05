@@ -111,7 +111,7 @@ fun ConfirmationDialog(
                                 Text(
                                     text = cancelText,
                                     fontFamily = JerseyFont,
-                                    fontSize = 20.sp,
+                                    fontSize = 22.sp,
                                     color = PastelYellow
                                 )
                             }
@@ -132,7 +132,10 @@ fun ConfirmationDialog(
                                 Text(
                                     text = confirmText,
                                     fontFamily = JerseyFont,
-                                    fontSize = 19.sp,
+                                    fontSize =
+                                        if (confirmText.length >= 10) 19.sp
+                                        else 22.sp
+                                    ,
                                     color = PastelYellow
                                 )
                             }

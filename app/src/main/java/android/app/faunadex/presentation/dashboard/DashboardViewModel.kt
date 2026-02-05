@@ -38,6 +38,10 @@ class DashboardViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(user = user)
     }
 
+    fun refreshUser() {
+        loadUser()
+    }
+
     private fun loadFavorites() {
         viewModelScope.launch {
             val user = getCurrentUserUseCase()

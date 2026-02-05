@@ -3,12 +3,12 @@ package android.app.faunadex.presentation.quiz
 import android.app.faunadex.R
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.utils.SoundEffectPlayer
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.ErrorRedDark
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
-import android.app.faunadex.ui.theme.MediumGreen
 import android.app.faunadex.ui.theme.MediumGreenMint
 import android.app.faunadex.ui.theme.MediumGreenPale
 import android.app.faunadex.ui.theme.PastelYellow
@@ -29,8 +29,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Replay
@@ -39,6 +41,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,7 +65,14 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun QuizResultScreen(
-    onNavigateBack: () -> Unit = {}
+    score: Int = 100,
+    totalQuestions: Int = 10,
+    correctAnswers: Int = 10,
+    wrongAnswers: Int = 0,
+    completionPercentage: Int = 100,
+    onNavigateBack: () -> Unit = {},
+    onPlayAgain: () -> Unit = {},
+    onNavigateHome: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -73,6 +84,13 @@ fun QuizResultScreen(
         containerColor = DarkForest
     ) { paddingValues ->
         QuizResultContent(
+            score = score,
+            totalQuestions = totalQuestions,
+            correctAnswers = correctAnswers,
+            wrongAnswers = wrongAnswers,
+            completionPercentage = completionPercentage,
+            onPlayAgain = onPlayAgain,
+            onNavigateHome = onNavigateHome,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -85,13 +103,24 @@ fun QuizResultContent(
     totalQuestions: Int = 10,
     correctAnswers: Int = 10,
     wrongAnswers: Int = 0,
-    completionPercentage: Int = 100
+    completionPercentage: Int = 100,
+    onPlayAgain: () -> Unit = {},
+    onNavigateHome: () -> Unit = {}
 ) {
     var showConfetti by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val soundEffectPlayer = remember { SoundEffectPlayer(context) }
 
     LaunchedEffect(Unit) {
+        soundEffectPlayer.play(R.raw.quiz_result_sound_effect)
         delay(300)
         showConfetti = true
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            soundEffectPlayer.release()
+        }
     }
 
     Box(
@@ -124,6 +153,7 @@ fun QuizResultContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -134,7 +164,7 @@ fun QuizResultContent(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "out of 100",
+                text = stringResource(R.string.out_of_100),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = PastelYellow
@@ -149,7 +179,7 @@ fun QuizResultContent(
                 wrongAnswers = wrongAnswers
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(64.dp))
 
             Row(
                 modifier = Modifier
@@ -162,12 +192,13 @@ fun QuizResultContent(
                     verticalArrangement = Arrangement.Center
                 ) {
                     IconButton(
-                        onClick = { /* TODO Replay Quiz Feature */ },
-                        icon = Icons.Default.Replay
+                        onClick = onPlayAgain,
+                        icon = Icons.Default.Replay,
+                        iconTint = DarkForest
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Play Again",
+                        text = stringResource(R.string.quiz_replay),
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,
@@ -179,18 +210,21 @@ fun QuizResultContent(
                     verticalArrangement = Arrangement.Center
                 ){
                     IconButton(
-                        onClick = { /* TODO Navigate back to Quiz Home */ },
-                        icon = Icons.Default.Home
+                        onClick = onNavigateHome,
+                        icon = Icons.Default.Home,
+                        iconTint = DarkForest
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Home",
+                        text = stringResource(R.string.nav_home),
                         fontSize = 20.sp,
                         color = PrimaryGreen,
                         fontFamily = JerseyFont,
                     )
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
         }
 
         if (showConfetti) {
@@ -322,10 +356,10 @@ private fun GlowingScoreCircle(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Your Score",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MediumGreen
+                    text = stringResource(R.string.your_score),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PastelYellow
                 )
 
                 Text(
@@ -367,12 +401,12 @@ private fun QuizInfoBox(
             ) {
                 InfoItem(
                     count = "$completionPercentage%",
-                    label = "Completion",
+                    label = stringResource(R.string.completion),
                     color = MediumGreenMint
                 )
                 InfoItem(
                     count = correctAnswers.toString(),
-                    label = "Correct",
+                    label = stringResource(R.string.correct),
                     color = PrimaryGreenNeon
                 )
             }
@@ -382,12 +416,12 @@ private fun QuizInfoBox(
             ) {
                 InfoItem(
                     count = totalQuestions.toString(),
-                    label = "Total Questions",
+                    label = stringResource(R.string.total_questions),
                     color = MediumGreenPale
                 )
                 InfoItem(
                     count = wrongAnswers.toString(),
-                    label = "Wrong",
+                    label = stringResource(R.string.wrong),
                     color = ErrorRedDark
                 )
             }

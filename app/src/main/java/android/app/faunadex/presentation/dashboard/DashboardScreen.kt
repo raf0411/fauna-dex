@@ -68,6 +68,10 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.refreshUser()
+    }
+
     LaunchedEffect(uiState.isSignedOut) {
         if (uiState.isSignedOut) {
             onNavigateToLogin()

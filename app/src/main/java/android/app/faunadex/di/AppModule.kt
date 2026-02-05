@@ -2,9 +2,11 @@ package android.app.faunadex.di
 
 import android.app.faunadex.data.repository.AnimalRepositoryImpl
 import android.app.faunadex.data.repository.AuthRepositoryImpl
+import android.app.faunadex.data.repository.QuizRepositoryImpl
 import android.app.faunadex.data.repository.UserRepositoryImpl
 import android.app.faunadex.domain.repository.AnimalRepository
 import android.app.faunadex.domain.repository.AuthRepository
+import android.app.faunadex.domain.repository.QuizRepository
 import android.app.faunadex.domain.repository.UserRepository
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
@@ -47,4 +49,10 @@ object AppModule {
         firestore: FirebaseFirestore,
         @ApplicationContext context: Context
     ): AnimalRepository = AnimalRepositoryImpl(firestore, context)
+
+    @Provides
+    @Singleton
+    fun provideQuizRepository(
+        firestore: FirebaseFirestore
+    ): QuizRepository = QuizRepositoryImpl(firestore)
 }

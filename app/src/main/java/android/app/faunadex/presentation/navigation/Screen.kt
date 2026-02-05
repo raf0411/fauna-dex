@@ -15,6 +15,19 @@ sealed class Screen(val route: String) {
     object QuizDetail : Screen("quiz_detail/{quizId}") {
         fun createRoute(quizId: String) = "quiz_detail/$quizId"
     }
+    object QuizGameplay : Screen("quiz_gameplay/{quizId}") {
+        fun createRoute(quizId: String) = "quiz_gameplay/$quizId"
+    }
+    object QuizResult : Screen("quiz_result/{quizId}/{score}/{correctAnswers}/{wrongAnswers}/{totalQuestions}/{xpEarned}") {
+        fun createRoute(
+            quizId: String,
+            score: Int,
+            correctAnswers: Int,
+            wrongAnswers: Int,
+            totalQuestions: Int,
+            xpEarned: Int
+        ) = "quiz_result/$quizId/$score/$correctAnswers/$wrongAnswers/$totalQuestions/$xpEarned"
+    }
     object AR : Screen("ar/{animalId}") {
         fun createRoute(animalId: String) = "ar/$animalId"
     }

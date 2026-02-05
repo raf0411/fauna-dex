@@ -2,9 +2,14 @@ package android.app.faunadex.presentation.quiz
 
 import android.annotation.SuppressLint
 import android.app.faunadex.R
+import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
+import android.app.faunadex.presentation.components.IconButton
+import android.app.faunadex.presentation.quiz.ShuffledQuestion
+import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
+import androidx.activity.compose.BackHandler
 import android.app.faunadex.ui.theme.DarkGreenMoss
 import android.app.faunadex.ui.theme.ErrorRedDark
 import android.app.faunadex.ui.theme.FaunaDexTheme
@@ -13,47 +18,56 @@ import android.app.faunadex.ui.theme.MediumGreenSage
 import android.app.faunadex.ui.theme.PastelYellow
 import android.app.faunadex.ui.theme.PoppinsFont
 import android.app.faunadex.ui.theme.PrimaryGreen
+import android.app.faunadex.ui.theme.PrimaryGreenAlpha60
 import android.app.faunadex.ui.theme.PrimaryGreenLight
 import android.app.faunadex.ui.theme.PrimaryGreenLime
 import android.app.faunadex.ui.theme.PrimaryGreenNeon
 import android.app.faunadex.ui.theme.QuizGreenGradient
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -63,7 +77,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -72,57 +89,176 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun QuizGameplayScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> },
+    viewModel: QuizGameplayViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var showQuitDialog by remember { mutableStateOf(false) }
+
+    BackHandler {
+        showQuitDialog = true
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    viewModel.pauseMusic()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.resumeMusic()
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     Scaffold(
         topBar = {
             FaunaTopBarWithBack(
                 title = stringResource(R.string.quiz_gameplay),
-                onNavigateBack = onNavigateBack
+                onNavigateBack = { showQuitDialog = true },
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.toggleMute() },
+                        modifier = Modifier.padding(end = 16.dp),
+                        icon = if (uiState.isMuted) {
+                            Icons.AutoMirrored.Filled.VolumeOff
+                        } else {
+                            Icons.AutoMirrored.Filled.VolumeUp
+                        },
+                        iconTint = PrimaryGreenLight,
+                        backgroundColor = PrimaryGreenAlpha60,
+                        borderColor = PrimaryGreenAlpha60,
+                        borderWidth = 0.dp,
+                        size = 48.dp,
+                        iconSize = 24.dp,
+                        contentDescription = if (uiState.isMuted) "Unmute" else "Mute"
+                    )
+                }
             )
         },
         containerColor = DarkForest
     ) { paddingValues ->
-        QuizGameplayContent(
-            modifier = Modifier.padding(paddingValues)
-        )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(60.dp),
+                            color = PrimaryGreen,
+                            strokeWidth = 4.dp
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "Loading questions...",
+                            color = PastelYellow,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JerseyFont
+                        )
+                    }
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(uiState.error ?: "Unknown error", color = ErrorRedDark)
+                }
+            }
+            uiState.countdown != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = uiState.countdown.toString(),
+                        fontFamily = JerseyFont,
+                        fontSize = 200.sp,
+                        color = PrimaryGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            else -> {
+                QuizGameplayContent(
+                    uiState = uiState,
+                    onSelectAnswer = { index -> viewModel.selectAnswer(index) },
+                    onConfirmAnswer = { viewModel.confirmAnswer() },
+                    onNextQuestion = { viewModel.nextQuestion() },
+                    onQuizCompleted = onQuizCompleted,
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+        }
     }
+
+    ConfirmationDialog(
+        title = stringResource(R.string.quit_quiz_title),
+        message = stringResource(R.string.quit_quiz_message),
+        confirmText = stringResource(R.string.quit),
+        cancelText = stringResource(R.string.stay),
+        onConfirm = {
+            onNavigateBack()
+        },
+        onDismiss = { showQuitDialog = false },
+        showDialog = showQuitDialog
+    )
 }
 
 @SuppressLint("AutoboxingStateCreation")
 @Composable
 fun QuizGameplayContent(
-    modifier: Modifier = Modifier
+    uiState: QuizGameplayUiState,
+    onSelectAnswer: (Int) -> Unit,
+    onConfirmAnswer: () -> Unit,
+    onNextQuestion: () -> Unit,
+    onQuizCompleted: (score: Int, correctAnswers: Int, wrongAnswers: Int, totalQuestions: Int) -> Unit = { _, _, _, _ -> },
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
-    var selectedAnswer by remember { mutableStateOf<Int?>(null) }
-    var isRevealed by remember { mutableStateOf(false) }
-    var timeRemaining by remember { mutableIntStateOf(30) }
-    var showConfetti by remember { mutableStateOf(false) }
-    var currentQuestionIndex by remember { mutableIntStateOf(0) }
+    val currentQuestion = uiState.currentQuestion
+    val currentQuestionAnswer = currentQuestion?.let { uiState.userAnswers[it.originalQuestion.id] }
+    val isShowingConfetti = uiState.isRevealed && currentQuestionAnswer?.isCorrect == true
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
-    val questions = listOf(
-        "What is the scientific name of the Komodo Dragon?" to 0,
-        "Which animal is the largest land mammal?" to 2,
-        "What is the fastest land animal?" to 1
-    )
-
-    val currentQuestion = questions.getOrNull(currentQuestionIndex)
-    val correctAnswerIndex = currentQuestion?.second ?: 0
-
-    LaunchedEffect(isRevealed, currentQuestionIndex) {
-        while (timeRemaining > 0 && !isRevealed) {
-            delay(1000L)
-            timeRemaining--
-        }
+    LaunchedEffect(uiState.currentQuestionIndex) {
+        scrollState.animateScrollTo(0)
     }
 
-    // Reset function for next question
-    fun resetForNextQuestion() {
-        selectedAnswer = null
-        isRevealed = false
-        timeRemaining = 30
-        showConfetti = false
-        currentQuestionIndex++
+    LaunchedEffect(uiState.isQuizCompleted) {
+        if (uiState.isQuizCompleted) {
+            onQuizCompleted(
+                ((uiState.correctAnswers.toDouble() / uiState.questions.size) * 100).toInt(),
+                uiState.correctAnswers,
+                uiState.wrongAnswers,
+                uiState.questions.size
+            )
+        }
     }
 
     Box(
@@ -155,50 +291,39 @@ fun QuizGameplayContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(50.dp))
 
-            QuestionBox(
-                timeRemaining = timeRemaining,
-                currentQuestion = currentQuestionIndex + 1,
-                totalQuestions = questions.size,
-                questionText = currentQuestion?.first ?: "Loading..."
-            )
+            if (currentQuestion != null) {
+                QuestionBox(
+                    timeRemaining = uiState.timeRemaining,
+                    currentQuestion = uiState.currentQuestionIndex + 1,
+                    totalQuestions = uiState.questions.size,
+                    questionText = QuizLanguageHelper.getQuestionText(currentQuestion.originalQuestion, context)
+                )
 
-            Spacer(Modifier.height(64.dp))
+                Spacer(Modifier.height(64.dp))
 
-            AnswerOptionsList(
-                answers = listOf(
-                    "Varanus komodoensis",
-                    "Panthera tigris",
-                    "Elephas maximus",
-                    "Rhinoceros sondaicus"
-                ),
-                selectedAnswer = selectedAnswer,
-                onAnswerSelected = { index ->
-                    if (!isRevealed) {
-                        selectedAnswer = index
-                    }
-                },
-                isRevealed = isRevealed,
-                correctAnswerIndex = correctAnswerIndex
-            )
+                AnswerOptionsList(
+                    answers = QuizLanguageHelper.getQuestionOptions(currentQuestion.originalQuestion, context),
+                    selectedAnswer = uiState.selectedAnswerIndex,
+                    onAnswerSelected = { index -> onSelectAnswer(index) },
+                    isRevealed = uiState.isRevealed,
+                    correctAnswerIndex = currentQuestion.shuffledCorrectAnswerIndex
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    if (!isRevealed && selectedAnswer != null) {
-                        // Confirm answer
-                        isRevealed = true
-                        if (selectedAnswer == correctAnswerIndex) {
-                            showConfetti = true
-                        }
-                    } else if (isRevealed) {
-                        // Go to next question
-                        resetForNextQuestion()
+                    if (!uiState.isRevealed) {
+                        onConfirmAnswer()
+                    } else {
+                        onNextQuestion()
                     }
                 },
                 modifier = Modifier
@@ -209,17 +334,19 @@ fun QuizGameplayContent(
                     disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f)
                 ),
                 shape = RoundedCornerShape(12.dp),
-                enabled = if (isRevealed) {
-                    // Enable "Next" button after reveal
-                    true
+                enabled = if (uiState.isRevealed) {
+                    uiState.canProceedToNext
                 } else {
-                    // Enable "Confirm" button only when answer is selected
-                    selectedAnswer != null
+                    uiState.selectedAnswerIndex != null
                 }
             ) {
                 Text(
-                    text = if (isRevealed) {
-                        stringResource(R.string.next)
+                    text = if (uiState.isRevealed) {
+                        if (uiState.currentQuestionIndex >= uiState.questions.size - 1) {
+                            stringResource(R.string.finish)
+                        } else {
+                            stringResource(R.string.next)
+                        }
                     } else {
                         stringResource(R.string.confirm)
                     },
@@ -232,7 +359,7 @@ fun QuizGameplayContent(
             Spacer(Modifier.height(24.dp))
         }
 
-        if (showConfetti) {
+        if (isShowingConfetti) {
             KonfettiView(
                 modifier = Modifier.fillMaxSize(),
                 parties = listOf(
@@ -242,25 +369,20 @@ fun QuizGameplayContent(
                         damping = 0.9f,
                         spread = 360,
                         colors = listOf(
-                            0xFFBEDC7F, // PrimaryGreenLight
-                            0xFF89A257, // PrimaryGreen
-                            0xFFDBFB98, // PrimaryGreenLime
-                            0xFFEEFFCC, // PastelYellow
-                            0xFF71A8C6, // BlueLight
-                            0xFFFB3434, // ErrorRedBright
-                            0xFFA5B08D, // MediumGreenSage
-                            0xFF00A63D  // PrimaryGreenNeon
+                            0xFFBEDC7F,
+                            0xFF89A257,
+                            0xFFDBFB98,
+                            0xFFEEFFCC,
+                            0xFF71A8C6,
+                            0xFFFB3434,
+                            0xFFA5B08D,
+                            0xFF00A63D
                         ).map { it.toInt() },
                         emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
                         position = Position.Relative(0.5, 0.3)
                     )
                 )
             )
-
-            LaunchedEffect(showConfetti) {
-                delay(2000L)
-                showConfetti = false
-            }
         }
     }
 }
@@ -301,7 +423,8 @@ fun QuestionBox(
 
                 Text(
                     text = buildAnnotatedString {
-                        append("Question ")
+                        append(stringResource(R.string.question))
+                        append(" ")
                         withStyle(
                             style = SpanStyle(
                                 fontSize = 20.sp,
@@ -424,6 +547,7 @@ fun AnswerOption(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable(enabled = !isRevealed, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         color = DarkGreen,
@@ -507,6 +631,56 @@ fun AnswerOption(
 @Composable
 fun QuizGameplayScreenPreview() {
     FaunaDexTheme {
-        QuizGameplayScreen()
+        val mockQuestion = android.app.faunadex.domain.model.Question(
+            id = "q1",
+            quizId = "quiz_1",
+            questionTextEn = "What is the scientific name of the Komodo Dragon?",
+            questionTextId = "Apa nama ilmiah Komodo?",
+            questionType = "multiple_choice",
+            optionsEn = listOf(
+                "Varanus komodoensis",
+                "Varanus salvator",
+                "Varanus gouldi",
+                "Varanus acanthurus"
+            ),
+            optionsId = listOf(
+                "Varanus komodoensis",
+                "Varanus salvator",
+                "Varanus gouldi",
+                "Varanus acanthurus"
+            ),
+            correctAnswerIndex = 0,
+            explanationEn = "Komodo is scientifically known as Varanus komodoensis.",
+            explanationId = "Komodo secara ilmiah dikenal sebagai Varanus komodoensis.",
+            difficulty = "medium",
+            orderIndex = 0
+        )
+
+        val mockUiState = QuizGameplayUiState(
+            quiz = null,
+            questions = listOf(
+                ShuffledQuestion(
+                    originalQuestion = mockQuestion,
+                    shuffledCorrectAnswerIndex = 0
+                )
+            ),
+            currentQuestionIndex = 0,
+            selectedAnswerIndex = null,
+            isRevealed = false,
+            timeRemaining = 120,
+            userAnswers = emptyMap(),
+            attemptId = "",
+            isLoading = false,
+            error = null,
+            isQuizCompleted = false
+        )
+
+        QuizGameplayContent(
+            uiState = mockUiState,
+            onSelectAnswer = {},
+            onConfirmAnswer = {},
+            onNextQuestion = {},
+            onQuizCompleted = { _, _, _, _ -> }
+        )
     }
 }

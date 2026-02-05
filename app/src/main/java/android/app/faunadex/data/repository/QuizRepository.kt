@@ -1,64 +1,413 @@
 package android.app.faunadex.data.repository
 
-import android.app.faunadex.presentation.quiz.QuizDetail
+import android.app.faunadex.domain.model.Question
+import android.app.faunadex.domain.model.Quiz
+import android.app.faunadex.domain.model.QuizAttempt
+import android.app.faunadex.domain.model.UserAnswer
+import android.app.faunadex.domain.repository.QuizRepository
+import android.app.faunadex.domain.repository.QuizStats
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.tasks.await
+import java.util.Date
+import java.util.UUID
+import javax.inject.Inject
 
-object QuizRepository {
-    private val dummyQuizzes = listOf(
-        QuizDetail(
-            id = "1",
-            title = "Animal Habitats",
-            imageUrl = "https://images.unsplash.com/photo-1446891574402-9b1e68b5e58e?w=400&h=300&fit=crop",
-            totalQuestions = 10,
-            educationLevel = "SMP",
-            description = "Test your knowledge about different animal habitats around the world. Learn where various species live and what makes each habitat unique. From rainforests to deserts, explore the diverse environments that animals call home."
-        ),
-        QuizDetail(
-            id = "2",
-            title = "Species Classification",
-            imageUrl = "https://images.unsplash.com/photo-1444080748397-f442aa95c3e5?w=400&h=300&fit=crop",
-            totalQuestions = 15,
-            educationLevel = "SMA",
-            description = "Master the taxonomy and classification of animal species. This comprehensive quiz covers kingdom, phylum, class, order, family, genus, and species categories. Challenge yourself with questions about how scientists organize the animal kingdom."
-        ),
-        QuizDetail(
-            id = "3",
-            title = "Endangered Animals",
-            imageUrl = "https://images.unsplash.com/photo-1500463959177-e0869687df26?q=80&w=1170&auto=format&fit=crop",
-            totalQuestions = 8,
-            educationLevel = "SMP",
-            description = "Learn about critically endangered species and conservation efforts worldwide. Discover what threats these animals face and how we can help protect them. This quiz highlights the importance of biodiversity and habitat preservation."
-        ),
-        QuizDetail(
-            id = "4",
-            title = "Bird Species",
-            imageUrl = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop",
-            totalQuestions = 12,
-            educationLevel = "SMP",
-            description = "Identify and learn about fascinating bird species from around the world. From majestic eagles to colorful parrots, test your knowledge about avian behavior, migration patterns, and unique characteristics. Explore the incredible diversity of birds."
-        ),
-        QuizDetail(
-            id = "5",
-            title = "Marine Life",
-            imageUrl = "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=300&fit=crop",
-            totalQuestions = 14,
-            educationLevel = "SMA",
-            description = "Dive into the ocean and discover amazing marine creatures. Learn about deep-sea animals, coral reef inhabitants, and the complex ecosystems beneath the waves. This quiz covers everything from sharks to seahorses."
-        ),
-        QuizDetail(
-            id = "6",
-            title = "Mammal Adaptation",
-            imageUrl = "https://images.unsplash.com/photo-1484406566174-9da000fda645?w=400&h=300&fit=crop",
-            totalQuestions = 11,
-            educationLevel = "SMP",
-            description = "Explore how mammals adapt to their environments. From arctic foxes to desert camels, learn about physical and behavioral adaptations that help animals survive in extreme conditions. Understand evolution and natural selection."
-        )
-    )
+class QuizRepositoryImpl @Inject constructor(
+    private val firestore: FirebaseFirestore
+) : QuizRepository {
 
-    fun getQuizzes(): List<QuizDetail> = dummyQuizzes
+    private val quizzesCollection = firestore.collection("quizzes")
+    private val questionsCollection = firestore.collection("questions")
+    private val attemptsCollection = firestore.collection("quiz_attempts")
 
-    fun getQuizById(quizId: String): QuizDetail? = dummyQuizzes.find { it.id == quizId }
 
-    fun getCompletedQuizzes(): List<QuizDetail> = dummyQuizzes.takeLast(2)
+    override suspend fun getQuizzes(educationLevel: String?): Result<List<Quiz>> {
+        return try {
+            val query = if (educationLevel != null) {
+                quizzesCollection
+                    .whereEqualTo("is_active", true)
+                    .whereEqualTo("education_level", educationLevel)
+            } else {
+                quizzesCollection.whereEqualTo("is_active", true)
+            }
 
-    fun getAvailableQuizzes(): List<QuizDetail> = dummyQuizzes.dropLast(2)
+            val snapshot = query.get().await()
+            val quizzes = snapshot.documents.mapNotNull { doc ->
+                parseQuizFromDocument(doc)
+            }
+
+            android.util.Log.d("QuizRepository", "Loaded ${quizzes.size} quizzes for education level: $educationLevel")
+            quizzes.forEach { quiz ->
+                android.util.Log.d("QuizRepository", "  - Quiz: ${quiz.titleEn}, totalQuestions=${quiz.totalQuestions}, level=${quiz.educationLevel}")
+            }
+
+            Result.success(quizzes)
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error loading quizzes: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getQuizById(quizId: String): Result<Quiz> {
+        return try {
+            val document = quizzesCollection.document(quizId).get().await()
+
+            if (!document.exists()) {
+                return Result.failure(Exception("Quiz not found"))
+            }
+
+            val quiz = parseQuizFromDocument(document)
+                ?: return Result.failure(Exception("Failed to parse quiz"))
+
+            android.util.Log.d("QuizRepository", "Loaded quiz: id=${quiz.id}, title=${quiz.titleEn}, totalQuestions=${quiz.totalQuestions}, educationLevel=${quiz.educationLevel}")
+
+            Result.success(quiz)
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error loading quiz: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getQuizzesByCategory(category: String): Result<List<Quiz>> {
+        return try {
+            val snapshot = quizzesCollection
+                .whereEqualTo("category", category)
+                .whereEqualTo("is_active", true)
+                .get()
+                .await()
+
+            val quizzes = snapshot.documents.mapNotNull { doc ->
+                parseQuizFromDocument(doc)
+            }
+            Result.success(quizzes)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getQuestionsByQuizId(quizId: String): Result<List<Question>> {
+        return try {
+            val snapshot = questionsCollection
+                .whereEqualTo("quiz_id", quizId)
+                .orderBy("order_index")
+                .get()
+                .await()
+
+            val questions = snapshot.documents.mapNotNull { doc ->
+                parseQuestionFromDocument(doc)
+            }
+
+            android.util.Log.d("QuizRepository", "getQuestionsByQuizId($quizId) returned ${questions.size} questions")
+            questions.forEach { q ->
+                android.util.Log.d("QuizRepository", "  - Question: ${q.id} (order: ${q.orderIndex})")
+            }
+
+            Result.success(questions)
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error getting questions for quiz $quizId with orderBy: ${e.message}")
+
+            // Fallback: get all questions without orderBy and sort in memory
+            return try {
+                val snapshot = questionsCollection
+                    .whereEqualTo("quiz_id", quizId)
+                    .get()
+                    .await()
+
+                val questions = snapshot.documents.mapNotNull { doc ->
+                    parseQuestionFromDocument(doc)
+                }.sortedBy { it.orderIndex }
+
+                android.util.Log.d("QuizRepository", "getQuestionsByQuizId($quizId) fallback returned ${questions.size} questions")
+                questions.forEach { q ->
+                    android.util.Log.d("QuizRepository", "  - Question: ${q.id} (order: ${q.orderIndex})")
+                }
+
+                Result.success(questions)
+            } catch (fallbackE: Exception) {
+                android.util.Log.e("QuizRepository", "Error getting questions for quiz $quizId (fallback also failed): ${fallbackE.message}")
+                Result.failure(fallbackE)
+            }
+        }
+    }
+
+    override suspend fun getQuestionById(questionId: String): Result<Question> {
+        return try {
+            val document = questionsCollection.document(questionId).get().await()
+
+            if (!document.exists()) {
+                return Result.failure(Exception("Question not found"))
+            }
+
+            val question = parseQuestionFromDocument(document)
+                ?: return Result.failure(Exception("Failed to parse question"))
+
+            Result.success(question)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun startQuizAttempt(userId: String, quizId: String): Result<QuizAttempt> {
+        return try {
+            val quiz = getQuizById(quizId).getOrNull()
+                ?: return Result.failure(Exception("Quiz not found"))
+
+            val attemptId = UUID.randomUUID().toString()
+            val attempt = QuizAttempt(
+                id = attemptId,
+                userId = userId,
+                quizId = quizId,
+                totalQuestions = quiz.totalQuestions,
+                isCompleted = false,
+                startedAt = Date()
+            )
+
+            val attemptData = mapOf(
+                "user_id" to attempt.userId,
+                "quiz_id" to attempt.quizId,
+                "score" to attempt.score,
+                "total_questions" to attempt.totalQuestions,
+                "correct_answers" to attempt.correctAnswers,
+                "wrong_answers" to attempt.wrongAnswers,
+                "completion_percentage" to attempt.completionPercentage,
+                "xp_earned" to attempt.xpEarned,
+                "time_taken_seconds" to attempt.timeTakenSeconds,
+                "answers" to attempt.answers,
+                "is_completed" to false,
+                "started_at" to attempt.startedAt,
+                "completed_at" to attempt.completedAt
+            )
+
+            attemptsCollection.document(attemptId).set(attemptData).await()
+
+            Result.success(attempt)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun submitQuizAttempt(attempt: QuizAttempt): Result<Unit> {
+        return try {
+            android.util.Log.d("QuizRepository", "submitQuizAttempt called")
+            android.util.Log.d("QuizRepository", "  - attemptId: ${attempt.id}")
+            android.util.Log.d("QuizRepository", "  - userId: ${attempt.userId}")
+            android.util.Log.d("QuizRepository", "  - quizId: ${attempt.quizId}")
+            android.util.Log.d("QuizRepository", "  - isCompleted: ${attempt.isCompleted}")
+            android.util.Log.d("QuizRepository", "  - score: ${attempt.score}")
+
+            val completedAttempt = attempt.copy(
+                isCompleted = true,
+                completedAt = Date()
+            )
+
+            // Create a Map with all fields explicitly using snake_case keys
+            val attemptData = mapOf(
+                "user_id" to completedAttempt.userId,
+                "quiz_id" to completedAttempt.quizId,
+                "score" to completedAttempt.score,
+                "total_questions" to completedAttempt.totalQuestions,
+                "correct_answers" to completedAttempt.correctAnswers,
+                "wrong_answers" to completedAttempt.wrongAnswers,
+                "completion_percentage" to completedAttempt.completionPercentage,
+                "xp_earned" to completedAttempt.xpEarned,
+                "time_taken_seconds" to completedAttempt.timeTakenSeconds,
+                "answers" to completedAttempt.answers,
+                "is_completed" to true,  // Explicitly set to true
+                "started_at" to completedAttempt.startedAt,
+                "completed_at" to completedAttempt.completedAt
+            )
+
+            android.util.Log.d("QuizRepository", "Saving attempt data with keys: ${attemptData.keys}")
+            android.util.Log.d("QuizRepository", "user_id value: ${attemptData["user_id"]}")
+            android.util.Log.d("QuizRepository", "is_completed value: ${attemptData["is_completed"]}")
+
+            attemptsCollection.document(attempt.id)
+                .set(attemptData)
+                .await()
+
+            android.util.Log.d("QuizRepository", "submitQuizAttempt saved successfully")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error submitting quiz attempt: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserQuizAttempts(userId: String, quizId: String?): Result<List<QuizAttempt>> {
+        return try {
+            val query = if (quizId != null) {
+                attemptsCollection
+                    .whereEqualTo("user_id", userId)
+                    .whereEqualTo("quiz_id", quizId)
+            } else {
+                attemptsCollection.whereEqualTo("user_id", userId)
+            }
+
+            val snapshot = query
+                .orderBy("started_at", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            val attempts = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(QuizAttempt::class.java)?.copy(id = doc.id)
+            }
+            Result.success(attempts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserCompletedQuizIds(userId: String): Result<List<String>> {
+        return try {
+            android.util.Log.d("QuizRepository", "getUserCompletedQuizIds called for userId: $userId")
+
+            // First, let's get ALL attempts for this user to debug
+            val allAttemptsSnapshot = attemptsCollection
+                .whereEqualTo("user_id", userId)
+                .get()
+                .await()
+
+            android.util.Log.d("QuizRepository", "Total attempts for user: ${allAttemptsSnapshot.documents.size}")
+            allAttemptsSnapshot.documents.forEach { doc ->
+                android.util.Log.d("QuizRepository", "  Document ${doc.id}:")
+                android.util.Log.d("QuizRepository", "    - user_id: ${doc.getString("user_id")}")
+                android.util.Log.d("QuizRepository", "    - quiz_id: ${doc.getString("quiz_id")}")
+                android.util.Log.d("QuizRepository", "    - is_completed: ${doc.getBoolean("is_completed")}")
+            }
+
+            // Now do the filtered query
+            val snapshot = attemptsCollection
+                .whereEqualTo("user_id", userId)
+                .whereEqualTo("is_completed", true)
+                .get()
+                .await()
+
+            android.util.Log.d("QuizRepository", "Filtered query (is_completed=true) returned ${snapshot.documents.size} completed attempts")
+
+            val completedQuizIds = snapshot.documents.mapNotNull { doc ->
+                android.util.Log.d("QuizRepository", "Processing document: ${doc.id}")
+                val attempt = parseQuizAttemptFromDocument(doc)
+                android.util.Log.d("QuizRepository", "Attempt: $attempt, quizId: ${attempt?.quizId}")
+                attempt?.quizId
+            }.distinct()
+
+            android.util.Log.d("QuizRepository", "Final completed quiz IDs: $completedQuizIds")
+            Result.success(completedQuizIds)
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error in getUserCompletedQuizIds: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserQuizStats(userId: String): Result<QuizStats> {
+        return try {
+            val snapshot = attemptsCollection
+                .whereEqualTo("user_id", userId)
+                .get()
+                .await()
+
+            val attempts = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(QuizAttempt::class.java)?.copy(id = doc.id)
+            }
+            val completed = attempts.filter { it.isCompleted }
+
+            val stats = QuizStats(
+                totalQuizzesTaken = attempts.size,
+                totalQuizzesCompleted = completed.size,
+                totalXpEarned = completed.sumOf { it.xpEarned },
+                averageScore = if (completed.isNotEmpty()) {
+                    completed.map { it.score }.average()
+                } else 0.0,
+                bestScore = completed.maxOfOrNull { it.score } ?: 0
+            )
+
+            Result.success(stats)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun parseQuizFromDocument(doc: com.google.firebase.firestore.DocumentSnapshot): Quiz? {
+        return try {
+            Quiz(
+                id = doc.id,
+                titleEn = doc.getString("title_en") ?: "",
+                titleId = doc.getString("title_id") ?: "",
+                imageUrl = doc.getString("image_url") ?: "",
+                shortDescriptionEn = doc.getString("short_description_en") ?: "",
+                shortDescriptionId = doc.getString("short_description_id") ?: "",
+                descriptionEn = doc.getString("description_en") ?: "",
+                descriptionId = doc.getString("description_id") ?: "",
+                totalQuestions = (doc.get("total_questions") as? Long)?.toInt() ?: 0,
+                educationLevel = doc.getString("education_level") ?: "",
+                category = doc.getString("category") ?: "",
+                difficulty = doc.getString("difficulty") ?: "medium",
+                xpReward = (doc.get("xp_reward") as? Long)?.toInt() ?: 100,
+                timeLimitSeconds = (doc.get("time_limit_seconds") as? Long)?.toInt() ?: 30,
+                questionIds = (doc.get("question_ids") as? List<String>) ?: emptyList(),
+                isActive = doc.getBoolean("is_active") ?: true,
+                createdAt = doc.getDate("created_at")
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error parsing quiz document ${doc.id}: ${e.message}")
+            null
+        }
+    }
+
+    private fun parseQuestionFromDocument(doc: com.google.firebase.firestore.DocumentSnapshot): Question? {
+        return try {
+            Question(
+                id = doc.id,
+                quizId = doc.getString("quiz_id") ?: "",
+                questionTextEn = doc.getString("question_text_en") ?: "",
+                questionTextId = doc.getString("question_text_id") ?: "",
+                questionType = doc.getString("question_type") ?: "multiple_choice",
+                optionsEn = (doc.get("options_en") as? List<String>) ?: emptyList(),
+                optionsId = (doc.get("options_id") as? List<String>) ?: emptyList(),
+                correctAnswerIndex = (doc.get("correct_answer_index") as? Long)?.toInt() ?: 0,
+                explanationEn = doc.getString("explanation_en") ?: "",
+                explanationId = doc.getString("explanation_id") ?: "",
+                difficulty = doc.getString("difficulty") ?: "medium",
+                orderIndex = (doc.get("order_index") as? Long)?.toInt() ?: 0
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error parsing question document ${doc.id}: ${e.message}")
+            null
+        }
+    }
+
+    private fun parseQuizAttemptFromDocument(doc: com.google.firebase.firestore.DocumentSnapshot): QuizAttempt? {
+        return try {
+            @Suppress("UNCHECKED_CAST")
+            val answersMap = (doc.get("answers") as? Map<String, Map<String, Any>>)?.mapValues { (_, value) ->
+                UserAnswer(
+                    questionId = value["question_id"] as? String ?: "",
+                    selectedAnswerIndex = ((value["selected_answer_index"] as? Number)?.toInt()) ?: -1,
+                    isCorrect = value["is_correct"] as? Boolean ?: false,
+                    timeTakenSeconds = ((value["time_taken_seconds"] as? Number)?.toInt()) ?: 0
+                )
+            } ?: emptyMap()
+
+            QuizAttempt(
+                id = doc.id,
+                userId = doc.getString("user_id") ?: "",
+                quizId = doc.getString("quiz_id") ?: "",
+                score = (doc.get("score") as? Long)?.toInt() ?: 0,
+                totalQuestions = (doc.get("total_questions") as? Long)?.toInt() ?: 0,
+                correctAnswers = (doc.get("correct_answers") as? Long)?.toInt() ?: 0,
+                wrongAnswers = (doc.get("wrong_answers") as? Long)?.toInt() ?: 0,
+                completionPercentage = (doc.get("completion_percentage") as? Long)?.toInt() ?: 0,
+                xpEarned = (doc.get("xp_earned") as? Long)?.toInt() ?: 0,
+                timeTakenSeconds = (doc.get("time_taken_seconds") as? Long)?.toInt() ?: 0,
+                answers = answersMap,
+                isCompleted = doc.getBoolean("is_completed") ?: false,
+                startedAt = doc.getDate("started_at"),
+                completedAt = doc.getDate("completed_at")
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("QuizRepository", "Error parsing quiz attempt document ${doc.id}: ${e.message}")
+            null
+        }
+    }
 }

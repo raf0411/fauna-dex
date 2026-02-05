@@ -1,10 +1,10 @@
 package android.app.faunadex.presentation.quiz
 
 import android.app.faunadex.R
-import android.app.faunadex.data.repository.QuizRepository
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.TopAppBar
 import android.app.faunadex.presentation.components.TopAppBarUserData
+import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.JerseyFont
@@ -31,6 +31,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,6 +61,11 @@ fun QuizScreen(
     viewModel: QuizViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("QuizScreen", "Screen shown, reloading data...")
+        viewModel.refresh()
+    }
 
     QuizScreenContent(
         uiState = uiState,
@@ -108,6 +116,9 @@ fun QuizScreenContent(
     ) { paddingValues ->
         QuizContent(
             modifier = Modifier.padding(paddingValues),
+            availableQuizzes = uiState.availableQuizzes,
+            completedQuizzes = uiState.completedQuizzes,
+            isLoading = uiState.isLoading,
             onNavigateToQuizDetail = onNavigateToQuizDetail
         )
     }
@@ -116,10 +127,22 @@ fun QuizScreenContent(
 @Composable
 private fun QuizContent(
     modifier: Modifier = Modifier,
+    availableQuizzes: List<android.app.faunadex.domain.model.Quiz>,
+    completedQuizzes: List<android.app.faunadex.domain.model.Quiz>,
+    isLoading: Boolean,
     onNavigateToQuizDetail: (String) -> Unit = {}
 ) {
-    val availableQuizzes = QuizRepository.getAvailableQuizzes()
-    val completedQuizzes = QuizRepository.getCompletedQuizzes()
+    val context = LocalContext.current
+
+    if (isLoading) {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = PrimaryGreen)
+        }
+        return
+    }
 
     Column(
         modifier = modifier
@@ -133,36 +156,46 @@ private fun QuizContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Available Quizzes
-        availableQuizzes.forEach { quiz ->
-            QuizCardItem(
-                title = quiz.title,
-                subtitle = quiz.description.take(40) + "...",
-                totalQuestions = quiz.totalQuestions,
-                imageUrl = quiz.imageUrl,
-                isCompleted = false,
-                onCardClick = { onNavigateToQuizDetail(quiz.id) }
+        if (availableQuizzes.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_available_quizzes),
+                color = MediumGreenSage,
+                fontSize = 18.sp,
+                fontFamily = JerseyFont,
+                modifier = Modifier.padding(16.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+        } else {
+            availableQuizzes.forEach { quiz ->
+                QuizCardItem(
+                    title = QuizLanguageHelper.getQuizTitle(quiz, context),
+                    subtitle = QuizLanguageHelper.getQuizShortDescription(quiz, context),
+                    totalQuestions = quiz.totalQuestions,
+                    imageUrl = quiz.imageUrl,
+                    isCompleted = false,
+                    onCardClick = { onNavigateToQuizDetail(quiz.id) }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        SectionTitle(title = stringResource(R.string.quiz_completed))
+        if (completedQuizzes.isNotEmpty()) {
+            SectionTitle(title = stringResource(R.string.quiz_completed))
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Completed Quizzes
-        completedQuizzes.forEach { quiz ->
-            QuizCardItem(
-                title = quiz.title,
-                subtitle = quiz.description.take(40) + "...",
-                totalQuestions = quiz.totalQuestions,
-                imageUrl = quiz.imageUrl,
-                isCompleted = true,
-                onCardClick = {}
-            )
             Spacer(modifier = Modifier.height(12.dp))
+
+            completedQuizzes.forEach { quiz ->
+                QuizCardItem(
+                    title = QuizLanguageHelper.getQuizTitle(quiz, context),
+                    subtitle = QuizLanguageHelper.getQuizShortDescription(quiz, context),
+                    totalQuestions = quiz.totalQuestions,
+                    imageUrl = quiz.imageUrl,
+                    isCompleted = true,
+                    onCardClick = {}
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -293,7 +326,7 @@ private fun QuizCardItem(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    text = "$totalQuestions questions",
+                    text = stringResource(R.string.questions_format, totalQuestions),
                     color = if (isCompleted)
                         MediumGreenSage.copy(alpha = 0.4f)
                     else

@@ -50,6 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -66,6 +67,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -79,6 +83,27 @@ fun QuizGameplayScreen(
     viewModel: QuizGameplayViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    viewModel.pauseMusic()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.resumeMusic()
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -537,6 +562,51 @@ fun AnswerOption(
 @Composable
 fun QuizGameplayScreenPreview() {
     FaunaDexTheme {
-        QuizGameplayScreen()
+        val mockQuestion = android.app.faunadex.domain.model.Question(
+            id = "q1",
+            quizId = "quiz_1",
+            questionTextEn = "What is the scientific name of the Komodo Dragon?",
+            questionTextId = "Apa nama ilmiah Komodo?",
+            questionType = "multiple_choice",
+            optionsEn = listOf(
+                "Varanus komodoensis",
+                "Varanus salvator",
+                "Varanus gouldi",
+                "Varanus acanthurus"
+            ),
+            optionsId = listOf(
+                "Varanus komodoensis",
+                "Varanus salvator",
+                "Varanus gouldi",
+                "Varanus acanthurus"
+            ),
+            correctAnswerIndex = 0,
+            explanationEn = "Komodo is scientifically known as Varanus komodoensis.",
+            explanationId = "Komodo secara ilmiah dikenal sebagai Varanus komodoensis.",
+            difficulty = "medium",
+            orderIndex = 0
+        )
+
+        val mockUiState = QuizGameplayUiState(
+            quiz = null,
+            questions = listOf(mockQuestion),
+            currentQuestionIndex = 0,
+            selectedAnswerIndex = null,
+            isRevealed = false,
+            timeRemaining = 120,
+            userAnswers = emptyMap(),
+            attemptId = "",
+            isLoading = false,
+            error = null,
+            isQuizCompleted = false
+        )
+
+        QuizGameplayContent(
+            uiState = mockUiState,
+            onSelectAnswer = {},
+            onConfirmAnswer = {},
+            onNextQuestion = {},
+            onQuizCompleted = { _, _, _, _ -> }
+        )
     }
 }

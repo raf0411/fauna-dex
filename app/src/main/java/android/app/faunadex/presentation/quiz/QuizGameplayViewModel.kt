@@ -9,6 +9,7 @@ import android.app.faunadex.domain.usecase.GetCurrentUserUseCase
 import android.app.faunadex.domain.usecase.GetQuizQuestionsUseCase
 import android.app.faunadex.domain.usecase.SubmitQuizUseCase
 import android.app.faunadex.domain.repository.QuizRepository
+import android.app.faunadex.utils.QuizMusicPlayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -69,6 +70,9 @@ class QuizGameplayViewModel @Inject constructor(
     private var questionStartTime: Long = 0
     private var quizStartTime: Long = 0
 
+    // Music player for background music
+    private val musicPlayer: QuizMusicPlayer = QuizMusicPlayer(context, R.raw.quiz_background_music)
+
     init {
         loadQuizAndQuestions()
     }
@@ -113,6 +117,9 @@ class QuizGameplayViewModel @Inject constructor(
                         quizStartTime = System.currentTimeMillis()
                         questionStartTime = System.currentTimeMillis()
                         startTimer()
+
+                        // Start background music
+                        musicPlayer.play()
                     } else {
                         _uiState.value = _uiState.value.copy(
                             error = context.getString(R.string.error_user_not_logged_in),
@@ -196,6 +203,16 @@ class QuizGameplayViewModel @Inject constructor(
         }
     }
 
+    fun pauseMusic() {
+        musicPlayer.pause()
+    }
+
+    fun resumeMusic() {
+        if (!_uiState.value.isQuizCompleted) {
+            musicPlayer.play()
+        }
+    }
+
     private fun submitQuiz() {
         viewModelScope.launch {
             android.util.Log.d("QuizGameplay", "submitQuiz() called")
@@ -244,6 +261,10 @@ class QuizGameplayViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     android.util.Log.d("QuizGameplay", "Quiz submitted successfully!")
+
+                    // Stop music when quiz is completed
+                    musicPlayer.stop()
+
                     _uiState.value = state.copy(isQuizCompleted = true)
                 },
                 onFailure = { exception ->
@@ -259,5 +280,8 @@ class QuizGameplayViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+
+        // Release music player resources
+        musicPlayer.release()
     }
 }

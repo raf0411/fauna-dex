@@ -240,7 +240,8 @@ fun QuizGameplayContent(
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val currentQuestion = uiState.currentQuestion
-    val isShowingConfetti = uiState.isRevealed && uiState.selectedAnswerIndex == currentQuestion?.correctAnswerIndex
+    val currentQuestionAnswer = currentQuestion?.let { uiState.userAnswers[it.id] }
+    val isShowingConfetti = uiState.isRevealed && currentQuestionAnswer?.isCorrect == true
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 

@@ -174,7 +174,7 @@ class QuizGameplayViewModel @Inject constructor(
             }
 
             if (_uiState.value.timeRemaining <= 0 && !_uiState.value.isRevealed) {
-                confirmAnswer()
+                confirmAnswer(isTimeout = true)
             }
         }
     }
@@ -186,13 +186,18 @@ class QuizGameplayViewModel @Inject constructor(
         }
     }
 
-    fun confirmAnswer() {
+    fun confirmAnswer(isTimeout: Boolean = false) {
         val state = _uiState.value
         val currentQuestion = state.currentQuestion ?: return
         val selectedIndex = state.selectedAnswerIndex ?: -1
 
         val timeTaken = ((System.currentTimeMillis() - questionStartTime) / 1000).toInt()
-        val isCorrect = selectedIndex == currentQuestion.correctAnswerIndex
+
+        val isCorrect = if (isTimeout) {
+            false
+        } else {
+            selectedIndex == currentQuestion.correctAnswerIndex
+        }
 
         if (isCorrect) {
             soundEffectPlayer.play(R.raw.correct_sound_effect)

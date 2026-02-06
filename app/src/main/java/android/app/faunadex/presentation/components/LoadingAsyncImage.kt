@@ -1,7 +1,7 @@
 package android.app.faunadex.presentation.components
 
 import android.app.faunadex.R
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,11 +13,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 
-/**
- * Custom AsyncImage with shimmer loading effect
- * Shows skeleton animation while image is loading
- * Best practice: Provides better UX by showing loading state
- */
 @Composable
 fun LoadingAsyncImage(
     model: Any?,
@@ -28,24 +23,31 @@ fun LoadingAsyncImage(
     placeholder: Int = R.drawable.animal_dummy,
     error: Int = R.drawable.animal_dummy
 ) {
-    Box(modifier = modifier) {
-        SubcomposeAsyncImage(
-            model = model,
-            contentDescription = contentDescription,
-            modifier = Modifier
-                .matchParentSize()
-                .clip(shape),
-            contentScale = contentScale
-        ) {
-            val state = painter.state
-            if (state is coil.compose.AsyncImagePainter.State.Loading ||
-                state is coil.compose.AsyncImagePainter.State.Empty) {
+    SubcomposeAsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        modifier = modifier.clip(shape),
+        contentScale = contentScale
+    ) {
+        val state = painter.state
+        when (state) {
+            is coil.compose.AsyncImagePainter.State.Loading,
+            is coil.compose.AsyncImagePainter.State.Empty -> {
                 ShimmerEffect(
                     modifier = Modifier.matchParentSize(),
                     shape = shape
                 )
-            } else {
+            }
+            is coil.compose.AsyncImagePainter.State.Success -> {
                 SubcomposeAsyncImageContent()
+            }
+            is coil.compose.AsyncImagePainter.State.Error -> {
+                Image(
+                    painter = painterResource(error),
+                    contentDescription = contentDescription,
+                    contentScale = contentScale,
+                    modifier = Modifier.matchParentSize()
+                )
             }
         }
     }

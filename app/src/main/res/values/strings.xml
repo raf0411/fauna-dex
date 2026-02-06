@@ -56,6 +56,30 @@
     <string name="filter_endangered">Endangered Species</string>
     <string name="filter_endemic">Endemic to Indonesia</string>
 
+    <!-- Region/Island Filters -->
+    <string name="filter_java">Java Island</string>
+    <string name="filter_sumatra">Sumatra Island</string>
+    <string name="filter_sulawesi">Sulawesi Island</string>
+    <string name="filter_bali">Bali Island</string>
+    <string name="filter_kalimantan">Kalimantan (Borneo)</string>
+    <string name="filter_papua">Papua</string>
+
+    <!-- Diet Filters -->
+    <string name="filter_carnivore">Carnivores</string>
+    <string name="filter_herbivore">Herbivores</string>
+    <string name="filter_omnivore">Omnivores</string>
+
+    <!-- Activity Period Filters -->
+    <string name="filter_diurnal">Diurnal (Day Active)</string>
+    <string name="filter_nocturnal">Nocturnal (Night Active)</string>
+
+    <!-- Protection Status Filter -->
+    <string name="filter_protected">Protected by Law</string>
+
+    <!-- Size Filters -->
+    <string name="filter_small">Small Animals</string>
+    <string name="filter_large">Large Animals</string>
+
     <!-- Profile Screen -->
     <string name="profile">Profile</string>
     <string name="edit_profile">Edit Profile</string>

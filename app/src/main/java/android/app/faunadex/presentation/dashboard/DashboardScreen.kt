@@ -120,17 +120,50 @@ fun DashboardScreenContent(
     val filterEndangered = stringResource(R.string.filter_endangered)
     val filterEndemic = stringResource(R.string.filter_endemic)
 
+    val filterJava = stringResource(R.string.filter_java)
+    val filterSumatra = stringResource(R.string.filter_sumatra)
+    val filterSulawesi = stringResource(R.string.filter_sulawesi)
+    val filterBali = stringResource(R.string.filter_bali)
+    val filterKalimantan = stringResource(R.string.filter_kalimantan)
+    val filterPapua = stringResource(R.string.filter_papua)
+
+    val filterCarnivore = stringResource(R.string.filter_carnivore)
+    val filterHerbivore = stringResource(R.string.filter_herbivore)
+    val filterOmnivore = stringResource(R.string.filter_omnivore)
+
+    val filterDiurnal = stringResource(R.string.filter_diurnal)
+    val filterNocturnal = stringResource(R.string.filter_nocturnal)
+
+    val filterProtected = stringResource(R.string.filter_protected)
+
+    val filterSmall = stringResource(R.string.filter_small)
+    val filterLarge = stringResource(R.string.filter_large)
+
     var appliedFilterOptions by remember {
         mutableStateOf(
             listOf(
                 FilterOption("favorites", filterMyFavorites, false),
-                FilterOption("mammal", filterMammals, false),
-                FilterOption("bird", filterBirds, false),
-                FilterOption("reptile", filterReptiles, false),
-                FilterOption("amphibian", filterAmphibians, false),
-                FilterOption("fish", filterFish, false),
+                FilterOption("Mammal", filterMammals, false),
+                FilterOption("Bird", filterBirds, false),
+                FilterOption("Reptile", filterReptiles, false),
+                FilterOption("Amphibian", filterAmphibians, false),
+                FilterOption("Fish", filterFish, false),
                 FilterOption("endangered", filterEndangered, false),
-                FilterOption("endemic", filterEndemic, false)
+                FilterOption("endemic", filterEndemic, false),
+                FilterOption("Java", filterJava, false),
+                FilterOption("Sumatra", filterSumatra, false),
+                FilterOption("Sulawesi", filterSulawesi, false),
+                FilterOption("Bali", filterBali, false),
+                FilterOption("Kalimantan", filterKalimantan, false),
+                FilterOption("Papua", filterPapua, false),
+                FilterOption("Carnivore", filterCarnivore, false),
+                FilterOption("Herbivore", filterHerbivore, false),
+                FilterOption("Omnivore", filterOmnivore, false),
+                FilterOption("Diurnal", filterDiurnal, false),
+                FilterOption("Nocturnal", filterNocturnal, false),
+                FilterOption("protected", filterProtected, false),
+                FilterOption("Small", filterSmall, false),
+                FilterOption("Large", filterLarge, false)
             )
         )
     }
@@ -254,12 +287,56 @@ fun DashboardScreenContent(
                             when (filter) {
                                 "favorites" ->
                                     uiState.favoriteAnimalIds.contains(animal.id)
-                                "mammal", "bird", "reptile", "amphibian", "fish" ->
+
+                                "Mammal", "Bird", "Reptile", "Amphibian", "Fish" ->
                                     animal.category.equals(filter, ignoreCase = true)
+
                                 "endangered" ->
                                     animal.conservationStatus in listOf("CR", "EN", "VU")
                                 "endemic" ->
                                     animal.endemicStatus.contains("Endemic", ignoreCase = true)
+
+                                "Java" ->
+                                    animal.endemicStatus.contains("Java", ignoreCase = true)
+                                "Sumatra" ->
+                                    animal.endemicStatus.contains("Sumatra", ignoreCase = true)
+                                "Sulawesi" ->
+                                    animal.endemicStatus.contains("Sulawesi", ignoreCase = true)
+                                "Bali" ->
+                                    animal.endemicStatus.contains("Bali", ignoreCase = true)
+                                "Kalimantan" ->
+                                    animal.endemicStatus.contains("Kalimantan", ignoreCase = true) ||
+                                    animal.endemicStatus.contains("Borneo", ignoreCase = true)
+                                "Papua" ->
+                                    animal.endemicStatus.contains("Papua", ignoreCase = true) ||
+                                    animal.endemicStatus.contains("Raja Ampat", ignoreCase = true) ||
+                                    animal.endemicStatus.contains("Waigeo", ignoreCase = true)
+
+                                "Carnivore" ->
+                                    animal.diet.contains("Carnivore", ignoreCase = true) ||
+                                    animal.diet.contains("Karnivora", ignoreCase = true)
+                                "Herbivore" ->
+                                    animal.diet.contains("Herbivore", ignoreCase = true) ||
+                                    animal.diet.contains("Herbivora", ignoreCase = true)
+                                "Omnivore" ->
+                                    animal.diet.contains("Omnivore", ignoreCase = true) ||
+                                    animal.diet.contains("Omnivora", ignoreCase = true)
+
+                                "Diurnal" ->
+                                    animal.activityPeriod.contains("Diurnal", ignoreCase = true)
+                                "Nocturnal" ->
+                                    animal.activityPeriod.contains("Nocturnal", ignoreCase = true)
+
+                                "protected" ->
+                                    animal.isProtected
+
+                                "Small" ->
+                                    animal.sizeCategory.contains("Small", ignoreCase = true) ||
+                                    animal.sizeCategory.contains("Kecil", ignoreCase = true)
+                                "Large" ->
+                                    animal.sizeCategory.contains("Large", ignoreCase = true) ||
+                                    animal.sizeCategory.contains("Besar", ignoreCase = true)
+
                                 else -> false
                             }
                         }
@@ -314,7 +391,6 @@ fun DashboardScreenContent(
                 onRefresh = {
                     isRefreshing = true
                     viewModel?.loadAnimals()
-                    // Reset loading state after a short delay
                     coroutineScope.launch {
                         kotlinx.coroutines.delay(1000)
                         isRefreshing = false

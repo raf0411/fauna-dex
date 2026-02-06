@@ -56,6 +56,30 @@
     <string name="filter_endangered">Spesies Terancam Punah</string>
     <string name="filter_endemic">Endemik Indonesia</string>
 
+    <!-- Region/Island Filters -->
+    <string name="filter_java">Pulau Jawa</string>
+    <string name="filter_sumatra">Pulau Sumatra</string>
+    <string name="filter_sulawesi">Pulau Sulawesi</string>
+    <string name="filter_bali">Pulau Bali</string>
+    <string name="filter_kalimantan">Kalimantan (Borneo)</string>
+    <string name="filter_papua">Papua</string>
+
+    <!-- Diet Filters -->
+    <string name="filter_carnivore">Karnivora</string>
+    <string name="filter_herbivore">Herbivora</string>
+    <string name="filter_omnivore">Omnivora</string>
+
+    <!-- Activity Period Filters -->
+    <string name="filter_diurnal">Diurnal (Aktif Siang Hari)</string>
+    <string name="filter_nocturnal">Nokturnal (Aktif Malam Hari)</string>
+
+    <!-- Protection Status Filter -->
+    <string name="filter_protected">Dilindungi Undang-Undang</string>
+
+    <!-- Size Filters -->
+    <string name="filter_small">Hewan Kecil</string>
+    <string name="filter_large">Hewan Besar</string>
+
     <!-- Profile Screen -->
     <string name="profile">Profil</string>
     <string name="edit_profile">Edit Profil</string>

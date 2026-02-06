@@ -100,7 +100,6 @@ import com.google.accompanist.permissions.shouldShowRationale
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import androidx.core.graphics.createBitmap
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -1427,7 +1426,6 @@ private fun captureArView(arSceneView: ArSceneView, onResult: (Boolean) -> Unit)
                     val saved = saveBitmapToGallery(arSceneView.context, bitmap)
                     onResult(saved)
                 } else {
-                    android.util.Log.e("AR_CAPTURE", "PixelCopy failed with result: $copyResult")
                     onResult(false)
                 }
             },
@@ -1447,21 +1445,20 @@ private fun captureArView(arSceneView: ArSceneView, onResult: (Boolean) -> Unit)
                 onResult(false)
             }
         } catch (e: Exception) {
-            android.util.Log.e("AR_CAPTURE", "Capture failed: ${e.message}")
             onResult(false)
         }
     }
 }
 
 private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Boolean {
-    val filename = "FaunaDex_AR_${System.currentTimeMillis()}.jpg"
+    val filename = "WildAR!_AR_${System.currentTimeMillis()}.jpg"
 
     return try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, filename)
                 put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FaunaDex")
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/WildAR!")
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
 
@@ -1479,12 +1476,11 @@ private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Boolean {
                 contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
                 context.contentResolver.update(uri, contentValues, null, null)
 
-                android.util.Log.d("AR_CAPTURE", "Image saved to gallery: $uri")
                 true
             } ?: false
         } else {
             val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            val faunaDexDir = java.io.File(imagesDir, "FaunaDex")
+            val faunaDexDir = java.io.File(imagesDir, "WildAR!")
             if (!faunaDexDir.exists()) {
                 faunaDexDir.mkdirs()
             }
@@ -1498,11 +1494,9 @@ private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Boolean {
             mediaScanIntent.data = android.net.Uri.fromFile(imageFile)
             context.sendBroadcast(mediaScanIntent)
 
-            android.util.Log.d("AR_CAPTURE", "Image saved to: ${imageFile.absolutePath}")
             true
         }
     } catch (e: Exception) {
-        android.util.Log.e("AR_CAPTURE", "Failed to save image: ${e.message}")
         false
     }
 }

@@ -57,7 +57,6 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Rotate90DegreesCw
 import androidx.compose.material.icons.filled.ZoomOutMap
@@ -233,11 +232,18 @@ fun ArCameraContent(
                     planeRenderer.isVisible = true
 
                     configureSession { _, config ->
-                        config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-                        config.lightEstimationMode = com.google.ar.core.Config.LightEstimationMode.ENVIRONMENTAL_HDR
+                        // HORIZONTAL only - fastest detection
+                        config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL
+
+                        // Auto focus
+                        config.focusMode = com.google.ar.core.Config.FocusMode.AUTO
+
+                        android.util.Log.d("AR_CONFIG", "✅ AR configured: HORIZONTAL planes only")
                     }
 
                     var frameCounter = 0
+                    val startTime = System.currentTimeMillis()
+
                     onFrame = { _ ->
                         frameCounter++
                         val currentSession = arSession
@@ -246,15 +252,38 @@ fun ArCameraContent(
                         }
 
                         currentSession?.let { session ->
-                            val allPlanes = session.getAllTrackables(com.google.ar.core.Plane::class.java)
-                            val trackingPlanes = allPlanes.count { plane ->
-                                plane.trackingState == com.google.ar.core.TrackingState.TRACKING
-                            }
+                            // Check every 5 frames for faster detection
+                            if (frameCounter % 5 == 0) {
+                                val allPlanes = session.getAllTrackables(com.google.ar.core.Plane::class.java)
+                                val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
 
-                            if (trackingPlanes != planeCount) {
-                                android.util.Log.d("AR_DEBUG", "Plane count changed: $planeCount -> $trackingPlanes (total planes: ${allPlanes.size})")
-                                planeCount = trackingPlanes
-                                onPlaneDetected(trackingPlanes)
+                                // Log all planes for debugging
+                                if (frameCounter % 30 == 0) {
+                                    android.util.Log.d("AR_DEBUG", "📊 Total planes found: ${allPlanes.size}")
+                                    allPlanes.take(3).forEachIndexed { idx, plane ->
+                                        android.util.Log.d("AR_DEBUG", "  Plane $idx: type=${plane.type}, state=${plane.trackingState}, subsumed=${plane.subsumedBy != null}")
+                                    }
+                                }
+
+                                // Accept ANY plane that's not stopped
+                                val usablePlanes = allPlanes.count { plane ->
+                                    plane.trackingState != com.google.ar.core.TrackingState.STOPPED &&
+                                    plane.subsumedBy == null
+                                }
+
+                                // Force enable after 2 seconds even without perfect plane
+                                val effectivePlaneCount = if (elapsedSeconds >= 2 && usablePlanes == 0) {
+                                    android.util.Log.d("AR_DEBUG", "⚡ FORCE ENABLING after ${elapsedSeconds}s - allowing instant placement")
+                                    1 // Enable tapping
+                                } else {
+                                    usablePlanes
+                                }
+
+                                if (effectivePlaneCount != planeCount) {
+                                    android.util.Log.d("AR_DEBUG", "✅ Plane count: $planeCount -> $effectivePlaneCount (detected: $usablePlanes, total: ${allPlanes.size}, elapsed: ${elapsedSeconds}s)")
+                                    planeCount = effectivePlaneCount
+                                    onPlaneDetected(effectivePlaneCount)
+                                }
                             }
                         }
                     }
@@ -263,7 +292,8 @@ fun ArCameraContent(
                         android.util.Log.d("AR_DEBUG", "=== TAP DETECTED ===")
                         android.util.Log.d("AR_DEBUG", "isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
 
-                        if (!isModelPlaced && !isModelLoading) {
+                        // ONLY allow tap if plane is detected AND model not placed/loading
+                        if (!isModelPlaced && !isModelLoading && planeCount > 0) {
                             isModelLoading = true
                             android.util.Log.d("AR_DEBUG", "=== STARTING MODEL LOAD ===")
 
@@ -291,13 +321,17 @@ fun ArCameraContent(
                                 val newModelNode = ArModelNode(
                                     engine = engine,
                                     modelGlbFileLocation = modelUrl,
-                                    autoAnimate = true,
-                                    scaleToUnits = 1.5f,
+                                    autoAnimate = false,
+                                    scaleToUnits = 1.0f,
                                     centerOrigin = io.github.sceneview.math.Position(0f, 0f, 0f),
                                     onLoaded = {
                                         android.util.Log.d("AR_DEBUG", "✓ Model loaded successfully from: $modelUrl")
                                         isModelLoading = false
                                         isModelPlaced = true
+
+                                        planeRenderer.isVisible = false
+                                        planeRenderer.isEnabled = false
+
                                         currentSessionState.selectedAnimal?.let { animal ->
                                             onAnimalPlaced(animal)
                                         }
@@ -327,7 +361,7 @@ fun ArCameraContent(
                                 isModelLoading = false
                             }
                         } else {
-                            android.util.Log.d("AR_DEBUG", "Tap ignored - isModelPlaced: $isModelPlaced, isModelLoading: $isModelLoading")
+                            android.util.Log.d("AR_DEBUG", "Tap ignored - planeCount: $planeCount, isModelPlaced: $isModelPlaced, isModelLoading: $isModelLoading")
                         }
                     }
                 }
@@ -360,6 +394,7 @@ fun ArCameraContent(
         ArCameraOverlay(
             planeCount = planeCount,
             isModelPlaced = isModelPlaced,
+            isModelLoading = isModelLoading,
             sessionState = sessionState,
             onNavigateBack = onNavigateBack,
             onClearAnimals = {
@@ -369,6 +404,11 @@ fun ArCameraContent(
                 }
                 modelNodeRef = null
                 isModelPlaced = false
+                planeCount = 0
+
+                arSceneViewRef?.planeRenderer?.isVisible = true
+                arSceneViewRef?.planeRenderer?.isEnabled = true
+
                 onClearAnimals()
             },
             showCaptureSuccess = showCaptureSuccess,
@@ -392,6 +432,7 @@ fun ArCameraContent(
 fun BoxScope.ArCameraOverlay(
     planeCount: Int,
     isModelPlaced: Boolean,
+    isModelLoading: Boolean = false,
     sessionState: ArSessionState,
     onNavigateBack: () -> Unit,
     onClearAnimals: () -> Unit,
@@ -407,13 +448,24 @@ fun BoxScope.ArCameraOverlay(
 
     LaunchedEffect(isModelPlaced) {
         if (isModelPlaced) {
+            android.util.Log.d("AR_OVERLAY", "✅ Model placed - starting tooltip sequence")
             showSuccessMessage = true
             kotlinx.coroutines.delay(2000L)
             showSuccessMessage = false
+            android.util.Log.d("AR_OVERLAY", "💡 Showing gesture hints")
             showGestureHint = true
             kotlinx.coroutines.delay(5000L)
             showGestureHint = false
+            android.util.Log.d("AR_OVERLAY", "👋 Hiding gesture hints")
+        } else {
+            // Reset when model is cleared
+            showSuccessMessage = false
+            showGestureHint = false
         }
+    }
+
+    LaunchedEffect(showGestureHint, isModelPlaced) {
+        android.util.Log.d("AR_OVERLAY", "🎯 Gesture hint visible: $showGestureHint, Model placed: $isModelPlaced")
     }
 
     Row(
@@ -448,12 +500,10 @@ fun BoxScope.ArCameraOverlay(
             )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Only show scanning badge when needed
+        if (planeCount == 0 && !isModelPlaced) {
             Surface(
-                color = if (planeCount > 0) PrimaryGreen.copy(alpha = 0.9f) else Color.Gray.copy(alpha = 0.7f),
+                color = Color.Gray.copy(alpha = 0.7f),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
@@ -462,46 +512,17 @@ fun BoxScope.ArCameraOverlay(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Icon(
-                        imageVector = if (planeCount > 0) Icons.Default.CheckCircle else Icons.Default.CenterFocusWeak,
+                        imageVector = Icons.Default.CenterFocusWeak,
                         contentDescription = null,
                         tint = White,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = if (planeCount > 0) "$planeCount ${stringResource(R.string.ar_surfaces_detected, planeCount, if (planeCount > 1) "s" else "")}" else stringResource(R.string.ar_scanning),
+                        text = stringResource(R.string.ar_scanning),
                         color = White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
-                }
-            }
-
-            AnimatedVisibility(visible = isModelPlaced) {
-                IconButton(
-                    onClick = onCapture,
-                    enabled = !isCapturing,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            if (isCapturing) Color.Gray.copy(alpha = 0.5f)
-                            else PrimaryGreen,
-                            RoundedCornerShape(10.dp)
-                        )
-                ) {
-                    if (isCapturing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = PastelYellow,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Capture",
-                            tint = PastelYellow,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
                 }
             }
         }
@@ -543,7 +564,7 @@ fun BoxScope.ArCameraOverlay(
         }
     }
 
-    if (!isModelPlaced) {
+    if (!isModelPlaced && !isModelLoading) {
         if (planeCount == 0) {
             Column(
                 modifier = Modifier
@@ -593,48 +614,43 @@ fun BoxScope.ArCameraOverlay(
                 }
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
-                    color = Color.Black.copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        sessionState.selectedAnimal?.let { animal ->
-                            Text(
-                                text = stringResource(R.string.ar_ready_to_place, animal.name),
-                                color = PrimaryGreenLime,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Text(
-                            text = stringResource(R.string.ar_tap_to_place),
-                            color = White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = stringResource(R.string.ar_surface_detected),
-                            color = White.copy(alpha = 0.7f),
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-
+            // Only show reticle when plane detected - no text box to avoid UI collision
             ArReticle()
+        }
+    }
+
+    // Show "Tap to place" message at bottom when plane detected but model not placed
+    if (!isModelPlaced && !isModelLoading && planeCount > 0) {
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = navigationBarPadding.calculateBottomPadding())
+                .padding(24.dp),
+            color = PrimaryGreen.copy(alpha = 0.9f),
+            shape = RoundedCornerShape(64.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CenterFocusWeak,
+                    contentDescription = null,
+                    tint = White,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = stringResource(
+                        R.string.ar_tap_to_place_named,
+                        sessionState.selectedAnimal?.name ?: stringResource(R.string.ar_tap_to_place_animal)
+                    ),
+                    color = White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = JerseyFont
+                )
+            }
         }
     }
 
@@ -713,7 +729,7 @@ fun BoxScope.ArCameraOverlay(
         visible = showGestureHint && isModelPlaced,
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(bottom = navigationBarPadding.calculateBottomPadding() + 100.dp)
+            .padding(bottom = navigationBarPadding.calculateBottomPadding() + 150.dp)
     ) {
         Surface(
             color = Color.Black.copy(alpha = 0.85f),
@@ -794,24 +810,18 @@ fun BoxScope.ArCameraOverlay(
         }
     }
 
-    Row(
+    AnimatedVisibility(
+        visible = isModelPlaced,
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        Color.Black.copy(alpha = 0.8f)
-                    )
-                )
-            )
             .padding(bottom = navigationBarPadding.calculateBottomPadding())
-            .padding(24.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(24.dp)
     ) {
-        AnimatedVisibility(visible = isModelPlaced) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Reset button
             IconButton(
                 onClick = onClearAnimals,
                 modifier = Modifier
@@ -820,35 +830,39 @@ fun BoxScope.ArCameraOverlay(
             ) {
                 Icon(
                     imageVector = Icons.Default.Replay,
-                    contentDescription = "Clear Model",
-                    tint = PastelYellow,
+                    contentDescription = "Reset",
+                    tint = White,
                     modifier = Modifier.size(28.dp)
                 )
             }
-        }
 
-        Surface(
-            color = PrimaryGreen.copy(alpha = 0.9f),
-            shape = RoundedCornerShape(64.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(White, CircleShape)
+                    .border(4.dp, PrimaryGreen, CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Pets,
-                    contentDescription = null,
-                    tint = PastelYellow,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = if (isModelPlaced) stringResource(R.string.ar_model_active) else stringResource(R.string.ar_tap_surface_to_place),
-                    color = PastelYellow,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = JerseyFont
-                )
+                IconButton(
+                    onClick = onCapture,
+                    enabled = !isCapturing,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    if (isCapturing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = PrimaryGreen,
+                            strokeWidth = 3.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Capture",
+                            tint = DarkGreen,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -1325,6 +1339,8 @@ fun BoxScope.ArReticle() {
 
         val bracketLength = radius * 0.4f
         val bracketDistance = radius * 0.8f
+
+        // Top-left corner
         drawLine(
             color = PrimaryGreenLime,
             start = Offset(center.x - bracketDistance, center.y - bracketDistance),
@@ -1335,6 +1351,48 @@ fun BoxScope.ArReticle() {
             color = PrimaryGreenLime,
             start = Offset(center.x - bracketDistance, center.y - bracketDistance),
             end = Offset(center.x - bracketDistance, center.y - bracketDistance + bracketLength),
+            strokeWidth = 3.dp.toPx()
+        )
+
+        // Top-right corner
+        drawLine(
+            color = PrimaryGreenLime,
+            start = Offset(center.x + bracketDistance, center.y - bracketDistance),
+            end = Offset(center.x + bracketDistance - bracketLength, center.y - bracketDistance),
+            strokeWidth = 3.dp.toPx()
+        )
+        drawLine(
+            color = PrimaryGreenLime,
+            start = Offset(center.x + bracketDistance, center.y - bracketDistance),
+            end = Offset(center.x + bracketDistance, center.y - bracketDistance + bracketLength),
+            strokeWidth = 3.dp.toPx()
+        )
+
+        // Bottom-left corner
+        drawLine(
+            color = PrimaryGreenLime,
+            start = Offset(center.x - bracketDistance, center.y + bracketDistance),
+            end = Offset(center.x - bracketDistance + bracketLength, center.y + bracketDistance),
+            strokeWidth = 3.dp.toPx()
+        )
+        drawLine(
+            color = PrimaryGreenLime,
+            start = Offset(center.x - bracketDistance, center.y + bracketDistance),
+            end = Offset(center.x - bracketDistance, center.y + bracketDistance - bracketLength),
+            strokeWidth = 3.dp.toPx()
+        )
+
+        // Bottom-right corner
+        drawLine(
+            color = PrimaryGreenLime,
+            start = Offset(center.x + bracketDistance, center.y + bracketDistance),
+            end = Offset(center.x + bracketDistance - bracketLength, center.y + bracketDistance),
+            strokeWidth = 3.dp.toPx()
+        )
+        drawLine(
+            color = PrimaryGreenLime,
+            start = Offset(center.x + bracketDistance, center.y + bracketDistance),
+            end = Offset(center.x + bracketDistance, center.y + bracketDistance - bracketLength),
             strokeWidth = 3.dp.toPx()
         )
     }

@@ -2,6 +2,7 @@ package android.app.faunadex.presentation.dashboard
 
 import android.app.faunadex.R
 import android.app.faunadex.domain.model.User
+import android.util.Log
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.presentation.components.FaunaCard
@@ -53,6 +54,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -281,66 +283,152 @@ fun DashboardScreenContent(
             val filteredFaunaList = remember(animals, searchQuery, appliedFilterOptions, uiState.favoriteAnimalIds) {
                 var result = animals
 
+                Log.d("DashboardFilter", "=== Starting Filter Process ===")
+                Log.d("DashboardFilter", "Total animals: ${animals.size}")
+                Log.d("DashboardFilter", "Selected filters: $selectedFilters")
+
                 if (selectedFilters.isNotEmpty()) {
                     result = result.filter { animal ->
-                        selectedFilters.any { filter ->
-                            when (filter) {
-                                "favorites" ->
-                                    uiState.favoriteAnimalIds.contains(animal.id)
+                        val matches = selectedFilters.any { filter ->
+                            val matchResult = when (filter) {
+                                "favorites" -> {
+                                    val match = uiState.favoriteAnimalIds.contains(animal.id)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - favorites match")
+                                    match
+                                }
 
-                                "Mammal", "Bird", "Reptile", "Amphibian", "Fish" ->
-                                    animal.category.equals(filter, ignoreCase = true)
+                                "Mammal", "Bird", "Reptile", "Amphibian", "Fish" -> {
+                                    val match = when (filter) {
+                                        "Mammal" -> animal.category.equals("Mammal", ignoreCase = true) ||
+                                                   animal.category.equals("Mamalia", ignoreCase = true)
+                                        "Bird" -> animal.category.equals("Bird", ignoreCase = true) ||
+                                                 animal.category.equals("Burung", ignoreCase = true)
+                                        "Reptile" -> animal.category.equals("Reptile", ignoreCase = true) ||
+                                                    animal.category.equals("Reptil", ignoreCase = true)
+                                        "Amphibian" -> animal.category.equals("Amphibian", ignoreCase = true) ||
+                                                      animal.category.equals("Amfibi", ignoreCase = true)
+                                        "Fish" -> animal.category.equals("Fish", ignoreCase = true) ||
+                                                 animal.category.equals("Ikan", ignoreCase = true)
+                                        else -> false
+                                    }
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - category: ${animal.category}")
+                                    else Log.d("DashboardFilter", "  ${animal.name} - NO MATCH: category='${animal.category}' looking for '$filter'")
+                                    match
+                                }
 
-                                "endangered" ->
-                                    animal.conservationStatus in listOf("CR", "EN", "VU")
-                                "endemic" ->
-                                    animal.endemicStatus.contains("Endemic", ignoreCase = true)
+                                "endangered" -> {
+                                    val match = animal.conservationStatus in listOf("CR", "EN", "VU")
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - endangered: ${animal.conservationStatus}")
+                                    match
+                                }
+                                "endemic" -> {
+                                    val match = animal.endemicStatus.contains("Endemic", ignoreCase = true) ||
+                                               animal.endemicStatus.contains("Endemik", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - endemic: ${animal.endemicStatus}")
+                                    match
+                                }
 
-                                "Java" ->
-                                    animal.endemicStatus.contains("Java", ignoreCase = true)
-                                "Sumatra" ->
-                                    animal.endemicStatus.contains("Sumatra", ignoreCase = true)
-                                "Sulawesi" ->
-                                    animal.endemicStatus.contains("Sulawesi", ignoreCase = true)
-                                "Bali" ->
-                                    animal.endemicStatus.contains("Bali", ignoreCase = true)
-                                "Kalimantan" ->
-                                    animal.endemicStatus.contains("Kalimantan", ignoreCase = true) ||
-                                    animal.endemicStatus.contains("Borneo", ignoreCase = true)
-                                "Papua" ->
-                                    animal.endemicStatus.contains("Papua", ignoreCase = true) ||
-                                    animal.endemicStatus.contains("Raja Ampat", ignoreCase = true) ||
-                                    animal.endemicStatus.contains("Waigeo", ignoreCase = true)
+                                "Java" -> {
+                                    val match = animal.endemicStatus.contains("Java", ignoreCase = true) ||
+                                               animal.endemicStatus.contains("Jawa", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Java: ${animal.endemicStatus}")
+                                    match
+                                }
+                                "Sumatra" -> {
+                                    val match = animal.endemicStatus.contains("Sumatra", ignoreCase = true) ||
+                                               animal.endemicStatus.contains("Sumatera", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Sumatra: ${animal.endemicStatus}")
+                                    match
+                                }
+                                "Sulawesi" -> {
+                                    val match = animal.endemicStatus.contains("Sulawesi", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Sulawesi: ${animal.endemicStatus}")
+                                    match
+                                }
+                                "Bali" -> {
+                                    val match = animal.endemicStatus.contains("Bali", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Bali: ${animal.endemicStatus}")
+                                    match
+                                }
+                                "Kalimantan" -> {
+                                    val match = animal.endemicStatus.contains("Kalimantan", ignoreCase = true) ||
+                                            animal.endemicStatus.contains("Borneo", ignoreCase = true) ||
+                                            animal.endemicStatus.contains("Mahakam", ignoreCase = true) ||
+                                            animal.city.contains("Kalimantan", ignoreCase = true) ||
+                                            animal.city.contains("Borneo", ignoreCase = true) ||
+                                            animal.city.contains("Mahakam", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Kalimantan: endemic='${animal.endemicStatus}' city='${animal.city}'")
+                                    match
+                                }
+                                "Papua" -> {
+                                    val match = animal.endemicStatus.contains("Papua", ignoreCase = true) ||
+                                            animal.endemicStatus.contains("Raja Ampat", ignoreCase = true) ||
+                                            animal.endemicStatus.contains("Waigeo", ignoreCase = true) ||
+                                            animal.endemicStatus.contains("Batanta", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Papua: ${animal.endemicStatus}")
+                                    match
+                                }
 
-                                "Carnivore" ->
-                                    animal.diet.contains("Carnivore", ignoreCase = true) ||
-                                    animal.diet.contains("Karnivora", ignoreCase = true)
-                                "Herbivore" ->
-                                    animal.diet.contains("Herbivore", ignoreCase = true) ||
-                                    animal.diet.contains("Herbivora", ignoreCase = true)
-                                "Omnivore" ->
-                                    animal.diet.contains("Omnivore", ignoreCase = true) ||
-                                    animal.diet.contains("Omnivora", ignoreCase = true)
+                                "Carnivore" -> {
+                                    val match = animal.diet.contains("Carnivore", ignoreCase = true) ||
+                                            animal.diet.contains("Karnivora", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Carnivore: ${animal.diet}")
+                                    match
+                                }
+                                "Herbivore" -> {
+                                    val match = animal.diet.contains("Herbivore", ignoreCase = true) ||
+                                            animal.diet.contains("Herbivora", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Herbivore: ${animal.diet}")
+                                    match
+                                }
+                                "Omnivore" -> {
+                                    val match = animal.diet.contains("Omnivore", ignoreCase = true) ||
+                                            animal.diet.contains("Omnivora", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Omnivore: ${animal.diet}")
+                                    match
+                                }
+                                "Diurnal" -> {
+                                    val match = animal.activityPeriod.contains("Diurnal", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Diurnal: ${animal.activityPeriod}")
+                                    match
+                                }
+                                "Nocturnal" -> {
+                                    // Check for both "Nocturnal" (English) and "Nokturnal" (Indonesian)
+                                    val match = animal.activityPeriod.contains("Nocturnal", ignoreCase = true) ||
+                                               animal.activityPeriod.contains("Nokturnal", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Nocturnal: ${animal.activityPeriod}")
+                                    match
+                                }
 
-                                "Diurnal" ->
-                                    animal.activityPeriod.contains("Diurnal", ignoreCase = true)
-                                "Nocturnal" ->
-                                    animal.activityPeriod.contains("Nocturnal", ignoreCase = true)
+                                "protected" -> {
+                                    val match = animal.isProtected
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Protected: true")
+                                    match
+                                }
 
-                                "protected" ->
-                                    animal.isProtected
+                                "Small" -> {
+                                    val match = animal.sizeCategory.contains("Small", ignoreCase = true) ||
+                                            animal.sizeCategory.contains("Kecil", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Small: ${animal.sizeCategory}")
+                                    match
+                                }
+                                "Large" -> {
+                                    val match = animal.sizeCategory.contains("Large", ignoreCase = true) ||
+                                            animal.sizeCategory.contains("Besar", ignoreCase = true)
+                                    if (match) Log.d("DashboardFilter", "  ${animal.name} - Large: ${animal.sizeCategory}")
+                                    match
+                                }
 
-                                "Small" ->
-                                    animal.sizeCategory.contains("Small", ignoreCase = true) ||
-                                    animal.sizeCategory.contains("Kecil", ignoreCase = true)
-                                "Large" ->
-                                    animal.sizeCategory.contains("Large", ignoreCase = true) ||
-                                    animal.sizeCategory.contains("Besar", ignoreCase = true)
-
-                                else -> false
+                                else -> {
+                                    Log.w("DashboardFilter", "Unknown filter: $filter")
+                                    false
+                                }
                             }
+                            matchResult
                         }
+                        matches
                     }
+                    Log.d("DashboardFilter", "After filters: ${result.size} animals")
                 }
 
                 if (searchQuery.isNotBlank()) {
@@ -348,8 +436,10 @@ fun DashboardScreenContent(
                         animal.name.contains(searchQuery, ignoreCase = true) ||
                             animal.scientificName.contains(searchQuery, ignoreCase = true)
                     }
+                    Log.d("DashboardFilter", "After search '$searchQuery': ${result.size} animals")
                 }
 
+                Log.d("DashboardFilter", "=== Final filtered list: ${result.size} animals ===")
                 result
             }
 
@@ -399,57 +489,85 @@ fun DashboardScreenContent(
                 state = pullToRefreshState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(displayedFaunaList.size) { index ->
-                        val animal = displayedFaunaList[index]
-
-                        FaunaCard(
-                            faunaName = animal.name,
-                            latinName = animal.scientificName,
-                            imageUrl = animal.imageUrl,
-                            isFavorite = uiState.favoriteAnimalIds.contains(animal.id),
-                            onFavoriteClick = {
-                                viewModel?.toggleFavorite(animal.id)
-                            },
-                            onCardClick = {
-                                onNavigateToAnimalDetail(animal.id)
-                            }
-                        )
-                    }
-
-                    if (isLoadingMore && hasMoreItems) {
-                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
-                            }
+                if (displayedFaunaList.isEmpty() && (selectedFilters.isNotEmpty() || searchQuery.isNotBlank())) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_animals_found),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = PrimaryGreen,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.no_animals_found_description),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PastelYellow,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(displayedFaunaList.size) { index ->
+                            val animal = displayedFaunaList[index]
 
-                    if (!hasMoreItems && displayedFaunaList.isNotEmpty()) {
-                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.no_more_fauna),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = PrimaryGreen
-                                )
+                            FaunaCard(
+                                faunaName = animal.name,
+                                latinName = animal.scientificName,
+                                imageUrl = animal.imageUrl,
+                                isFavorite = uiState.favoriteAnimalIds.contains(animal.id),
+                                onFavoriteClick = {
+                                    viewModel?.toggleFavorite(animal.id)
+                                },
+                                onCardClick = {
+                                    onNavigateToAnimalDetail(animal.id)
+                                }
+                            )
+                        }
+
+                        if (isLoadingMore && hasMoreItems) {
+                            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    LoadingSpinner(size = 32.dp, strokeWidth = 3.dp)
+                                }
+                            }
+                        }
+
+                        if (!hasMoreItems && displayedFaunaList.isNotEmpty()) {
+                            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.no_more_fauna),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PrimaryGreen
+                                    )
+                                }
                             }
                         }
                     }

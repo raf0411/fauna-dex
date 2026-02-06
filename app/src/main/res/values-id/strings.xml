@@ -42,6 +42,8 @@
     <!-- Dashboard Screen -->
     <string name="search_your_fauna">Cari Fauna kamu…</string>
     <string name="no_more_fauna">Tidak ada fauna lagi untuk dimuat</string>
+    <string name="no_animals_found">Tidak ada fauna ditemukan</string>
+    <string name="no_animals_found_description">Coba sesuaikan filter atau pencarian kamu</string>
     <string name="filter_applied">Filter telah diterapkan</string>
 
     <!-- Filter Bottom Sheet -->

@@ -42,6 +42,8 @@
     <!-- Dashboard Screen -->
     <string name="search_your_fauna">Search your Fauna…</string>
     <string name="no_more_fauna">No more fauna to load</string>
+    <string name="no_animals_found">No animals found</string>
+    <string name="no_animals_found_description">Try adjusting your filters or search query</string>
     <string name="filter_applied">Filter has been applied</string>
 
     <!-- Filter Bottom Sheet -->

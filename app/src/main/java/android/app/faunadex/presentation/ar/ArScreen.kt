@@ -100,6 +100,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import androidx.core.graphics.createBitmap
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -108,12 +109,8 @@ fun ArScreen(
     animalId: String? = null,
     viewModel: ArViewModel = hiltViewModel()
 ) {
-    android.util.Log.d("AR_SCREEN", "▶▶▶ ArScreen COMPOSING - animalId: $animalId")
-
     val uiState by viewModel.uiState.collectAsState()
     val sessionState by viewModel.sessionState.collectAsState()
-    
-    android.util.Log.d("AR_SCREEN", "State collected - selectedAnimal: ${sessionState.selectedAnimal?.name}")
 
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA
@@ -127,37 +124,18 @@ fun ArScreen(
     }
 
     LaunchedEffect(animalId) {
-        android.util.Log.d("AR_SCREEN", "=== ArScreen LaunchedEffect (Animal Loading) ===")
-        android.util.Log.d("AR_SCREEN", "AnimalId received: $animalId")
-
-        animalId?.let {
-            android.util.Log.d("AR_SCREEN", "Loading animal for AR with ID: $it")
-            viewModel.loadAnimalForAr(it)
-        } ?: android.util.Log.e("AR_SCREEN", "ERROR: AnimalId is NULL!")
+        animalId?.let { viewModel.loadAnimalForAr(it) }
     }
 
     LaunchedEffect(Unit) {
-        android.util.Log.d("AR_SCREEN", "=== Camera Permission Check ===")
         if (cameraPermissionState.status.isGranted) {
-            android.util.Log.d("AR_SCREEN", "Camera permission already granted")
             viewModel.onPermissionGranted()
             viewModel.startScanning()
         } else {
-            android.util.Log.d("AR_SCREEN", "Requesting camera permission")
             cameraPermissionState.launchPermissionRequest()
         }
     }
 
-    LaunchedEffect(sessionState.selectedAnimal) {
-        android.util.Log.d("AR_SCREEN", "=== Selected Animal Changed ===")
-        android.util.Log.d("AR_SCREEN", "Animal: ${sessionState.selectedAnimal?.name}")
-        android.util.Log.d("AR_SCREEN", "Animal ID: ${sessionState.selectedAnimal?.id}")
-        android.util.Log.d("AR_SCREEN", "AR Model URL: ${sessionState.selectedAnimal?.arModelUrl}")
-        android.util.Log.d("AR_SCREEN", "Is URL null?: ${sessionState.selectedAnimal?.arModelUrl == null}")
-        android.util.Log.d("AR_SCREEN", "Is URL empty?: ${sessionState.selectedAnimal?.arModelUrl?.isEmpty()}")
-        android.util.Log.d("AR_SCREEN", "Is URL blank?: ${sessionState.selectedAnimal?.arModelUrl?.isBlank()}")
-        android.util.Log.d("AR_SCREEN", "URL length: ${sessionState.selectedAnimal?.arModelUrl?.length ?: 0}")
-    }
 
     if (cameraPermissionState.status.isGranted &&
         (uiState is ArUiState.Ready || uiState is ArUiState.Scanning || uiState is ArUiState.AnimalPlaced)) {
@@ -201,6 +179,7 @@ fun ArCameraContent(
     var planeCount by remember { mutableIntStateOf(0) }
     var isModelPlaced by remember { mutableStateOf(false) }
     var isModelLoading by remember { mutableStateOf(false) }
+    var isTrackingLost by remember { mutableStateOf(false) }
     var arSceneViewRef by remember { mutableStateOf<ArSceneView?>(null) }
     var modelNodeRef by remember { mutableStateOf<ArModelNode?>(null) }
 
@@ -214,12 +193,6 @@ fun ArCameraContent(
         }
     }
 
-    // Log when the selected animal changes
-    LaunchedEffect(sessionState.selectedAnimal) {
-        android.util.Log.d("AR_CAMERA", "=== ArCameraContent - Animal Changed ===")
-        android.util.Log.d("AR_CAMERA", "Selected Animal: ${sessionState.selectedAnimal?.name}")
-        android.util.Log.d("AR_CAMERA", "AR Model URL: ${sessionState.selectedAnimal?.arModelUrl}")
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -229,16 +202,18 @@ fun ArCameraContent(
                     arSceneViewRef = this
 
                     planeRenderer.isEnabled = true
-                    planeRenderer.isVisible = true
+                    planeRenderer.isVisible = false
+
+                    try {
+                        isDepthOcclusionEnabled = false
+                    } catch (_: Exception) { }
 
                     configureSession { _, config ->
-                        // HORIZONTAL only - fastest detection
                         config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL
-
-                        // Auto focus
                         config.focusMode = com.google.ar.core.Config.FocusMode.AUTO
-
-                        android.util.Log.d("AR_CONFIG", "✅ AR configured: HORIZONTAL planes only")
+                        try {
+                            config.depthMode = com.google.ar.core.Config.DepthMode.DISABLED
+                        } catch (_: Exception) { }
                     }
 
                     var frameCounter = 0
@@ -246,122 +221,75 @@ fun ArCameraContent(
 
                     onFrame = { _ ->
                         frameCounter++
-                        val currentSession = arSession
-                        if (currentSession == null && frameCounter % 60 == 0) {
-                            android.util.Log.d("AR_DEBUG", "arSession is null in onFrame (frame $frameCounter)")
+
+                        if (isModelPlaced && modelNodeRef != null && frameCounter % 30 == 0) {
+                            val anchor = modelNodeRef?.anchor
+                            val trackingState = anchor?.trackingState
+
+                            if (trackingState == com.google.ar.core.TrackingState.STOPPED) {
+                                if (!isTrackingLost) {
+                                    isTrackingLost = true
+                                }
+                            } else if (trackingState == com.google.ar.core.TrackingState.TRACKING) {
+                                if (isTrackingLost) {
+                                    isTrackingLost = false
+                                }
+                            }
                         }
 
-                        currentSession?.let { session ->
-                            // Check every 5 frames for faster detection
-                            if (frameCounter % 5 == 0) {
-                                val allPlanes = session.getAllTrackables(com.google.ar.core.Plane::class.java)
-                                val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
+                        if (!isModelPlaced) {
+                            arSession?.let { currentSession ->
+                                if (frameCounter % 10 == 0) {
+                                    val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
 
-                                // Log all planes for debugging
-                                if (frameCounter % 30 == 0) {
-                                    android.util.Log.d("AR_DEBUG", "📊 Total planes found: ${allPlanes.size}")
-                                    allPlanes.take(3).forEachIndexed { idx, plane ->
-                                        android.util.Log.d("AR_DEBUG", "  Plane $idx: type=${plane.type}, state=${plane.trackingState}, subsumed=${plane.subsumedBy != null}")
+                                    if (elapsedSeconds >= 2 && planeCount == 0) {
+                                        planeCount = 1
+                                        onPlaneDetected(1)
+                                    } else {
+                                        val allPlanes = currentSession.getAllTrackables(com.google.ar.core.Plane::class.java)
+                                        val usablePlanes = allPlanes.count { plane ->
+                                            plane.trackingState == com.google.ar.core.TrackingState.TRACKING
+                                        }
+                                        if (usablePlanes > 0 && usablePlanes != planeCount) {
+                                            planeCount = usablePlanes
+                                            onPlaneDetected(usablePlanes)
+                                        }
                                     }
-                                }
-
-                                // Accept ANY plane that's not stopped
-                                val usablePlanes = allPlanes.count { plane ->
-                                    plane.trackingState != com.google.ar.core.TrackingState.STOPPED &&
-                                    plane.subsumedBy == null
-                                }
-
-                                // Force enable after 2 seconds even without perfect plane
-                                val effectivePlaneCount = if (elapsedSeconds >= 2 && usablePlanes == 0) {
-                                    android.util.Log.d("AR_DEBUG", "⚡ FORCE ENABLING after ${elapsedSeconds}s - allowing instant placement")
-                                    1 // Enable tapping
-                                } else {
-                                    usablePlanes
-                                }
-
-                                if (effectivePlaneCount != planeCount) {
-                                    android.util.Log.d("AR_DEBUG", "✅ Plane count: $planeCount -> $effectivePlaneCount (detected: $usablePlanes, total: ${allPlanes.size}, elapsed: ${elapsedSeconds}s)")
-                                    planeCount = effectivePlaneCount
-                                    onPlaneDetected(effectivePlaneCount)
                                 }
                             }
                         }
                     }
 
                     onTapAr = { hitResult, _ ->
-                        android.util.Log.d("AR_DEBUG", "=== TAP DETECTED ===")
-                        android.util.Log.d("AR_DEBUG", "isModelPlaced=$isModelPlaced, isModelLoading=$isModelLoading, planeCount=$planeCount")
-
-                        // ONLY allow tap if plane is detected AND model not placed/loading
                         if (!isModelPlaced && !isModelLoading && planeCount > 0) {
                             isModelLoading = true
-                            android.util.Log.d("AR_DEBUG", "=== STARTING MODEL LOAD ===")
-
-                            android.util.Log.d("AR_DEBUG", "Using currentSessionState (latest)")
-                            android.util.Log.d("AR_DEBUG", "Selected Animal: ${currentSessionState.selectedAnimal?.name}")
-                            android.util.Log.d("AR_DEBUG", "Animal ID: ${currentSessionState.selectedAnimal?.id}")
-                            android.util.Log.d("AR_DEBUG", "Raw AR URL from animal: '${currentSessionState.selectedAnimal?.arModelUrl}'")
-                            android.util.Log.d("AR_DEBUG", "Is AR URL null?: ${currentSessionState.selectedAnimal?.arModelUrl == null}")
-                            android.util.Log.d("AR_DEBUG", "Is AR URL empty?: ${currentSessionState.selectedAnimal?.arModelUrl?.isEmpty()}")
-                            android.util.Log.d("AR_DEBUG", "Is AR URL blank?: ${currentSessionState.selectedAnimal?.arModelUrl?.isBlank()}")
 
                             val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
-                            val modelUrl = if (!animalArUrl.isNullOrBlank()) {
-                                android.util.Log.d("AR_DEBUG", "✅ Using animal AR URL: $animalArUrl")
-                                animalArUrl
-                            } else {
-                                android.util.Log.w("AR_DEBUG", "❌ Animal AR URL is null or blank, using DUMMY_MODEL_URL")
-                                DUMMY_MODEL_URL
-                            }
-
-                            android.util.Log.d("AR_DEBUG", "Final Model URL to load: $modelUrl")
-                            android.util.Log.d("AR_DEBUG", "Is using dummy?: ${modelUrl == DUMMY_MODEL_URL}")
+                            val modelUrl = if (!animalArUrl.isNullOrBlank()) animalArUrl else DUMMY_MODEL_URL
 
                             try {
+                                val anchor = hitResult.createAnchor()
+
                                 val newModelNode = ArModelNode(
                                     engine = engine,
                                     modelGlbFileLocation = modelUrl,
-                                    autoAnimate = false,
-                                    scaleToUnits = 1.0f,
-                                    centerOrigin = io.github.sceneview.math.Position(0f, 0f, 0f),
+                                    autoAnimate = true,
+                                    scaleToUnits = 0.5f,
                                     onLoaded = {
-                                        android.util.Log.d("AR_DEBUG", "✓ Model loaded successfully from: $modelUrl")
                                         isModelLoading = false
                                         isModelPlaced = true
-
-                                        planeRenderer.isVisible = false
-                                        planeRenderer.isEnabled = false
-
-                                        currentSessionState.selectedAnimal?.let { animal ->
-                                            onAnimalPlaced(animal)
-                                        }
+                                        currentSessionState.selectedAnimal?.let { onAnimalPlaced(it) }
                                     },
-                                    onError = { e ->
-                                        android.util.Log.e("AR_DEBUG", "✗ Model load FAILED for URL: $modelUrl")
-                                        android.util.Log.e("AR_DEBUG", "Error message: ${e.message}", e)
+                                    onError = { _ ->
                                         isModelLoading = false
                                     }
-                                ).apply {
-                                    isScaleEditable = true
-                                    isRotationEditable = true
-                                    isPositionEditable = true
-
-                                    minEditableScale = 0.2f
-                                    maxEditableScale = 5.0f
-                                }
-
-                                android.util.Log.d("AR_DEBUG", "Creating anchor...")
-                                newModelNode.anchor = hitResult.createAnchor()
-                                android.util.Log.d("AR_DEBUG", "Adding child node...")
+                                )
+                                newModelNode.anchor = anchor
                                 addChild(newModelNode)
                                 modelNodeRef = newModelNode
-                                android.util.Log.d("AR_DEBUG", "Model node added to scene")
-                            } catch (e: Exception) {
-                                android.util.Log.e("AR_DEBUG", "Exception during model creation: ${e.message}", e)
+                            } catch (_: Exception) {
                                 isModelLoading = false
                             }
-                        } else {
-                            android.util.Log.d("AR_DEBUG", "Tap ignored - planeCount: $planeCount, isModelPlaced: $isModelPlaced, isModelLoading: $isModelLoading")
                         }
                     }
                 }
@@ -391,6 +319,48 @@ fun ArCameraContent(
             }
         }
 
+        if (isTrackingLost && isModelPlaced) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .padding(horizontal = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    color = Color.Red.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Warning,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.ar_tracking_lost),
+                            color = White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = JerseyFont,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = stringResource(R.string.ar_tracking_lost_hint),
+                            color = White.copy(alpha = 0.8f),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+
         ArCameraOverlay(
             planeCount = planeCount,
             isModelPlaced = isModelPlaced,
@@ -399,15 +369,14 @@ fun ArCameraContent(
             onNavigateBack = onNavigateBack,
             onClearAnimals = {
                 modelNodeRef?.let { node ->
+                    node.anchor?.detach()
                     arSceneViewRef?.removeChild(node)
                     node.destroy()
                 }
                 modelNodeRef = null
                 isModelPlaced = false
+                isTrackingLost = false
                 planeCount = 0
-
-                arSceneViewRef?.planeRenderer?.isVisible = true
-                arSceneViewRef?.planeRenderer?.isEnabled = true
 
                 onClearAnimals()
             },
@@ -448,25 +417,18 @@ fun BoxScope.ArCameraOverlay(
 
     LaunchedEffect(isModelPlaced) {
         if (isModelPlaced) {
-            android.util.Log.d("AR_OVERLAY", "✅ Model placed - starting tooltip sequence")
             showSuccessMessage = true
             kotlinx.coroutines.delay(2000L)
             showSuccessMessage = false
-            android.util.Log.d("AR_OVERLAY", "💡 Showing gesture hints")
             showGestureHint = true
             kotlinx.coroutines.delay(5000L)
             showGestureHint = false
-            android.util.Log.d("AR_OVERLAY", "👋 Hiding gesture hints")
         } else {
-            // Reset when model is cleared
             showSuccessMessage = false
             showGestureHint = false
         }
     }
 
-    LaunchedEffect(showGestureHint, isModelPlaced) {
-        android.util.Log.d("AR_OVERLAY", "🎯 Gesture hint visible: $showGestureHint, Model placed: $isModelPlaced")
-    }
 
     Row(
         modifier = Modifier
@@ -614,12 +576,10 @@ fun BoxScope.ArCameraOverlay(
                 }
             }
         } else {
-            // Only show reticle when plane detected - no text box to avoid UI collision
             ArReticle()
         }
     }
 
-    // Show "Tap to place" message at bottom when plane detected but model not placed
     if (!isModelPlaced && !isModelLoading && planeCount > 0) {
         Surface(
             modifier = Modifier
@@ -821,7 +781,6 @@ fun BoxScope.ArCameraOverlay(
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Reset button
             IconButton(
                 onClick = onClearAnimals,
                 modifier = Modifier
@@ -1049,9 +1008,9 @@ fun BoxScope.ArPermissionRequired(
             modifier = Modifier.size(80.dp)
         )
         Text(
-            text = if (showRationale) 
+            text = if (showRationale)
                 stringResource(R.string.camera_permission_fail)
-            else 
+            else
                 stringResource(R.string.camera_permission_grant),
             color = White,
             fontSize = 18.sp,
@@ -1121,7 +1080,7 @@ fun BoxScope.ArScanningInstructions(planesDetected: Int) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = if (planesDetected == 0) 
+                    text = if (planesDetected == 0)
                         "Point camera at a flat surface"
                     else
                         "Tap to place an animal",

@@ -230,6 +230,8 @@
     <string name="ar_tap_to_place_named">Ketuk untuk menempatkan %1$s</string>
     <string name="ar_move_device_slowly">Gerakkan perangkat perlahan untuk mendeteksi permukaan</string>
     <string name="ar_surface_ready">Permukaan terdeteksi! Siap menempatkan model 3D</string>
+    <string name="ar_tracking_lost">Pelacakan Hilang</string>
+    <string name="ar_tracking_lost_hint">Arahkan kamera kembali ke permukaan awal</string>
     <string name="camera_permission_fail">Izin kamera diperlukan untuk menggunakan fitur AR</string>
     <string name="camera_permission_grant">Berikan izin kamera</string>
 

@@ -230,6 +230,8 @@
     <string name="ar_tap_to_place_named">Tap to place %1$s</string>
     <string name="ar_move_device_slowly">Move your device slowly to detect surfaces</string>
     <string name="ar_surface_ready">Surface detected! Ready to place 3D models</string>
+    <string name="ar_tracking_lost">Tracking Lost</string>
+    <string name="ar_tracking_lost_hint">Point your camera back at the original surface</string>
     <string name="camera_permission_fail">Camera permission is required to use AR features</string>
     <string name="camera_permission_grant">Grant Camera Permission</string>
 

@@ -38,7 +38,32 @@ data class TopAppBarUserData(
     val currentLevel: Int,
     val currentXp: Int,
     val xpForNextLevel: Int
-)
+) {
+    fun getInitials(): String {
+        val cleanUsername = username
+            .replace(Regex("[^a-zA-Z0-9]"), " ")
+            .trim()
+
+        return when {
+            cleanUsername.isEmpty() -> "??"
+            cleanUsername.contains(" ") -> {
+                val words = cleanUsername.split(" ").filter { it.isNotEmpty() }
+                if (words.size >= 2) {
+                    "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+                } else {
+                    words[0].take(2).uppercase()
+                }
+            }
+            cleanUsername.length >= 2 -> {
+                cleanUsername.take(2).uppercase()
+            }
+            else -> {
+                // Single character: duplicate it
+                cleanUsername.uppercase().repeat(2)
+            }
+        }
+    }
+}
 
 @Composable
 fun TopAppBar(
@@ -71,6 +96,7 @@ fun TopAppBar(
                 if (showProfilePicture) {
                     ProfilePicture(
                         profilePictureUrl = userData.profilePictureUrl,
+                        username = userData.username,
                         modifier = Modifier.size(56.dp)
                     )
 
@@ -143,6 +169,7 @@ fun TopAppBar(
 @Composable
 private fun ProfilePicture(
     profilePictureUrl: String?,
+    username: String,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -171,34 +198,42 @@ private fun ProfilePicture(
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
                 loading = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "👤",
-                            fontSize = 28.sp
-                        )
-                    }
+                    UserInitials(username = username)
                 },
                 error = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "👤",
-                            fontSize = 28.sp
-                        )
-                    }
+                    UserInitials(username = username)
                 }
             )
         } else {
-            Text(
-                text = "👤",
-                fontSize = 28.sp
-            )
+            UserInitials(username = username)
         }
+    }
+}
+
+@Composable
+private fun UserInitials(
+    username: String,
+    modifier: Modifier = Modifier
+) {
+    val initials = TopAppBarUserData(
+        username = username,
+        educationLevel = "",
+        currentLevel = 0,
+        currentXp = 0,
+        xpForNextLevel = 0
+    ).getInitials()
+
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkGreenMoss,
+            fontFamily = JerseyFont
+        )
     }
 }
 
@@ -326,10 +361,6 @@ private fun HexagonLevel(
     }
 }
 
-
-/**
- * XP progress indicator
- */
 @Composable
 private fun XpProgress(
     currentXp: Int,

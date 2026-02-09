@@ -58,7 +58,6 @@ data class TopAppBarUserData(
                 cleanUsername.take(2).uppercase()
             }
             else -> {
-                // Single character: duplicate it
                 cleanUsername.uppercase().repeat(2)
             }
         }

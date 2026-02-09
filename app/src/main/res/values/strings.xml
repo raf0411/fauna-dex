@@ -29,7 +29,12 @@
     <!-- Register Screen -->
     <string name="username">Username</string>
     <string name="confirm_password">Confirm Password</string>
+    <string name="user_type">User Type</string>
+    <string name="user_type_student">Student</string>
+    <string name="user_type_teacher">Teacher</string>
+    <string name="i_am_a">I am a…</string>
     <string name="your_education_level">Your Education Level</string>
+    <string name="teaching_level">Teaching Level</string>
     <string name="already_have_account">Already have an account? Login</string>
 
     <!-- Auth Error Messages -->

@@ -15,6 +15,9 @@ data class User(
     @PropertyName("education_level")
     val educationLevel: String = "",
 
+    @PropertyName("user_type")
+    val userType: String = "Student",
+
     @PropertyName("current_title")
     val currentTitle: String = "Petualang Pemula",
 

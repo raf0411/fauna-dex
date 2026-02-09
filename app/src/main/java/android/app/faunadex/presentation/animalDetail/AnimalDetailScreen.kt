@@ -105,12 +105,14 @@ fun AnimalDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userEducationLevel = viewModel.currentUserEducationLevel
+    val userType = viewModel.currentUserType
     val audioPlaybackState by viewModel.audioPlaybackState.collectAsState()
     val audioCurrentPosition by viewModel.audioCurrentPosition.collectAsState()
     val audioDuration by viewModel.audioDuration.collectAsState()
 
     Log.d("AnimalDetailScreen", "======================================")
     Log.d("AnimalDetailScreen", "Education Level in Screen: $userEducationLevel")
+    Log.d("AnimalDetailScreen", "User Type: $userType")
     Log.d("AnimalDetailScreen", "UI State: ${uiState::class.simpleName}")
     Log.d("AnimalDetailScreen", "======================================")
 
@@ -143,6 +145,7 @@ fun AnimalDetailScreen(
                 AnimalDetailContent(
                     animal = animal,
                     userEducationLevel = userEducationLevel,
+                    userType = userType,
                     audioPlaybackState = audioPlaybackState,
                     audioCurrentPosition = audioCurrentPosition,
                     audioDuration = audioDuration,
@@ -178,6 +181,7 @@ fun AnimalDetailScreen(
 fun AnimalDetailContent(
     animal: Animal,
     userEducationLevel: String,
+    userType: String = "Student",
     audioPlaybackState: AudioPlaybackState,
     audioCurrentPosition: Long,
     audioDuration: Long,
@@ -270,7 +274,7 @@ fun AnimalDetailContent(
                         top = 16.dp
                     )
             ) {
-                if (shouldShowContent(userEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
+                if (shouldShowContent(userType, userEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
                     TabIndicators(
                         selectedTab = selectedTab,
                         onTabSelected = { selectedTab = it },
@@ -286,6 +290,7 @@ fun AnimalDetailContent(
                         InfoTabContent(
                             animal = animal,
                             userEducationLevel = userEducationLevel,
+                            userType = userType,
                             onAudioClick = {
                                 showAudioDialog = true
                                 onAudioClick()
@@ -400,6 +405,7 @@ fun TabItem(
 fun InfoTabContent(
     animal: Animal,
     userEducationLevel: String,
+    userType: String = "Student",
     onAudioClick: () -> Unit
 ) {
     var showFunFactDialog by remember { mutableStateOf(false) }
@@ -426,7 +432,7 @@ fun InfoTabContent(
                     color = PastelYellow
                 )
 
-                if (shouldShowContent(effectiveEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
+                if (shouldShowContent(userType, effectiveEducationLevel, minLevel = EducationLevelRequirement.SMP)) {
                     Spacer(Modifier.height(4.dp))
 
                     Text(
@@ -1411,7 +1417,7 @@ private fun getEducationLevelWithColor(level: String): EducationLevel {
         "SD" -> EducationLevel("SD", ErrorRed)
         "SMP" -> EducationLevel("SMP", PrimaryBlue)
         "SMA" -> EducationLevel("SMA", BlueOcean)
-        else -> EducationLevel("SMA", BlueOcean) // Default to SMA
+        else -> EducationLevel("SMA", BlueOcean)
     }
 }
 
@@ -1422,9 +1428,14 @@ enum class EducationLevelRequirement(val level: Int) {
 }
 
 private fun shouldShowContent(
+    userType: String,
     userLevel: String,
     minLevel: EducationLevelRequirement
 ): Boolean {
+    if (userType == "Teacher") {
+        return true
+    }
+
     val userLevelValue = when (userLevel) {
         "SD" -> EducationLevelRequirement.SD.level
         "SMP" -> EducationLevelRequirement.SMP.level

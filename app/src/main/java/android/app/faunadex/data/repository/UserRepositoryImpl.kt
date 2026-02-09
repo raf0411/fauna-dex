@@ -27,6 +27,7 @@ class UserRepositoryImpl @Inject constructor(
                 "email" to user.email,
                 "username" to user.username,
                 "education_level" to user.educationLevel,
+                "user_type" to user.userType,
                 "current_title" to user.currentTitle,
                 "total_xp" to user.totalXp,
                 "joined_at" to FieldValue.serverTimestamp()
@@ -46,10 +47,10 @@ class UserRepositoryImpl @Inject constructor(
             Log.d("UserRepositoryImpl", "Document data: ${document.data}")
 
             if (document.exists()) {
-                // Explicitly map snake_case fields to User object
                 val educationLevel = document.getString("education_level") ?: ""
                 val username = document.getString("username") ?: ""
                 val profilePictureUrl = document.getString("profile_picture_url")
+                val userType = document.getString("user_type") ?: "Student"
                 val currentTitle = document.getString("current_title") ?: "Petualang Pemula"
                 val totalXp = document.getLong("total_xp")?.toInt() ?: 0
                 val favoriteAnimalIds = document.get("favorite_animal_ids") as? List<String> ?: emptyList()
@@ -62,6 +63,7 @@ class UserRepositoryImpl @Inject constructor(
                     username = username,
                     profilePictureUrl = profilePictureUrl,
                     educationLevel = educationLevel,
+                    userType = userType,
                     currentTitle = currentTitle,
                     totalXp = totalXp,
                     favoriteAnimalIds = favoriteAnimalIds,
@@ -81,17 +83,16 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun updateUserProfile(user: User): Result<Unit> {
         return try {
-            // Explicitly map to snake_case field names
             val userMap = hashMapOf(
                 "uid" to user.uid,
                 "email" to user.email,
                 "username" to user.username,
                 "profile_picture_url" to (user.profilePictureUrl ?: ""),
                 "education_level" to user.educationLevel,
+                "user_type" to user.userType,
                 "current_title" to user.currentTitle,
                 "total_xp" to user.totalXp
             )
-            // Don't update joined_at on updates
             if (user.joinedAt != null) {
                 userMap["joined_at"] = user.joinedAt
             }
@@ -104,21 +105,17 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun uploadProfilePicture(uid: String, imageUri: Uri, context: Context): Result<String> {
         return try {
-            // Read image from URI
             val inputStream = context.contentResolver.openInputStream(imageUri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
-            // Resize image to reduce size (max 512x512)
             val resizedBitmap = resizeBitmap(bitmap, 512, 512)
 
-            // Convert to Base64
             val byteArrayOutputStream = ByteArrayOutputStream()
             resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
             val byteArray = byteArrayOutputStream.toByteArray()
             val base64Image = "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
-            // Update user document with Base64 image
             usersCollection.document(uid).update("profile_picture_url", base64Image).await()
 
             Log.d("UserRepositoryImpl", "Profile picture uploaded successfully as Base64")

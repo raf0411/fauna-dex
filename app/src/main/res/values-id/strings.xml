@@ -29,7 +29,12 @@
     <!-- Register Screen -->
     <string name="username">Nama Pengguna</string>
     <string name="confirm_password">Konfirmasi Kata Sandi</string>
+    <string name="user_type">Tipe Pengguna</string>
+    <string name="user_type_student">Pelajar</string>
+    <string name="user_type_teacher">Guru</string>
+    <string name="i_am_a">Saya adalah…</string>
     <string name="your_education_level">Tingkat Pendidikanmu</string>
+    <string name="teaching_level">Tingkat Pengajaran</string>
     <string name="already_have_account">Sudah punya akun? Masuk</string>
 
     <!-- Auth Error Messages -->

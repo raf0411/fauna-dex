@@ -9,7 +9,8 @@ interface AuthRepository {
         email: String,
         password: String,
         username: String,
-        educationLevel: String
+        educationLevel: String,
+        userType: String = "Student"
     ): AuthResult<User>
     suspend fun signIn(email: String, password: String): AuthResult<User>
     suspend fun signOut()

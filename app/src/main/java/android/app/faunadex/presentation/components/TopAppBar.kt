@@ -34,6 +34,7 @@ data class TopAppBarUserData(
     val username: String,
     val profilePictureUrl: String? = null,
     val educationLevel: String,
+    val userType: String = "Student",
     val currentLevel: Int,
     val currentXp: Int,
     val xpForNextLevel: Int
@@ -92,6 +93,12 @@ fun TopAppBar(
                         color = PastelYellow,
                         fontFamily = JerseyFont
                     )
+
+                    if (userData.userType == "Teacher") {
+                        Spacer(Modifier.height(4.dp))
+
+                        TeacherBadge()
+                    }
 
                     if (showEducationBadge) {
                         Spacer(Modifier.height(8.dp))
@@ -221,6 +228,31 @@ private fun EducationLevelBadgeCompact(
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = PastelYellow,
+            fontFamily = JerseyFont
+        )
+    }
+}
+
+@Composable
+private fun TeacherBadge(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .background(PastelYellow, CircleShape)
+            .padding(horizontal = 10.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = "👨‍🏫",
+            fontSize = 12.sp
+        )
+        Text(
+            text = stringResource(R.string.user_type_teacher),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkGreenMoss,
             fontFamily = JerseyFont
         )
     }

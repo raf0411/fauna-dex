@@ -4,6 +4,7 @@ import android.app.faunadex.R
 import android.app.faunadex.presentation.components.AuthButton
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.EducationLevelSelector
+import android.app.faunadex.presentation.components.UserTypeSelector
 import android.app.faunadex.presentation.components.LayeredHeader
 import android.app.faunadex.presentation.components.LoadingSpinner
 import android.app.faunadex.ui.theme.AlmostBlack
@@ -60,6 +61,7 @@ fun RegisterScreen(
         onUsernameChange = viewModel::onUsernameChange,
         onPasswordChange = viewModel::onPasswordChange,
         onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+        onUserTypeChange = viewModel::onUserTypeChange,
         onEducationLevelChange = viewModel::onEducationLevelChange,
         onSignUpClick = viewModel::signUp,
         onNavigateToLogin = onNavigateToLogin
@@ -73,6 +75,7 @@ internal fun RegisterContent(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
+    onUserTypeChange: (String) -> Unit,
     onEducationLevelChange: (String) -> Unit,
     onSignUpClick: () -> Unit,
     onNavigateToLogin: () -> Unit
@@ -201,7 +204,29 @@ internal fun RegisterContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = stringResource(R.string.your_education_level),
+                        text = stringResource(R.string.i_am_a),
+                        fontFamily = JerseyFont,
+                        fontSize = 28.sp,
+                        color = PastelYellow,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    UserTypeSelector(
+                        selectedType = uiState.userType,
+                        onTypeSelected = onUserTypeChange,
+                        enabled = !uiState.isLoading
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = stringResource(
+                            if (uiState.userType == "Teacher") R.string.teaching_level
+                            else R.string.your_education_level
+                        ),
                         fontFamily = JerseyFont,
                         fontSize = 28.sp,
                         color = PastelYellow,
@@ -301,6 +326,7 @@ fun RegisterScreenPreview() {
             onUsernameChange = {},
             onPasswordChange = {},
             onConfirmPasswordChange = {},
+            onUserTypeChange = {},
             onEducationLevelChange = {},
             onSignUpClick = {},
             onNavigateToLogin = {}

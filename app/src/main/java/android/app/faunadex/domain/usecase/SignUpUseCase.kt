@@ -12,7 +12,8 @@ class SignUpUseCase @Inject constructor(
         email: String,
         password: String,
         username: String,
-        educationLevel: String
+        educationLevel: String,
+        userType: String = "Student"
     ): AuthResult<User> {
         // Validation logic
         if (email.isBlank() || password.isBlank() || username.isBlank() || educationLevel.isBlank()) {
@@ -28,7 +29,7 @@ class SignUpUseCase @Inject constructor(
             return AuthResult.Error("Username must be at least 3 characters")
         }
 
-        return authRepository.signUp(email, password, username, educationLevel)
+        return authRepository.signUp(email, password, username, educationLevel, userType)
     }
 }
 

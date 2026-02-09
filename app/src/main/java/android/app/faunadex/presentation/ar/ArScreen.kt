@@ -100,6 +100,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import androidx.core.graphics.createBitmap
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -179,6 +180,8 @@ fun ArCameraContent(
     var isModelPlaced by remember { mutableStateOf(false) }
     var isModelLoading by remember { mutableStateOf(false) }
     var isTrackingLost by remember { mutableStateOf(false) }
+    var modelLoadError by remember { mutableStateOf<String?>(null) }
+    var modelLoadTimedOut by remember { mutableStateOf(false) }
     var arSceneViewRef by remember { mutableStateOf<ArSceneView?>(null) }
     var modelNodeRef by remember { mutableStateOf<ArModelNode?>(null) }
 
@@ -262,9 +265,25 @@ fun ArCameraContent(
                     onTapAr = { hitResult, _ ->
                         if (!isModelPlaced && !isModelLoading && planeCount > 0) {
                             isModelLoading = true
+                            modelLoadError = null
+                            modelLoadTimedOut = false
 
                             val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
                             val modelUrl = if (!animalArUrl.isNullOrBlank()) animalArUrl else DUMMY_MODEL_URL
+
+                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                kotlinx.coroutines.delay(30000L)
+                                if (isModelLoading) {
+                                    isModelLoading = false
+                                    modelLoadTimedOut = true
+                                    modelNodeRef?.let { node ->
+                                        node.anchor?.detach()
+                                        arSceneViewRef?.removeChild(node)
+                                        node.destroy()
+                                        modelNodeRef = null
+                                    }
+                                }
+                            }
 
                             try {
                                 val anchor = hitResult.createAnchor()
@@ -275,19 +294,31 @@ fun ArCameraContent(
                                     autoAnimate = true,
                                     scaleToUnits = 0.5f,
                                     onLoaded = {
-                                        isModelLoading = false
-                                        isModelPlaced = true
-                                        currentSessionState.selectedAnimal?.let { onAnimalPlaced(it) }
+                                        if (isModelLoading) { // Only proceed if not timed out
+                                            isModelLoading = false
+                                            isModelPlaced = true
+                                            modelLoadError = null
+                                            modelLoadTimedOut = false
+                                            currentSessionState.selectedAnimal?.let { onAnimalPlaced(it) }
+                                        }
                                     },
-                                    onError = { _ ->
-                                        isModelLoading = false
+                                    onError = { exception ->
+                                        if (isModelLoading) { // Only handle if not already timed out
+                                            isModelLoading = false
+                                            modelLoadError = exception.message ?: "Unknown error"
+                                            // Clean up
+                                            try {
+                                                anchor.detach()
+                                            } catch (_: Exception) {}
+                                        }
                                     }
                                 )
                                 newModelNode.anchor = anchor
                                 addChild(newModelNode)
                                 modelNodeRef = newModelNode
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
                                 isModelLoading = false
+                                modelLoadError = e.message ?: "Failed to create model"
                             }
                         }
                     }
@@ -355,6 +386,144 @@ fun ArCameraContent(
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center
                         )
+                    }
+                }
+            }
+        }
+
+        if (modelLoadTimedOut) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .padding(horizontal = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    color = Color(0xFFFF6B6B).copy(alpha = 0.95f),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.ar_model_load_timeout),
+                            color = White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = JerseyFont,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = stringResource(R.string.ar_model_load_timeout_hint),
+                            color = White.copy(alpha = 0.9f),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 20.sp
+                        )
+                        Button(
+                            onClick = {
+                                modelLoadTimedOut = false
+                                modelLoadError = null
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = White,
+                                contentColor = Color(0xFFFF6B6B)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Replay,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.retry),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (modelLoadError != null && !modelLoadTimedOut) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .padding(horizontal = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    color = Color(0xFFFF6B6B).copy(alpha = 0.95f),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.ar_model_load_failed),
+                            color = White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = JerseyFont,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = stringResource(R.string.ar_model_load_failed_hint),
+                            color = White.copy(alpha = 0.9f),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 20.sp
+                        )
+                        Button(
+                            onClick = {
+                                modelLoadError = null
+                                modelLoadTimedOut = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = White,
+                                contentColor = Color(0xFFFF6B6B)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Replay,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.retry),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -461,7 +630,6 @@ fun BoxScope.ArCameraOverlay(
             )
         }
 
-        // Only show scanning badge when needed
         if (planeCount == 0 && !isModelPlaced) {
             Surface(
                 color = Color.Gray.copy(alpha = 0.7f),

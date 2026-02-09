@@ -35,11 +35,16 @@ class QuizViewModel @Inject constructor(
         android.util.Log.d("QuizViewModel", "loadUser() called")
         val user = getCurrentUserUseCase()
         _uiState.value = _uiState.value.copy(user = user)
-        android.util.Log.d("QuizViewModel", "User loaded: ${user?.uid}")
+        android.util.Log.d("QuizViewModel", "User loaded: ${user?.uid}, type: ${user?.userType}")
 
         user?.let {
-            android.util.Log.d("QuizViewModel", "Loading quizzes for education level: ${it.educationLevel}")
-            loadQuizzesByEducationLevel(it.educationLevel)
+            if (it.userType == "Teacher") {
+                android.util.Log.d("QuizViewModel", "Loading all quizzes for teacher")
+                loadQuizzes(educationLevel = null)
+            } else {
+                android.util.Log.d("QuizViewModel", "Loading quizzes for education level: ${it.educationLevel}")
+                loadQuizzesByEducationLevel(it.educationLevel)
+            }
             android.util.Log.d("QuizViewModel", "Loading completed quizzes for user: ${it.uid}")
             loadCompletedQuizzes(it.uid)
         }

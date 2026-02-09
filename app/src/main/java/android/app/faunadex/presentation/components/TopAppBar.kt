@@ -34,10 +34,35 @@ data class TopAppBarUserData(
     val username: String,
     val profilePictureUrl: String? = null,
     val educationLevel: String,
+    val userType: String = "Student",
     val currentLevel: Int,
     val currentXp: Int,
     val xpForNextLevel: Int
-)
+) {
+    fun getInitials(): String {
+        val cleanUsername = username
+            .replace(Regex("[^a-zA-Z0-9]"), " ")
+            .trim()
+
+        return when {
+            cleanUsername.isEmpty() -> "??"
+            cleanUsername.contains(" ") -> {
+                val words = cleanUsername.split(" ").filter { it.isNotEmpty() }
+                if (words.size >= 2) {
+                    "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+                } else {
+                    words[0].take(2).uppercase()
+                }
+            }
+            cleanUsername.length >= 2 -> {
+                cleanUsername.take(2).uppercase()
+            }
+            else -> {
+                cleanUsername.uppercase().repeat(2)
+            }
+        }
+    }
+}
 
 @Composable
 fun TopAppBar(
@@ -70,6 +95,7 @@ fun TopAppBar(
                 if (showProfilePicture) {
                     ProfilePicture(
                         profilePictureUrl = userData.profilePictureUrl,
+                        username = userData.username,
                         modifier = Modifier.size(56.dp)
                     )
 
@@ -96,10 +122,22 @@ fun TopAppBar(
                     if (showEducationBadge) {
                         Spacer(Modifier.height(8.dp))
 
-                        EducationLevelBadgeCompact(
-                            educationLevel = userData.educationLevel,
-                            educationLevelLabel = educationLevelLabel
-                        )
+                        if (userData.userType == "Teacher") {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TeacherBadgeCompact()
+                                EducationLevelBadgeCompact(
+                                    educationLevel = userData.educationLevel
+                                )
+                            }
+                        } else {
+                            EducationLevelBadgeWithLabel(
+                                educationLevel = userData.educationLevel,
+                                educationLevelLabel = educationLevelLabel
+                            )
+                        }
                     }
                 }
             }
@@ -130,6 +168,7 @@ fun TopAppBar(
 @Composable
 private fun ProfilePicture(
     profilePictureUrl: String?,
+    username: String,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -158,39 +197,75 @@ private fun ProfilePicture(
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
                 loading = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "👤",
-                            fontSize = 28.sp
-                        )
-                    }
+                    UserInitials(username = username)
                 },
                 error = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "👤",
-                            fontSize = 28.sp
-                        )
-                    }
+                    UserInitials(username = username)
                 }
             )
         } else {
-            Text(
-                text = "👤",
-                fontSize = 28.sp
-            )
+            UserInitials(username = username)
         }
     }
 }
 
 @Composable
+private fun UserInitials(
+    username: String,
+    modifier: Modifier = Modifier
+) {
+    val initials = TopAppBarUserData(
+        username = username,
+        educationLevel = "",
+        currentLevel = 0,
+        currentXp = 0,
+        xpForNextLevel = 0
+    ).getInitials()
+
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkGreenMoss,
+            fontFamily = JerseyFont
+        )
+    }
+}
+
+@Composable
 private fun EducationLevelBadgeCompact(
+    educationLevel: String,
+    modifier: Modifier = Modifier
+) {
+    val badgeColor = when (educationLevel) {
+        "SD" -> ErrorRed
+        "SMP" -> PrimaryBlue
+        "SMA" -> BlueOcean
+        else -> BlueOcean
+    }
+
+    Box(
+        modifier = modifier
+            .background(badgeColor, CircleShape)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = educationLevel,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = PastelYellow,
+            fontFamily = JerseyFont
+        )
+    }
+}
+
+@Composable
+private fun EducationLevelBadgeWithLabel(
     educationLevel: String,
     educationLevelLabel: String,
     modifier: Modifier = Modifier
@@ -205,7 +280,7 @@ private fun EducationLevelBadgeCompact(
     Row(
         modifier = modifier
             .background(badgeColor, CircleShape)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -218,11 +293,36 @@ private fun EducationLevelBadgeCompact(
         )
         Text(
             text = educationLevel,
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = PastelYellow,
             fontFamily = JerseyFont
         )
+    }
+}
+
+@Composable
+private fun TeacherBadgeCompact(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .background(PastelYellow, CircleShape)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.user_type_teacher),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkGreenMoss,
+                fontFamily = JerseyFont
+            )
+        }
     }
 }
 
@@ -260,10 +360,6 @@ private fun HexagonLevel(
     }
 }
 
-
-/**
- * XP progress indicator
- */
 @Composable
 private fun XpProgress(
     currentXp: Int,

@@ -29,7 +29,12 @@
     <!-- Register Screen -->
     <string name="username">Nama Pengguna</string>
     <string name="confirm_password">Konfirmasi Kata Sandi</string>
+    <string name="user_type">Tipe Pengguna</string>
+    <string name="user_type_student">Pelajar</string>
+    <string name="user_type_teacher">Guru</string>
+    <string name="i_am_a">Saya adalah…</string>
     <string name="your_education_level">Tingkat Pendidikanmu</string>
+    <string name="teaching_level">Tingkat Pengajaran</string>
     <string name="already_have_account">Sudah punya akun? Masuk</string>
 
     <!-- Auth Error Messages -->
@@ -158,6 +163,7 @@
     <string name="question">Pertanyaan</string>
     <string name="finish">Selesai</string>
     <string name="quiz_replay">Main Lagi</string>
+    <string name="loading_questions">Memuat pertanyaan...</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>
@@ -232,6 +238,10 @@
     <string name="ar_surface_ready">Permukaan terdeteksi! Siap menempatkan model 3D</string>
     <string name="ar_tracking_lost">Pelacakan Hilang</string>
     <string name="ar_tracking_lost_hint">Arahkan kamera kembali ke permukaan awal</string>
+    <string name="ar_model_load_timeout">Waktu Muat Model Habis</string>
+    <string name="ar_model_load_timeout_hint">Model 3D membutuhkan waktu terlalu lama untuk dimuat. Silakan periksa koneksi internet Anda dan coba lagi.</string>
+    <string name="ar_model_load_failed">Gagal Memuat Model</string>
+    <string name="ar_model_load_failed_hint">Gagal memuat model 3D. Silakan periksa koneksi internet Anda dan coba lagi.</string>
     <string name="camera_permission_fail">Izin kamera diperlukan untuk menggunakan fitur AR</string>
     <string name="camera_permission_grant">Berikan izin kamera</string>
 

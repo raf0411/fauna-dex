@@ -24,31 +24,29 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
         username: String,
-        educationLevel: String
+        educationLevel: String,
+        userType: String
     ): AuthResult<User> {
         return try {
-            // Step 1: Create user in Firebase Authentication
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
 
             if (firebaseUser != null) {
-                // Step 2: Create User object with full profile data
                 val user = User(
                     uid = firebaseUser.uid,
                     email = firebaseUser.email ?: email,
                     username = username,
                     educationLevel = educationLevel,
+                    userType = userType,
                     currentTitle = "Petualang Pemula",
                     totalXp = 0
                 )
 
-                // Step 3: Save profile to Firestore (PENTING!)
                 val firestoreResult = userRepository.createUserProfile(user)
 
                 if (firestoreResult.isSuccess) {
                     AuthResult.Success(user)
                 } else {
-                    // Jika gagal simpan ke Firestore, hapus user dari Auth (rollback)
                     firebaseUser.delete().await()
                     AuthResult.Error("Failed to create user profile: ${firestoreResult.exceptionOrNull()?.message}")
                 }

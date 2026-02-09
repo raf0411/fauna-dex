@@ -93,6 +93,7 @@ fun QuizScreenContent(
                         username = user.username,
                         profilePictureUrl = user.profilePictureUrl,
                         educationLevel = user.educationLevel,
+                        userType = user.userType,
                         currentLevel = (user.totalXp / 1000) + 1,
                         currentXp = user.totalXp % 1000,
                         xpForNextLevel = 1000

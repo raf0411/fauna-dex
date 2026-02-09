@@ -41,6 +41,14 @@ class AnimalDetailViewModel @Inject constructor(
             return level
         }
 
+    val currentUserType: String
+        get() {
+            val user = getCurrentUserUseCase()
+            val type = user?.userType ?: "Student"
+            Log.d("AnimalDetailViewModel", "Current user type: '$type'")
+            return type
+        }
+
     init {
         val user = getCurrentUserUseCase()
         Log.d("AnimalDetailViewModel", "User info - uid: ${user?.uid}, email: ${user?.email}, level: '${user?.educationLevel}'")

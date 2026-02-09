@@ -1,12 +1,11 @@
 package android.app.faunadex.presentation.components
 
 import android.app.faunadex.R
-import android.app.faunadex.ui.theme.FaunaDexTheme
-import android.app.faunadex.ui.theme.MediumGreen
-import android.app.faunadex.ui.theme.PrimaryGreenLight
+import android.app.faunadex.ui.theme.*
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -15,9 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,13 +31,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
 
 @Composable
 fun ProfilePicture(
     imageUrl: String? = null,
     imagePainter: Painter? = null,
+    username: String = "",
     modifier: Modifier = Modifier,
     size: Dp = 160.dp,
     borderWidth: Dp = 8.dp,
@@ -47,16 +47,14 @@ fun ProfilePicture(
     Box(
         modifier = modifier.size(size)
     ) {
-        // Check if imageUrl is a Base64 data URL
         val painter = remember(imageUrl) {
             if (!imageUrl.isNullOrEmpty() && imageUrl.startsWith("data:image")) {
                 try {
-                    // Extract Base64 data from data URL
                     val base64Data = imageUrl.substringAfter("base64,")
                     val imageBytes = Base64.decode(base64Data, Base64.NO_WRAP)
                     val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     BitmapPainter(bitmap.asImageBitmap())
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             } else {
@@ -66,7 +64,6 @@ fun ProfilePicture(
 
         when {
             painter != null -> {
-                // Display Base64 decoded image
                 Image(
                     painter = painter,
                     contentDescription = "Profile Picture",
@@ -78,13 +75,12 @@ fun ProfilePicture(
                 )
             }
             !imageUrl.isNullOrEmpty() && !imageUrl.startsWith("data:image") -> {
-                // Display URL image using Coil
                 AsyncImage(
                     model = imageUrl,
                     contentDescription = "Profile Picture",
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.dummy_profile),
-                    error = painterResource(id = R.drawable.dummy_profile),
+                    placeholder = if (username.isNotEmpty()) null else painterResource(id = R.drawable.dummy_profile),
+                    error = if (username.isNotEmpty()) null else painterResource(id = R.drawable.dummy_profile),
                     modifier = Modifier
                         .matchParentSize()
                         .clip(CircleShape)
@@ -92,7 +88,6 @@ fun ProfilePicture(
                 )
             }
             imagePainter != null -> {
-                // Display provided painter
                 Image(
                     painter = imagePainter,
                     contentDescription = "Profile Picture",
@@ -103,8 +98,14 @@ fun ProfilePicture(
                         .border(borderWidth, Color.White, CircleShape)
                 )
             }
+            username.isNotEmpty() -> {
+                ProfileInitialsLarge(
+                    username = username,
+                    size = size,
+                    borderWidth = borderWidth
+                )
+            }
             else -> {
-                // Display default dummy profile
                 Image(
                     painter = painterResource(id = R.drawable.dummy_profile),
                     contentDescription = "Default Profile Picture",
@@ -142,6 +143,56 @@ fun ProfilePicture(
     }
 }
 
+private fun getUserInitials(username: String): String {
+    val cleanUsername = username
+        .replace(Regex("[^a-zA-Z0-9]"), " ")
+        .trim()
+
+    return when {
+        cleanUsername.isEmpty() -> "??"
+        cleanUsername.contains(" ") -> {
+            val words = cleanUsername.split(" ").filter { it.isNotEmpty() }
+            if (words.size >= 2) {
+                "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+            } else {
+                words[0].take(2).uppercase()
+            }
+        }
+        cleanUsername.length >= 2 -> {
+            cleanUsername.take(2).uppercase()
+        }
+        else -> {
+            cleanUsername.uppercase().repeat(2)
+        }
+    }
+}
+
+@Composable
+private fun ProfileInitialsLarge(
+    username: String,
+    size: Dp,
+    borderWidth: Dp,
+    modifier: Modifier = Modifier
+) {
+    val initials = getUserInitials(username)
+
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(MediumGreenSage)
+            .border(borderWidth, Color.White, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials,
+            fontSize = (size.value / 3).sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = DarkGreenMoss,
+            fontFamily = JerseyFont
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable

@@ -5,11 +5,8 @@ import android.app.faunadex.R
 import android.app.faunadex.presentation.components.ConfirmationDialog
 import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.presentation.components.IconButton
-import android.app.faunadex.presentation.quiz.ShuffledQuestion
-import android.app.faunadex.utils.QuizLanguageHelper
 import android.app.faunadex.ui.theme.DarkForest
 import android.app.faunadex.ui.theme.DarkGreen
-import androidx.activity.compose.BackHandler
 import android.app.faunadex.ui.theme.DarkGreenMoss
 import android.app.faunadex.ui.theme.ErrorRedDark
 import android.app.faunadex.ui.theme.FaunaDexTheme
@@ -23,6 +20,8 @@ import android.app.faunadex.ui.theme.PrimaryGreenLight
 import android.app.faunadex.ui.theme.PrimaryGreenLime
 import android.app.faunadex.ui.theme.PrimaryGreenNeon
 import android.app.faunadex.ui.theme.QuizGreenGradient
+import android.app.faunadex.utils.QuizLanguageHelper
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -169,7 +168,7 @@ fun QuizGameplayScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "Loading questions...",
+                            text = stringResource(R.string.loading_questions),
                             color = PastelYellow,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,

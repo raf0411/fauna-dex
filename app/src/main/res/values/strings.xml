@@ -158,6 +158,7 @@
     <string name="question">Question</string>
     <string name="finish">Finish</string>
     <string name="quiz_replay">Play Again</string>
+    <string name="loading_questions">Loading questions...</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>
@@ -232,6 +233,10 @@
     <string name="ar_surface_ready">Surface detected! Ready to place 3D models</string>
     <string name="ar_tracking_lost">Tracking Lost</string>
     <string name="ar_tracking_lost_hint">Point your camera back at the original surface</string>
+    <string name="ar_model_load_timeout">Model Loading Timeout</string>
+    <string name="ar_model_load_timeout_hint">The 3D model is taking too long to load. Please check your internet connection and try again.</string>
+    <string name="ar_model_load_failed">Model Loading Failed</string>
+    <string name="ar_model_load_failed_hint">Failed to load the 3D model. Please check your internet connection and try again.</string>
     <string name="camera_permission_fail">Camera permission is required to use AR features</string>
     <string name="camera_permission_grant">Grant Camera Permission</string>
 

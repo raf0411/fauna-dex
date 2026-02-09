@@ -158,6 +158,7 @@
     <string name="question">Pertanyaan</string>
     <string name="finish">Selesai</string>
     <string name="quiz_replay">Main Lagi</string>
+    <string name="loading_questions">Memuat pertanyaan...</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Beranda</string>

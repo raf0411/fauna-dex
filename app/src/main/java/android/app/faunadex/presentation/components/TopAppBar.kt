@@ -94,19 +94,25 @@ fun TopAppBar(
                         fontFamily = JerseyFont
                     )
 
-                    if (userData.userType == "Teacher") {
-                        Spacer(Modifier.height(4.dp))
-
-                        TeacherBadge()
-                    }
-
                     if (showEducationBadge) {
                         Spacer(Modifier.height(8.dp))
 
-                        EducationLevelBadgeCompact(
-                            educationLevel = userData.educationLevel,
-                            educationLevelLabel = educationLevelLabel
-                        )
+                        if (userData.userType == "Teacher") {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TeacherBadgeCompact()
+                                EducationLevelBadgeCompact(
+                                    educationLevel = userData.educationLevel
+                                )
+                            }
+                        } else {
+                            EducationLevelBadgeWithLabel(
+                                educationLevel = userData.educationLevel,
+                                educationLevelLabel = educationLevelLabel
+                            )
+                        }
                     }
                 }
             }
@@ -199,6 +205,34 @@ private fun ProfilePicture(
 @Composable
 private fun EducationLevelBadgeCompact(
     educationLevel: String,
+    modifier: Modifier = Modifier
+) {
+    val badgeColor = when (educationLevel) {
+        "SD" -> ErrorRed
+        "SMP" -> PrimaryBlue
+        "SMA" -> BlueOcean
+        else -> BlueOcean
+    }
+
+    Box(
+        modifier = modifier
+            .background(badgeColor, CircleShape)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = educationLevel,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = PastelYellow,
+            fontFamily = JerseyFont
+        )
+    }
+}
+
+@Composable
+private fun EducationLevelBadgeWithLabel(
+    educationLevel: String,
     educationLevelLabel: String,
     modifier: Modifier = Modifier
 ) {
@@ -212,7 +246,7 @@ private fun EducationLevelBadgeCompact(
     Row(
         modifier = modifier
             .background(badgeColor, CircleShape)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -225,7 +259,7 @@ private fun EducationLevelBadgeCompact(
         )
         Text(
             text = educationLevel,
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = PastelYellow,
             fontFamily = JerseyFont
@@ -234,27 +268,27 @@ private fun EducationLevelBadgeCompact(
 }
 
 @Composable
-private fun TeacherBadge(
+private fun TeacherBadgeCompact(
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Box(
         modifier = modifier
             .background(PastelYellow, CircleShape)
-            .padding(horizontal = 10.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "👨‍🏫",
-            fontSize = 12.sp
-        )
-        Text(
-            text = stringResource(R.string.user_type_teacher),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = DarkGreenMoss,
-            fontFamily = JerseyFont
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.user_type_teacher),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkGreenMoss,
+                fontFamily = JerseyFont
+            )
+        }
     }
 }
 

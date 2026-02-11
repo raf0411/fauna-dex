@@ -65,6 +65,7 @@ fun DashboardScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToQuiz: () -> Unit = {},
+    onNavigateToCredits: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -84,6 +85,7 @@ fun DashboardScreen(
         uiState = uiState,
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToQuiz = onNavigateToQuiz,
+        onNavigateToCredits = onNavigateToCredits,
         onNavigateToAnimalDetail = onNavigateToAnimalDetail,
         viewModel = viewModel
     )
@@ -95,6 +97,7 @@ fun DashboardScreenContent(
     uiState: DashboardUiState,
     onNavigateToProfile: () -> Unit,
     onNavigateToQuiz: () -> Unit = {},
+    onNavigateToCredits: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel? = null,
     currentRoute: String = "dashboard"
@@ -205,6 +208,7 @@ fun DashboardScreenContent(
                     when (route) {
                         "profile" -> onNavigateToProfile()
                         "quiz" -> onNavigateToQuiz()
+                        "credits" -> onNavigateToCredits()
                         "dashboard" -> { /* Already on dashboard */ }
                     }
                 }

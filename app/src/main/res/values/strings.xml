@@ -265,4 +265,69 @@
     <string name="good_night">Good night</string>
     <string name="education_level_label">Education Level:</string>
     <string name="press_back_to_exit">Press back again to exit</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_credits">Credits</string>
+
+    <!-- Credits Screen -->
+    <string name="credits_title">Credits &amp; Attributions</string>
+    <string name="credits_app_name">WildAR!</string>
+    <string name="credits_developer">Developed by Raissa Raffi Darmawan</string>
+    <string name="credits_year">© 2026</string>
+    <string name="credits_copyright">© 2026 Raffi Darmawan. All rights reserved.</string>
+    <string name="credits_purpose">Developed for educational and conservation awareness purposes.</string>
+
+    <!-- Credits - AI Models Section -->
+    <string name="credits_ai_models_title">AI-Generated 3D Models</string>
+    <string name="credits_ai_models_description">Some 3D models featured in this application were generated using AI-powered tools under appropriate licensing. These assets are used solely for educational visualization of endangered fauna species.</string>
+    <string name="credits_meshy_ai">Meshy AI</string>
+    <string name="credits_meshy_ai_description">Text-to-3D / Image-to-3D Generation Tool</string>
+
+    <!-- Credits - External Models Section -->
+    <string name="credits_external_models_title">External 3D Model Assets</string>
+    <string name="credits_sketchfab_models">Sketchfab 3D Models</string>
+    <string name="credits_cgtrader_models">CGTrader 3D Models</string>
+
+    <!-- Credits - Images Section -->
+    <string name="credits_images_title">Images &amp; Textures</string>
+    <string name="credits_unsplash">Unsplash</string>
+    <string name="credits_pixabay">Pixabay</string>
+
+    <!-- Credits - Scientific Sources Section -->
+    <string name="credits_scientific_sources_title">Educational &amp; Scientific Sources</string>
+    <string name="credits_scientific_sources_description">Fauna information and scientific data were sourced from the following authoritative organizations and databases.</string>
+    <string name="credits_inaturalist">iNaturalist</string>
+    <string name="credits_inaturalist_desc">Community-based Species Observation Platform</string>
+    <string name="credits_wikipedia">Wikipedia</string>
+    <string name="credits_wikipedia_desc">Free Online Encyclopedia</string>
+    <string name="credits_youtube">YouTube</string>
+    <string name="credits_youtube_desc">Educational Video Content Platform</string>
+
+    <!-- Credits - Libraries Section -->
+    <string name="credits_libraries_title">Libraries &amp; Frameworks</string>
+    <string name="credits_google_arcore">Google ARCore</string>
+    <string name="credits_google_arcore_desc">Augmented Reality SDK</string>
+    <string name="credits_jetpack_compose">Jetpack Compose</string>
+    <string name="credits_jetpack_compose_desc">Modern Android UI Toolkit</string>
+    <string name="credits_coil">Coil</string>
+    <string name="credits_coil_desc">Image Loading Library</string>
+    <string name="credits_hilt">Hilt</string>
+    <string name="credits_hilt_desc">Dependency Injection Framework</string>
+    <string name="credits_firebase">Firebase</string>
+    <string name="credits_firebase_desc">Backend-as-a-Service Platform</string>
+
+    <!-- Credits - Icons Section -->
+    <string name="credits_icons_title">Icons &amp; UI Assets</string>
+    <string name="credits_material_icons">Material Design Icons</string>
+    <string name="credits_freepik">Freepik / Flaticon</string>
+
+    <!-- Credits - Formatting -->
+    <string name="credits_author_format">Author: %1$s</string>
+    <string name="credits_license_format">License: %1$s</string>
+    <string name="credits_visit_website">Visit Website</string>
+    <string name="credits_view_licenses">View Full Open Source Licenses</string>
+
+    <!-- Credits - Academic Disclaimer -->
+    <string name="credits_academic_disclaimer_title">Academic Disclaimer</string>
+    <string name="credits_academic_disclaimer">This application is developed for educational purposes as part of an academic thesis project. All assets, information, and content are credited to their respective creators and organizations in accordance with applicable licenses and copyright regulations.</string>
 </resources>

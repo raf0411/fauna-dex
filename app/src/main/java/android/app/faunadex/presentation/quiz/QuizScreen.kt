@@ -56,6 +56,7 @@ import coil.compose.SubcomposeAsyncImage
 fun QuizScreen(
     onNavigateToDashboard: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCredits: () -> Unit = {},
     onNavigateToQuizDetail: (String) -> Unit = {},
     currentRoute: String = "quiz",
     viewModel: QuizViewModel = hiltViewModel()
@@ -71,6 +72,7 @@ fun QuizScreen(
         uiState = uiState,
         onNavigateToDashboard = onNavigateToDashboard,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToCredits = onNavigateToCredits,
         onNavigateToQuizDetail = onNavigateToQuizDetail,
         currentRoute = currentRoute
     )
@@ -81,6 +83,7 @@ fun QuizScreenContent(
     uiState: QuizUiState,
     onNavigateToDashboard: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCredits: () -> Unit = {},
     onNavigateToQuizDetail: (String) -> Unit = {},
     currentRoute: String = "quiz"
 ) {
@@ -108,6 +111,7 @@ fun QuizScreenContent(
                     when (route) {
                         "dashboard" -> onNavigateToDashboard()
                         "profile" -> onNavigateToProfile()
+                        "credits" -> onNavigateToCredits()
                         "quiz" -> { /* Already on quiz */ }
                     }
                 }

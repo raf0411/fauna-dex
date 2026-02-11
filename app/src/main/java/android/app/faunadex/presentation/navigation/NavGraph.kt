@@ -11,6 +11,7 @@ import android.app.faunadex.presentation.ar.ArScreen
 import android.app.faunadex.presentation.auth.login.LoginScreen
 import android.app.faunadex.presentation.auth.onboarding.OnboardingScreen
 import android.app.faunadex.presentation.auth.register.RegisterScreen
+import android.app.faunadex.presentation.credits.CreditsScreen
 import android.app.faunadex.presentation.dashboard.DashboardScreen
 import android.app.faunadex.presentation.profile.ChangePasswordScreen
 import android.app.faunadex.presentation.profile.EditProfileScreen
@@ -100,6 +101,15 @@ fun NavGraph(
                         restoreState = true
                     }
                 },
+                onNavigateToCredits = {
+                    navController.navigate(Screen.Credits.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 onNavigateToAnimalDetail = { animalId ->
                     navController.navigate(Screen.AnimalDetail.createRoute(animalId))
                 }
@@ -142,6 +152,15 @@ fun NavGraph(
                 },
                 onNavigateToQuiz = {
                     navController.navigate(Screen.Quiz.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToCredits = {
+                    navController.navigate(Screen.Credits.route) {
                         popUpTo(Screen.Dashboard.route) {
                             saveState = true
                         }
@@ -192,6 +211,15 @@ fun NavGraph(
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToCredits = {
+                    navController.navigate(Screen.Credits.route) {
                         popUpTo(Screen.Dashboard.route) {
                             saveState = true
                         }
@@ -289,6 +317,41 @@ fun NavGraph(
                     navController.navigate(Screen.Quiz.route) {
                         popUpTo(Screen.Quiz.route) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.Credits.route) {
+            CreditsScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToQuiz = {
+                    navController.navigate(Screen.Quiz.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToOpenSourceLicenses = {
+                    // TODO: Navigate to Open Source Licenses screen if needed
                 }
             )
         }

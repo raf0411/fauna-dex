@@ -265,4 +265,69 @@
     <string name="good_night">Selamat malam</string>
     <string name="education_level_label">Tingkat Pendidikan:</string>
     <string name="press_back_to_exit">Tekan kembali lagi untuk keluar</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_credits">Kredit</string>
+
+    <!-- Credits Screen -->
+    <string name="credits_title">Kredit &amp; Atribusi</string>
+    <string name="credits_app_name">WildAR!</string>
+    <string name="credits_developer">Dikembangkan oleh Raissa Raffi Darmawan</string>
+    <string name="credits_year">© 2026</string>
+    <string name="credits_copyright">© 2026 Raffi Darmawan. Hak cipta dilindungi undang-undang.</string>
+    <string name="credits_purpose">Dikembangkan untuk tujuan edukasi dan kesadaran konservasi.</string>
+
+    <!-- Credits - AI Models Section -->
+    <string name="credits_ai_models_title">Model 3D Buatan AI</string>
+    <string name="credits_ai_models_description">Beberapa model 3D yang ditampilkan dalam aplikasi ini dibuat menggunakan teknologi AI dengan lisensi yang sesuai. Aset-aset ini digunakan khusus untuk visualisasi edukatif spesies fauna yang terancam punah.</string>
+    <string name="credits_meshy_ai">Meshy AI</string>
+    <string name="credits_meshy_ai_description">Alat Pembuat Model 3D dari Teks / Gambar</string>
+
+    <!-- Credits - External Models Section -->
+    <string name="credits_external_models_title">Aset Model 3D Eksternal</string>
+    <string name="credits_sketchfab_models">Model 3D Sketchfab</string>
+    <string name="credits_cgtrader_models">Model 3D CGTrader</string>
+
+    <!-- Credits - Images Section -->
+    <string name="credits_images_title">Gambar &amp; Tekstur</string>
+    <string name="credits_unsplash">Unsplash</string>
+    <string name="credits_pixabay">Pixabay</string>
+
+    <!-- Credits - Scientific Sources Section -->
+    <string name="credits_scientific_sources_title">Sumber Edukasi &amp; Ilmiah</string>
+    <string name="credits_scientific_sources_description">Informasi fauna dan data ilmiah bersumber dari organisasi dan database otoritatif berikut.</string>
+    <string name="credits_inaturalist">iNaturalist</string>
+    <string name="credits_inaturalist_desc">Platform Observasi Spesies Berbasis Komunitas</string>
+    <string name="credits_wikipedia">Wikipedia</string>
+    <string name="credits_wikipedia_desc">Ensiklopedia Daring Gratis</string>
+    <string name="credits_youtube">YouTube</string>
+    <string name="credits_youtube_desc">Platform Konten Video Edukatif</string>
+
+    <!-- Credits - Libraries Section -->
+    <string name="credits_libraries_title">Library &amp; Framework</string>
+    <string name="credits_google_arcore">Google ARCore</string>
+    <string name="credits_google_arcore_desc">SDK Augmented Reality</string>
+    <string name="credits_jetpack_compose">Jetpack Compose</string>
+    <string name="credits_jetpack_compose_desc">Toolkit UI Android Modern</string>
+    <string name="credits_coil">Coil</string>
+    <string name="credits_coil_desc">Library Pemuat Gambar</string>
+    <string name="credits_hilt">Hilt</string>
+    <string name="credits_hilt_desc">Framework Injeksi Dependensi</string>
+    <string name="credits_firebase">Firebase</string>
+    <string name="credits_firebase_desc">Platform Backend-as-a-Service</string>
+
+    <!-- Credits - Icons Section -->
+    <string name="credits_icons_title">Ikon &amp; Aset UI</string>
+    <string name="credits_material_icons">Ikon Material Design</string>
+    <string name="credits_freepik">Freepik / Flaticon</string>
+
+    <!-- Credits - Formatting -->
+    <string name="credits_author_format">Pembuat: %1$s</string>
+    <string name="credits_license_format">Lisensi: %1$s</string>
+    <string name="credits_visit_website">Kunjungi Situs</string>
+    <string name="credits_view_licenses">Lihat Lisensi Open Source Lengkap</string>
+
+    <!-- Credits - Academic Disclaimer -->
+    <string name="credits_academic_disclaimer_title">Disclaimer Akademik</string>
+    <string name="credits_academic_disclaimer">Aplikasi ini dikembangkan untuk tujuan edukasi sebagai bagian dari proyek tugas akhir akademik. Semua aset, informasi, dan konten dikreditkan kepada pembuat dan organisasi masing-masing sesuai dengan lisensi dan peraturan hak cipta yang berlaku.</string>
 </resources>

@@ -116,7 +116,8 @@ class MainActivity : AppCompatActivity() {
 private val mainScreenRoutes = listOf(
     Screen.Dashboard.route,
     Screen.Profile.route,
-    Screen.Quiz.route
+    Screen.Quiz.route,
+    Screen.Credits.route
 )
 
 @Composable

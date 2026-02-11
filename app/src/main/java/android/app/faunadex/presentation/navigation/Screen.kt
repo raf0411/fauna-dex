@@ -31,5 +31,6 @@ sealed class Screen(val route: String) {
     object AR : Screen("ar/{animalId}") {
         fun createRoute(animalId: String) = "ar/$animalId"
     }
+    object Credits : Screen("credits")
 }
 

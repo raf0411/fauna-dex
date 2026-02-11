@@ -48,6 +48,7 @@ import java.util.*
 fun ProfileScreen(
     onNavigateToDashboard: () -> Unit = {},
     onNavigateToQuiz: () -> Unit = {},
+    onNavigateToCredits: () -> Unit = {},
     onNavigateToOnboarding: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToChangePassword: () -> Unit = {},
@@ -63,6 +64,7 @@ fun ProfileScreen(
         uiState = uiState,
         onNavigateToDashboard = onNavigateToDashboard,
         onNavigateToQuiz = onNavigateToQuiz,
+        onNavigateToCredits = onNavigateToCredits,
         onRetry = viewModel::retry,
         onLogout = {
             viewModel.logout()
@@ -81,6 +83,7 @@ fun ProfileScreenContent(
     uiState: ProfileUiState,
     onNavigateToDashboard: () -> Unit,
     onNavigateToQuiz: () -> Unit,
+    onNavigateToCredits: () -> Unit = {},
     onRetry: () -> Unit,
     onLogout: () -> Unit = {},
     onUploadProfilePicture: (android.net.Uri) -> Unit = {},
@@ -118,6 +121,7 @@ fun ProfileScreenContent(
                     when (route) {
                         "dashboard" -> onNavigateToDashboard()
                         "quiz" -> onNavigateToQuiz()
+                        "credits" -> onNavigateToCredits()
                         "profile" -> { /* Already on profile */ }
                     }
                 }

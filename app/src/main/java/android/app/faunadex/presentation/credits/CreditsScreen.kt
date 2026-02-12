@@ -91,27 +91,27 @@ fun CreditsScreenContent(
                 AppInfoCard()
             }
 
-            item {
-                CreditsCard(
-                    section = CreditsSection(
-                        titleResId = R.string.credits_ai_models_title,
-                        icon = Icons.Outlined.ViewInAr,
-                        descriptionResId = R.string.credits_ai_models_description,
-                        items = listOf(
-                            CreditItem(
-                                titleResId = R.string.credits_meshy_ai,
-                                descriptionResId = R.string.credits_meshy_ai_description,
-                                license = "Public License (Pro)",
-                                url = "https://meshy.ai/"
-                            )
-                        )
-                    ),
-                    onUrlClick = { url ->
-                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                        context.startActivity(intent)
-                    }
-                )
-            }
+//            item {
+//                CreditsCard(
+//                    section = CreditsSection(
+//                        titleResId = R.string.credits_ai_models_title,
+//                        icon = Icons.Outlined.ViewInAr,
+//                        descriptionResId = R.string.credits_ai_models_description,
+//                        items = listOf(
+//                            CreditItem(
+//                                titleResId = R.string.credits_meshy_ai,
+//                                descriptionResId = R.string.credits_meshy_ai_description,
+//                                license = "Public License (Pro)",
+//                                url = "https://meshy.ai/"
+//                            )
+//                        )
+//                    ),
+//                    onUrlClick = { url ->
+//                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+//                        context.startActivity(intent)
+//                    }
+//                )
+//            }
 
             item {
                 CreditsCard(
@@ -444,7 +444,6 @@ private fun CreditsCard(
                 )
             }
 
-            // Section Description (if any)
             section.descriptionResId?.let { descId ->
                 Text(
                     text = stringResource(descId),

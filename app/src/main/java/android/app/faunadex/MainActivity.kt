@@ -35,6 +35,7 @@ import android.app.faunadex.ui.theme.FaunaDexTheme
 import android.app.faunadex.ui.theme.PastelYellow
 import android.app.faunadex.ui.theme.PrimaryGreen
 import android.app.faunadex.utils.LanguageManager
+import android.app.faunadex.utils.PermissionsManager
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
@@ -125,9 +126,16 @@ fun FaunaDexApp(
     modifier: Modifier = Modifier,
     isUserLoggedIn: Boolean
 ) {
+    val context = LocalContext.current
     val navController = rememberNavController()
+
     val startDestination = if (isUserLoggedIn) {
-        Screen.Dashboard.route
+        // If user is logged in, check if they've been through permissions flow
+        if (PermissionsManager.hasRequestedPermissions(context)) {
+            Screen.Dashboard.route
+        } else {
+            Screen.Permissions.route
+        }
     } else {
         Screen.Onboarding.route
     }
@@ -135,7 +143,6 @@ fun FaunaDexApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val context = LocalContext.current
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     val backPressThreshold = 2000L
     val pressBackToExitMessage = stringResource(R.string.press_back_to_exit)

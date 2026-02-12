@@ -266,6 +266,22 @@
     <string name="education_level_label">Tingkat Pendidikan:</string>
     <string name="press_back_to_exit">Tekan kembali lagi untuk keluar</string>
 
+    <!-- Permissions Screen -->
+    <string name="permissions_title">Izin Aplikasi</string>
+    <string name="permissions_description">WildAR membutuhkan beberapa izin untuk memberikan pengalaman terbaik. Anda dapat memberikannya sekarang atau nanti dari pengaturan.</string>
+    <string name="permissions_grant_button">Berikan Izin</string>
+    <string name="permissions_continue_button">Lanjutkan ke Aplikasi</string>
+    <string name="permissions_skip_button">Lewati untuk Sekarang</string>
+    <string name="permissions_note">Anda dapat mengubah izin ini kapan saja dari pengaturan perangkat Anda.</string>
+
+    <!-- Permission Items -->
+    <string name="permission_camera_title">Kamera</string>
+    <string name="permission_camera_description">Diperlukan untuk fitur AR untuk melihat dan menempatkan model 3D hewan di lingkungan Anda</string>
+    <string name="permission_location_title">Lokasi</string>
+    <string name="permission_location_description">Digunakan untuk menyediakan fitur berbasis lokasi dan informasi habitat hewan</string>
+    <string name="permission_storage_title">Foto &amp; Media</string>
+    <string name="permission_storage_description">Memungkinkan menyimpan tangkapan layar AR ke galeri Anda</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_credits">Kredit</string>
 

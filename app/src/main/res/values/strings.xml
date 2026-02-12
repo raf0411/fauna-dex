@@ -266,6 +266,22 @@
     <string name="education_level_label">Education Level:</string>
     <string name="press_back_to_exit">Press back again to exit</string>
 
+    <!-- Permissions Screen -->
+    <string name="permissions_title">App Permissions</string>
+    <string name="permissions_description">WildAR needs certain permissions to provide you with the best experience. You can grant them now or later from settings.</string>
+    <string name="permissions_grant_button">Grant Permissions</string>
+    <string name="permissions_continue_button">Continue to App</string>
+    <string name="permissions_skip_button">Skip for Now</string>
+    <string name="permissions_note">You can change these permissions anytime from your device settings.</string>
+
+    <!-- Permission Items -->
+    <string name="permission_camera_title">Camera</string>
+    <string name="permission_camera_description">Required for AR features to view and place 3D animal models in your environment</string>
+    <string name="permission_location_title">Location</string>
+    <string name="permission_location_description">Used to provide location-based features and animal habitat information</string>
+    <string name="permission_storage_title">Photos &amp; Media</string>
+    <string name="permission_storage_description">Allows saving AR screenshots to your gallery</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_credits">Credits</string>
 

@@ -13,6 +13,7 @@ import android.app.faunadex.presentation.auth.onboarding.OnboardingScreen
 import android.app.faunadex.presentation.auth.register.RegisterScreen
 import android.app.faunadex.presentation.credits.CreditsScreen
 import android.app.faunadex.presentation.dashboard.DashboardScreen
+import android.app.faunadex.presentation.permissions.PermissionsScreen
 import android.app.faunadex.presentation.profile.ChangePasswordScreen
 import android.app.faunadex.presentation.profile.EditProfileScreen
 import android.app.faunadex.presentation.profile.ProfileScreen
@@ -53,7 +54,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToDashboard = {
-                    navController.navigate(Screen.Dashboard.route) {
+                    navController.navigate(Screen.Permissions.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -67,8 +68,19 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onNavigateToDashboard = {
-                    navController.navigate(Screen.Dashboard.route) {
+                    navController.navigate(Screen.Permissions.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(Screen.Permissions.route) {
+            PermissionsScreen(
+                onPermissionsHandled = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Permissions.route) { inclusive = true }
                         launchSingleTop = true
                     }
                 }

@@ -1,7 +1,10 @@
 package android.app.faunadex.presentation.dashboard
 
+import android.Manifest
 import android.app.faunadex.R
 import android.app.faunadex.domain.model.User
+import android.app.faunadex.utils.PermissionsManager
+import android.os.Build
 import android.util.Log
 import android.app.faunadex.presentation.components.CustomTextField
 import android.app.faunadex.presentation.components.FaunaBottomBar
@@ -53,13 +56,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DashboardScreen(
     onNavigateToLogin: () -> Unit,
@@ -69,10 +76,37 @@ fun DashboardScreen(
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
+    // Define required permissions based on Android version
+    val permissions = remember {
+        buildList {
+            add(Manifest.permission.CAMERA)
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(Manifest.permission.READ_MEDIA_IMAGES)
+            } else {
+                add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    val permissionsState = rememberMultiplePermissionsState(permissions)
+
+    // Request permissions on first launch
     LaunchedEffect(Unit) {
         viewModel.refreshUser()
+
+        // Check if permissions have been requested before
+        if (!PermissionsManager.hasRequestedPermissions(context)) {
+            // Request permissions
+            permissionsState.launchMultiplePermissionRequest()
+            // Mark as requested
+            PermissionsManager.setPermissionsRequested(context)
+        }
     }
 
     LaunchedEffect(uiState.isSignedOut) {

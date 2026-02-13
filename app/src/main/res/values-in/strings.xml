@@ -296,7 +296,7 @@
     <string name="credits_meshy_ai_description">Alat Pembuat Model 3D dari Teks / Gambar</string>
 
     <!-- Credits - External Models Section -->
-    <string name="credits_external_models_title">Aset Model 3D Eksternal</string>
+    <string name="credits_external_models_title">Aset Model 3D</string>
     <string name="credits_sketchfab_models">Model 3D Sketchfab</string>
     <string name="credits_cgtrader_models">Model 3D CGTrader</string>
 

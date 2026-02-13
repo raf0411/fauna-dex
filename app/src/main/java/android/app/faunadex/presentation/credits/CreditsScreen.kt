@@ -99,6 +99,12 @@ fun CreditsScreenContent(
                         icon = Icons.Outlined.Widgets,
                         items = listOf(
                             CreditItem(
+                                titleResId = R.string.credits_meshy_ai,
+                                descriptionResId = R.string.credits_meshy_ai_description,
+                                license = "Commercial Use License (Pro)",
+                                url = "https://www.meshy.ai/"
+                            ),
+                            CreditItem(
                                 titleResId = R.string.credits_sketchfab_models,
                                 author = "Various Artists",
                                 license = "CC BY 4.0 / Royalty Free",

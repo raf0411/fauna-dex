@@ -151,13 +151,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToCredits = {
-                    navController.navigate(Screen.Credits.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    navController.navigate(Screen.Credits.route)
                 },
                 onNavigateToOnboarding = {
                     navController.navigate(Screen.Onboarding.route) {

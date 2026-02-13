@@ -57,10 +57,6 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(key1 = true) {
-        viewModel.loadUserProfile()
-    }
-
     ProfileScreenContent(
         uiState = uiState,
         onNavigateToDashboard = onNavigateToDashboard,
@@ -97,22 +93,19 @@ fun ProfileScreenContent(
 
     Scaffold(
         topBar = {
-            when (uiState) {
-                is ProfileUiState.Success -> {
-                    val user = uiState.user
-                    TopAppBar(
-                        userData = TopAppBarUserData(
-                            username = user.username,
-                            profilePictureUrl = user.profilePictureUrl,
-                            educationLevel = user.educationLevel,
-                            userType = user.userType,
-                            currentLevel = (user.totalXp / 1000) + 1,
-                            currentXp = user.totalXp % 1000,
-                            xpForNextLevel = 1000
-                        )
+            val user = uiState.user
+            if (user != null) {
+                TopAppBar(
+                    userData = TopAppBarUserData(
+                        username = user.username,
+                        profilePictureUrl = user.profilePictureUrl,
+                        educationLevel = user.educationLevel,
+                        userType = user.userType,
+                        currentLevel = (user.totalXp / 1000) + 1,
+                        currentXp = user.totalXp % 1000,
+                        xpForNextLevel = 1000
                     )
-                }
-                else -> {}
+                )
             }
         },
         bottomBar = {

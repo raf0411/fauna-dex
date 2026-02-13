@@ -31,7 +31,7 @@ class ProfileViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
+    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
@@ -40,7 +40,8 @@ class ProfileViewModel @Inject constructor(
 
     fun loadUserProfile() {
         viewModelScope.launch {
-            _uiState.value = ProfileUiState.Loading
+            val previousUser = _uiState.value.user
+            _uiState.value = ProfileUiState.Loading(user = previousUser)
 
             val currentUser = authRepository.getCurrentUser()
             Log.d("ProfileViewModel", "Current user from Auth: uid=${currentUser?.uid}, email=${currentUser?.email}")
@@ -54,12 +55,13 @@ class ProfileViewModel @Inject constructor(
                 }.onFailure { exception ->
                     Log.e("ProfileViewModel", "Failed to fetch profile", exception)
                     _uiState.value = ProfileUiState.Error(
-                        exception.message ?: "Failed to load profile"
+                        message = exception.message ?: "Failed to load profile",
+                        user = previousUser
                     )
                 }
             } else {
                 Log.e("ProfileViewModel", "No current user found")
-                _uiState.value = ProfileUiState.Error("User not logged in")
+                _uiState.value = ProfileUiState.Error("User not logged in", user = null)
             }
         }
     }
@@ -68,9 +70,10 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is ProfileUiState.Success) {
-                _uiState.value = ProfileUiState.Loading
+                val currentUser = currentState.user
+                _uiState.value = ProfileUiState.Loading(user = currentUser)
 
-                val updatedUser = currentState.user.copy(educationLevel = educationLevel)
+                val updatedUser = currentUser.copy(educationLevel = educationLevel)
                 val result = userRepository.updateUserProfile(updatedUser)
 
                 result.onSuccess {
@@ -79,7 +82,8 @@ class ProfileViewModel @Inject constructor(
                 }.onFailure { exception ->
                     Log.e("ProfileViewModel", "Failed to update education level", exception)
                     _uiState.value = ProfileUiState.Error(
-                        "Failed to update: ${exception.message}"
+                        message = "Failed to update: ${exception.message}",
+                        user = currentUser
                     )
                 }
             }
@@ -107,7 +111,7 @@ class ProfileViewModel @Inject constructor(
             if (currentState is ProfileUiState.Success) {
                 val currentUser = authRepository.getCurrentUser()
                 if (currentUser != null) {
-                    _uiState.value = ProfileUiState.Loading
+                    _uiState.value = ProfileUiState.Loading(user = currentState.user)
 
                     val result = userRepository.uploadProfilePicture(currentUser.uid, imageUri, context)
 
@@ -118,9 +122,9 @@ class ProfileViewModel @Inject constructor(
                     }.onFailure { exception ->
                         Log.e("ProfileViewModel", "Failed to upload profile picture", exception)
                         _uiState.value = ProfileUiState.Error(
-                            "Failed to upload profile picture: ${exception.message}"
+                            message = "Failed to upload profile picture: ${exception.message}",
+                            user = currentState.user
                         )
-                        // Restore previous state after a short delay
                         kotlinx.coroutines.delay(2000)
                         _uiState.value = currentState
                     }
@@ -133,9 +137,10 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is ProfileUiState.Success) {
-                _uiState.value = ProfileUiState.Loading
+                val currentUser = currentState.user
+                _uiState.value = ProfileUiState.Loading(user = currentUser)
 
-                val updatedUser = currentState.user.copy(
+                val updatedUser = currentUser.copy(
                     username = username,
                     educationLevel = educationLevel
                 )
@@ -148,7 +153,8 @@ class ProfileViewModel @Inject constructor(
                 }.onFailure { exception ->
                     Log.e("ProfileViewModel", "Failed to update profile", exception)
                     _uiState.value = ProfileUiState.Error(
-                        "Failed to update profile: ${exception.message}"
+                        message = "Failed to update profile: ${exception.message}",
+                        user = currentUser
                     )
                     // Restore previous state after a short delay
                     kotlinx.coroutines.delay(2000)
@@ -174,7 +180,9 @@ class ProfileViewModel @Inject constructor(
 }
 
 sealed class ProfileUiState {
-    object Loading : ProfileUiState()
-    data class Success(val user: User) : ProfileUiState()
-    data class Error(val message: String) : ProfileUiState()
+    abstract val user: User?
+
+    data class Loading(override val user: User? = null) : ProfileUiState()
+    data class Success(override val user: User) : ProfileUiState()
+    data class Error(val message: String, override val user: User? = null) : ProfileUiState()
 }

@@ -3,13 +3,13 @@ package android.app.faunadex.presentation.credits
 import android.app.faunadex.R
 import android.app.faunadex.domain.model.CreditItem
 import android.app.faunadex.domain.model.CreditsSection
+import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.ui.theme.*
 import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -48,7 +48,10 @@ fun CreditsScreenContent(
 
     Scaffold(
         topBar = {
-            CreditsTopBar(onNavigateBack = onNavigateBack)
+            FaunaTopBarWithBack(
+                title = stringResource(R.string.credits_title),
+                onNavigateBack = onNavigateBack
+            )
         },
         containerColor = DarkForest
     ) { paddingValues ->
@@ -282,32 +285,6 @@ fun CreditsScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CreditsTopBar(onNavigateBack: () -> Unit) {
-    TopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.credits_title),
-                fontFamily = JerseyFont,
-                fontSize = 28.sp,
-                color = PastelYellow
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.navigate),
-                    tint = PastelYellow
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = DarkForest
-        )
-    )
-}
 
 @Composable
 private fun AppInfoCard() {

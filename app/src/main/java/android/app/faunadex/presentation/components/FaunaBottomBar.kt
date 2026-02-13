@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -55,11 +54,6 @@ fun FaunaBottomBar(
             labelResId = R.string.nav_profile,
             icon = Icons.Outlined.AccountCircle,
             route = "profile"
-        ),
-        BottomNavItem(
-            labelResId = R.string.nav_credits,
-            icon = Icons.Outlined.Info,
-            route = "credits"
         )
     )
 

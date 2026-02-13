@@ -101,15 +101,6 @@ fun NavGraph(
                         restoreState = true
                     }
                 },
-                onNavigateToCredits = {
-                    navController.navigate(Screen.Credits.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
                 onNavigateToAnimalDetail = { animalId ->
                     navController.navigate(Screen.AnimalDetail.createRoute(animalId))
                 }
@@ -218,15 +209,6 @@ fun NavGraph(
                         restoreState = true
                     }
                 },
-                onNavigateToCredits = {
-                    navController.navigate(Screen.Credits.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
                 onNavigateToQuizDetail = { quizId ->
                     navController.navigate(Screen.QuizDetail.createRoute(quizId))
                 }
@@ -323,32 +305,8 @@ fun NavGraph(
 
         composable(Screen.Credits.route) {
             CreditsScreen(
-                onNavigateToDashboard = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToQuiz = {
-                    navController.navigate(Screen.Quiz.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
                 onNavigateToOpenSourceLicenses = {
                     // TODO: Navigate to Open Source Licenses screen if needed

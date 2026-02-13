@@ -3,14 +3,13 @@ package android.app.faunadex.presentation.credits
 import android.app.faunadex.R
 import android.app.faunadex.domain.model.CreditItem
 import android.app.faunadex.domain.model.CreditsSection
-import android.app.faunadex.presentation.components.FaunaBottomBar
 import android.app.faunadex.ui.theme.*
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -18,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,47 +30,25 @@ import kotlin.collections.forEachIndexed
 
 @Composable
 fun CreditsScreen(
-    onNavigateToDashboard: () -> Unit = {},
-    onNavigateToQuiz: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToOpenSourceLicenses: () -> Unit = {},
-    currentRoute: String = "credits"
+    onNavigateBack: () -> Unit = {},
+    onNavigateToOpenSourceLicenses: () -> Unit = {}
 ) {
     CreditsScreenContent(
-        onNavigateToDashboard = onNavigateToDashboard,
-        onNavigateToQuiz = onNavigateToQuiz,
-        onNavigateToProfile = onNavigateToProfile,
-        onNavigateToOpenSourceLicenses = onNavigateToOpenSourceLicenses,
-        currentRoute = currentRoute
+        onNavigateBack = onNavigateBack,
+        onNavigateToOpenSourceLicenses = onNavigateToOpenSourceLicenses
     )
 }
 
 @Composable
 fun CreditsScreenContent(
-    onNavigateToDashboard: () -> Unit,
-    onNavigateToQuiz: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToOpenSourceLicenses: () -> Unit = {},
-    currentRoute: String = "credits"
+    onNavigateBack: () -> Unit,
+    onNavigateToOpenSourceLicenses: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            CreditsTopBar()
-        },
-        bottomBar = {
-            FaunaBottomBar(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
-                    when (route) {
-                        "dashboard" -> onNavigateToDashboard()
-                        "quiz" -> onNavigateToQuiz()
-                        "profile" -> onNavigateToProfile()
-                        "credits" -> { /* Already on credits */ }
-                    }
-                }
-            )
+            CreditsTopBar(onNavigateBack = onNavigateBack)
         },
         containerColor = DarkForest
     ) { paddingValues ->
@@ -308,7 +284,7 @@ fun CreditsScreenContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreditsTopBar() {
+private fun CreditsTopBar(onNavigateBack: () -> Unit) {
     TopAppBar(
         title = {
             Text(
@@ -317,6 +293,15 @@ private fun CreditsTopBar() {
                 fontSize = 28.sp,
                 color = PastelYellow
             )
+        },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.navigate),
+                    tint = PastelYellow
+                )
+            }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = DarkForest
@@ -592,9 +577,8 @@ private fun AcademicDisclaimerCard() {
 fun CreditsScreenPreview() {
     FaunaDexTheme {
         CreditsScreenContent(
-            onNavigateToDashboard = {},
-            onNavigateToQuiz = {},
-            onNavigateToProfile = {}
+            onNavigateBack = {},
+            onNavigateToOpenSourceLicenses = {}
         )
     }
 }

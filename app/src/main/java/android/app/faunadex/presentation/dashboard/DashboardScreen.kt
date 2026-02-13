@@ -72,14 +72,12 @@ fun DashboardScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToQuiz: () -> Unit = {},
-    onNavigateToCredits: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
-    // Define required permissions based on Android version
     val permissions = remember {
         buildList {
             add(Manifest.permission.CAMERA)
@@ -96,15 +94,11 @@ fun DashboardScreen(
 
     val permissionsState = rememberMultiplePermissionsState(permissions)
 
-    // Request permissions on first launch
     LaunchedEffect(Unit) {
         viewModel.refreshUser()
 
-        // Check if permissions have been requested before
         if (!PermissionsManager.hasRequestedPermissions(context)) {
-            // Request permissions
             permissionsState.launchMultiplePermissionRequest()
-            // Mark as requested
             PermissionsManager.setPermissionsRequested(context)
         }
     }
@@ -119,7 +113,6 @@ fun DashboardScreen(
         uiState = uiState,
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToQuiz = onNavigateToQuiz,
-        onNavigateToCredits = onNavigateToCredits,
         onNavigateToAnimalDetail = onNavigateToAnimalDetail,
         viewModel = viewModel
     )
@@ -131,7 +124,6 @@ fun DashboardScreenContent(
     uiState: DashboardUiState,
     onNavigateToProfile: () -> Unit,
     onNavigateToQuiz: () -> Unit = {},
-    onNavigateToCredits: () -> Unit = {},
     onNavigateToAnimalDetail: (String) -> Unit,
     viewModel: DashboardViewModel? = null,
     currentRoute: String = "dashboard"
@@ -242,7 +234,6 @@ fun DashboardScreenContent(
                     when (route) {
                         "profile" -> onNavigateToProfile()
                         "quiz" -> onNavigateToQuiz()
-                        "credits" -> onNavigateToCredits()
                         "dashboard" -> { /* Already on dashboard */ }
                     }
                 }

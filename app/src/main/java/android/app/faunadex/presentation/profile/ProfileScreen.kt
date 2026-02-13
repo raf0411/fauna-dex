@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
@@ -121,7 +122,6 @@ fun ProfileScreenContent(
                     when (route) {
                         "dashboard" -> onNavigateToDashboard()
                         "quiz" -> onNavigateToQuiz()
-                        "credits" -> onNavigateToCredits()
                         "profile" -> { /* Already on profile */ }
                     }
                 }
@@ -154,6 +154,7 @@ fun ProfileScreenContent(
                         onUploadProfilePicture = onUploadProfilePicture,
                         onNavigateToEditProfile = onNavigateToEditProfile,
                         onNavigateToChangePassword = onNavigateToChangePassword,
+                        onNavigateToCredits = onNavigateToCredits,
                         snackbarHostState = snackbarHostState,
                         scope = scope
                     )
@@ -233,6 +234,7 @@ private fun ProfileContent(
     onUploadProfilePicture: (android.net.Uri) -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToChangePassword: () -> Unit = {},
+    onNavigateToCredits: () -> Unit = {},
     snackbarHostState: SnackbarHostState,
     scope: kotlinx.coroutines.CoroutineScope
 ) {
@@ -319,6 +321,12 @@ private fun ProfileContent(
                 icon = Icons.Outlined.Language,
                 text = stringResource(R.string.language),
                 onClick = { showLanguageDialog = true }
+            )
+
+            ProfileActionButton(
+                icon = Icons.Outlined.Info,
+                text = stringResource(R.string.credits_title),
+                onClick = onNavigateToCredits
             )
         }
 
@@ -496,6 +504,7 @@ fun ProfileScreenPreview() {
             ),
             onNavigateToDashboard = {},
             onNavigateToQuiz = {},
+            onNavigateToCredits = {},
             onRetry = {},
             onLogout = {},
             onUploadProfilePicture = {},

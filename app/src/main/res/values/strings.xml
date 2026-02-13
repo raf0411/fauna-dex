@@ -348,6 +348,8 @@
     <string name="credits_inaturalist_images_desc">Community-sourced Wildlife Photography</string>
     <string name="credits_animalia_bio">Animalia.bio</string>
     <string name="credits_animalia_bio_desc">Nonprofit Animal Photography Database</string>
+    <string name="credits_unsplash">Unsplash</string>
+    <string name="credits_unsplash_desc">Photos by Various Contributors</string>
 
     <!-- Credits - Scientific Sources Section -->
     <string name="credits_scientific_sources_title">Educational &amp; Scientific Sources</string>

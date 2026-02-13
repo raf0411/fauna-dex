@@ -224,6 +224,12 @@ fun CreditsScreenContent(
                                 descriptionResId = R.string.credits_animalia_bio_desc,
                                 license = "Nonprofit Attribution",
                                 url = "https://animalia.bio/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_unsplash,
+                                descriptionResId = R.string.credits_unsplash_desc,
+                                license = "Unsplash License",
+                                url = "https://unsplash.com/"
                             )
                         )
                     ),

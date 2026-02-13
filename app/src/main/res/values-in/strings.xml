@@ -344,6 +344,8 @@
     <string name="credits_inaturalist_images_desc">Fotografi Satwa Liar dari Komunitas</string>
     <string name="credits_animalia_bio">Animalia.bio</string>
     <string name="credits_animalia_bio_desc">Database Fotografi Hewan Nirlaba</string>
+    <string name="credits_unsplash">Unsplash</string>
+    <string name="credits_unsplash_desc">Foto oleh Berbagai Kontributor</string>
 
     <!-- Credits - Scientific Sources Section -->
     <string name="credits_scientific_sources_title">Sumber Edukasi &amp; Ilmiah</string>

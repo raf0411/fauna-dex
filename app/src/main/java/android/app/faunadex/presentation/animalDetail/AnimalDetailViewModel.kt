@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import android.app.faunadex.domain.usecase.GetAnimalDetailUseCase
 import android.app.faunadex.domain.usecase.GetCurrentUserUseCase
 import android.app.faunadex.utils.AudioPlayerManager
+import android.app.faunadex.utils.ArCoreSessionManager
+import android.app.faunadex.utils.ArCoreStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,12 +28,17 @@ class AnimalDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AnimalDetailUiState>(AnimalDetailUiState.Loading)
     val uiState: StateFlow<AnimalDetailUiState> = _uiState.asStateFlow()
 
+    private val _arAvailability = MutableStateFlow<ArAvailabilityState>(ArAvailabilityState.Checking)
+    val arAvailability: StateFlow<ArAvailabilityState> = _arAvailability.asStateFlow()
+
     private val animalId: String? = savedStateHandle.get<String>("animalId")
 
     private val audioPlayerManager = AudioPlayerManager.getInstance(application)
     val audioPlaybackState = audioPlayerManager.playbackState
     val audioCurrentPosition = audioPlayerManager.currentPosition
     val audioDuration = audioPlayerManager.duration
+
+    private val arCoreSessionManager = ArCoreSessionManager(application)
 
     val currentUserEducationLevel: String
         get() {
@@ -54,7 +61,32 @@ class AnimalDetailViewModel @Inject constructor(
         Log.d("AnimalDetailViewModel", "User info - uid: ${user?.uid}, email: ${user?.email}, level: '${user?.educationLevel}'")
         Log.d("AnimalDetailViewModel", "Education level is blank: ${user?.educationLevel.isNullOrBlank()}")
         loadAnimalDetail()
+        checkArCoreAvailability()
     }
+
+    private fun checkArCoreAvailability() {
+        viewModelScope.launch {
+            try {
+                val status = arCoreSessionManager.checkArCoreAvailability()
+                _arAvailability.value = when (status) {
+                    ArCoreStatus.SUPPORTED -> ArAvailabilityState.Available
+                    ArCoreStatus.NOT_INSTALLED -> ArAvailabilityState.NotInstalled
+                    ArCoreStatus.UNSUPPORTED -> ArAvailabilityState.Unsupported
+                    ArCoreStatus.UNKNOWN, ArCoreStatus.ERROR -> ArAvailabilityState.Error("Unable to check AR support")
+                }
+                Log.d("AnimalDetailViewModel", "ARCore availability: ${_arAvailability.value}")
+            } catch (e: Exception) {
+                Log.e("AnimalDetailViewModel", "Error checking ARCore availability", e)
+                _arAvailability.value = ArAvailabilityState.Error("Error checking AR support: ${e.message}")
+            }
+        }
+    }
+
+    fun checkArBeforeNavigation(): ArAvailabilityState {
+        return _arAvailability.value
+    }
+
+    // ...existing code...
 
     private fun loadAnimalDetail() {
         viewModelScope.launch {
@@ -109,3 +141,10 @@ class AnimalDetailViewModel @Inject constructor(
     }
 }
 
+sealed class ArAvailabilityState {
+    object Checking : ArAvailabilityState()
+    object Available : ArAvailabilityState()
+    object NotInstalled : ArAvailabilityState()
+    object Unsupported : ArAvailabilityState()
+    data class Error(val message: String) : ArAvailabilityState()
+}

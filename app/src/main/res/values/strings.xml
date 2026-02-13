@@ -245,6 +245,16 @@
     <string name="camera_permission_fail">Camera permission is required to use AR features</string>
     <string name="camera_permission_grant">Grant Camera Permission</string>
 
+    <!-- AR Availability Messages -->
+    <string name="ar_not_supported_title">AR Not Supported</string>
+    <string name="ar_not_supported_message">Your device does not support AR functionality. AR features require ARCore compatible hardware.</string>
+    <string name="ar_not_installed_title">ARCore Required</string>
+    <string name="ar_not_installed_message">Google Play Services for AR is required to use AR features. Would you like to install it?</string>
+    <string name="ar_install">Install ARCore</string>
+    <string name="ar_unavailable_title">AR Unavailable</string>
+    <string name="ar_unavailable_message">Unable to check AR support on your device. Please ensure Google Play Services is up to date.</string>
+    <string name="ar_ok">OK</string>
+
     <!-- Confirmation Dialog -->
     <string name="default_confirm">Confirm</string>
     <string name="default_cancel">Cancel</string>

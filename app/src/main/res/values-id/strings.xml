@@ -245,6 +245,16 @@
     <string name="camera_permission_fail">Izin kamera diperlukan untuk menggunakan fitur AR</string>
     <string name="camera_permission_grant">Berikan izin kamera</string>
 
+    <!-- AR Availability Messages -->
+    <string name="ar_not_supported_title">AR Tidak Didukung</string>
+    <string name="ar_not_supported_message">Perangkat Anda tidak mendukung fungsi AR. Fitur AR memerlukan perangkat keras yang kompatibel dengan ARCore.</string>
+    <string name="ar_not_installed_title">ARCore Diperlukan</string>
+    <string name="ar_not_installed_message">Google Play Services untuk AR diperlukan untuk menggunakan fitur AR. Apakah Anda ingin menginstalnya?</string>
+    <string name="ar_install">Instal ARCore</string>
+    <string name="ar_unavailable_title">AR Tidak Tersedia</string>
+    <string name="ar_unavailable_message">Tidak dapat memeriksa dukungan AR di perangkat Anda. Pastikan Google Play Services sudah diperbarui.</string>
+    <string name="ar_ok">OK</string>
+
     <!-- Confirmation Dialog -->
     <string name="default_confirm">Konfirmasi</string>
     <string name="default_cancel">Batal</string>

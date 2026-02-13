@@ -305,9 +305,42 @@
     <string name="credits_cgtrader_models">CGTrader 3D Models</string>
 
     <!-- Credits - Images Section -->
-    <string name="credits_images_title">Images &amp; Textures</string>
-    <string name="credits_unsplash">Unsplash</string>
-    <string name="credits_pixabay">Pixabay</string>
+    <string name="credits_images_title">Images</string>
+    <string name="credits_images_description">Animal photographs were sourced from Wikimedia Commons, iNaturalist, and Animalia.bio under Creative Commons licenses.</string>
+    <string name="credits_tim_laman">Tim Laman</string>
+    <string name="credits_tim_laman_desc">Tapanuli Orangutan Photography</string>
+    <string name="credits_charles_hardin">Charles W. Hardin</string>
+    <string name="credits_charles_hardin_desc">Sumatran Rhinoceros Photography</string>
+    <string name="credits_vaclav_silha">Václav Šilha</string>
+    <string name="credits_vaclav_silha_desc">Javan Green Magpie Photography</string>
+    <string name="credits_seshadri_ks">Seshadri K. S.</string>
+    <string name="credits_seshadri_ks_desc">Ghatophryne ornata Photography</string>
+    <string name="credits_stefan_brending">Stefan Brending</string>
+    <string name="credits_stefan_brending_desc">Irrawaddy Dolphin Photography</string>
+    <string name="credits_mangkau_zulkifli">Mangkau Zulkifli</string>
+    <string name="credits_mangkau_zulkifli_desc">Togian Babirusa Photography</string>
+    <string name="credits_dick_daniels">Dick Daniels</string>
+    <string name="credits_dick_daniels_desc">Bali Starling Photography</string>
+    <string name="credits_jj_harrison">JJ Harrison</string>
+    <string name="credits_jj_harrison_desc">Wilson\'s Bird-of-Paradise Photography</string>
+    <string name="credits_fabian_lambeck">Fabian Lambeck</string>
+    <string name="credits_fabian_lambeck_desc">Red Bird-of-Paradise Photography</string>
+    <string name="credits_julien_willem">Julien Willem</string>
+    <string name="credits_julien_willem_desc">Dugong Photography</string>
+    <string name="credits_james_jolokia">James Jolokia</string>
+    <string name="credits_james_jolokia_desc">Komodo Dragon Photography</string>
+    <string name="credits_vardhan_patankar">Vardhan Patankar</string>
+    <string name="credits_vardhan_patankar_desc">Hawksbill Sea Turtle Photography</string>
+    <string name="credits_derek_keats">Derek Keats</string>
+    <string name="credits_derek_keats_desc">Napoleon Wrasse Photography</string>
+    <string name="credits_arturo_frias">Arturo de Frias Marques</string>
+    <string name="credits_arturo_frias_desc">Giant Oceanic Manta Ray Photography</string>
+    <string name="credits_wikimedia_commons">Wikimedia Commons</string>
+    <string name="credits_wikimedia_commons_desc">Creative Commons Licensed Images</string>
+    <string name="credits_inaturalist_images">iNaturalist</string>
+    <string name="credits_inaturalist_images_desc">Community-sourced Wildlife Photography</string>
+    <string name="credits_animalia_bio">Animalia.bio</string>
+    <string name="credits_animalia_bio_desc">Nonprofit Animal Photography Database</string>
 
     <!-- Credits - Scientific Sources Section -->
     <string name="credits_scientific_sources_title">Educational &amp; Scientific Sources</string>

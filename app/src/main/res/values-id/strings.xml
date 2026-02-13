@@ -305,9 +305,42 @@
     <string name="credits_cgtrader_models">Model 3D CGTrader</string>
 
     <!-- Credits - Images Section -->
-    <string name="credits_images_title">Gambar &amp; Tekstur</string>
-    <string name="credits_unsplash">Unsplash</string>
-    <string name="credits_pixabay">Pixabay</string>
+    <string name="credits_images_title">Gambar</string>
+    <string name="credits_images_description">Foto-foto hewan bersumber dari Wikimedia Commons, iNaturalist, dan Animalia.bio di bawah lisensi Creative Commons.</string>
+    <string name="credits_tim_laman">Tim Laman</string>
+    <string name="credits_tim_laman_desc">Fotografi Orangutan Tapanuli</string>
+    <string name="credits_charles_hardin">Charles W. Hardin</string>
+    <string name="credits_charles_hardin_desc">Fotografi Badak Sumatera</string>
+    <string name="credits_vaclav_silha">Václav Šilha</string>
+    <string name="credits_vaclav_silha_desc">Fotografi Ekek Geling Jawa</string>
+    <string name="credits_seshadri_ks">Seshadri K. S.</string>
+    <string name="credits_seshadri_ks_desc">Fotografi Ghatophryne ornata</string>
+    <string name="credits_stefan_brending">Stefan Brending</string>
+    <string name="credits_stefan_brending_desc">Fotografi Lumba-lumba Irrawaddy</string>
+    <string name="credits_mangkau_zulkifli">Mangkau Zulkifli</string>
+    <string name="credits_mangkau_zulkifli_desc">Fotografi Babirusa Togian</string>
+    <string name="credits_dick_daniels">Dick Daniels</string>
+    <string name="credits_dick_daniels_desc">Fotografi Jalak Bali</string>
+    <string name="credits_jj_harrison">JJ Harrison</string>
+    <string name="credits_jj_harrison_desc">Fotografi Cenderawasih Wilson</string>
+    <string name="credits_fabian_lambeck">Fabian Lambeck</string>
+    <string name="credits_fabian_lambeck_desc">Fotografi Cenderawasih Merah</string>
+    <string name="credits_julien_willem">Julien Willem</string>
+    <string name="credits_julien_willem_desc">Fotografi Dugong</string>
+    <string name="credits_james_jolokia">James Jolokia</string>
+    <string name="credits_james_jolokia_desc">Fotografi Komodo</string>
+    <string name="credits_vardhan_patankar">Vardhan Patankar</string>
+    <string name="credits_vardhan_patankar_desc">Fotografi Penyu Sisik</string>
+    <string name="credits_derek_keats">Derek Keats</string>
+    <string name="credits_derek_keats_desc">Fotografi Ikan Napoleon</string>
+    <string name="credits_arturo_frias">Arturo de Frias Marques</string>
+    <string name="credits_arturo_frias_desc">Fotografi Pari Manta Raksasa</string>
+    <string name="credits_wikimedia_commons">Wikimedia Commons</string>
+    <string name="credits_wikimedia_commons_desc">Gambar Berlisensi Creative Commons</string>
+    <string name="credits_inaturalist_images">iNaturalist</string>
+    <string name="credits_inaturalist_images_desc">Fotografi Satwa Liar dari Komunitas</string>
+    <string name="credits_animalia_bio">Animalia.bio</string>
+    <string name="credits_animalia_bio_desc">Database Fotografi Hewan Nirlaba</string>
 
     <!-- Credits - Scientific Sources Section -->
     <string name="credits_scientific_sources_title">Sumber Edukasi &amp; Ilmiah</string>

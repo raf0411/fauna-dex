@@ -124,16 +124,109 @@ fun CreditsScreenContent(
                     section = CreditsSection(
                         titleResId = R.string.credits_images_title,
                         icon = Icons.Outlined.Image,
+                        descriptionResId = R.string.credits_images_description,
                         items = listOf(
                             CreditItem(
-                                titleResId = R.string.credits_unsplash,
-                                license = "CC0 / Free License",
-                                url = "https://unsplash.com/"
+                                titleResId = R.string.credits_tim_laman,
+                                descriptionResId = R.string.credits_tim_laman_desc,
+                                license = "CC BY 4.0",
+                                url = "https://commons.wikimedia.org/"
                             ),
                             CreditItem(
-                                titleResId = R.string.credits_pixabay,
-                                license = "Free for Commercial Use",
-                                url = "https://pixabay.com/"
+                                titleResId = R.string.credits_charles_hardin,
+                                descriptionResId = R.string.credits_charles_hardin_desc,
+                                license = "CC BY 2.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_vaclav_silha,
+                                descriptionResId = R.string.credits_vaclav_silha_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_seshadri_ks,
+                                descriptionResId = R.string.credits_seshadri_ks_desc,
+                                license = "CC BY-SA 3.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_stefan_brending,
+                                descriptionResId = R.string.credits_stefan_brending_desc,
+                                license = "CC BY-SA 3.0 DE",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_mangkau_zulkifli,
+                                descriptionResId = R.string.credits_mangkau_zulkifli_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_dick_daniels,
+                                descriptionResId = R.string.credits_dick_daniels_desc,
+                                license = "CC BY-SA 3.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_jj_harrison,
+                                descriptionResId = R.string.credits_jj_harrison_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_fabian_lambeck,
+                                descriptionResId = R.string.credits_fabian_lambeck_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_julien_willem,
+                                descriptionResId = R.string.credits_julien_willem_desc,
+                                license = "CC BY-SA 3.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_james_jolokia,
+                                descriptionResId = R.string.credits_james_jolokia_desc,
+                                license = "CC BY 4.0",
+                                url = "https://www.inaturalist.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_vardhan_patankar,
+                                descriptionResId = R.string.credits_vardhan_patankar_desc,
+                                license = "CC BY 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_derek_keats,
+                                descriptionResId = R.string.credits_derek_keats_desc,
+                                license = "CC BY 2.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_arturo_frias,
+                                descriptionResId = R.string.credits_arturo_frias_desc,
+                                license = "CC BY-SA",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_wikimedia_commons,
+                                descriptionResId = R.string.credits_wikimedia_commons_desc,
+                                license = "Various CC Licenses",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_inaturalist_images,
+                                descriptionResId = R.string.credits_inaturalist_images_desc,
+                                license = "CC BY 4.0",
+                                url = "https://www.inaturalist.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_animalia_bio,
+                                descriptionResId = R.string.credits_animalia_bio_desc,
+                                license = "Nonprofit Attribution",
+                                url = "https://animalia.bio/"
                             )
                         )
                     ),
@@ -248,31 +341,31 @@ fun CreditsScreenContent(
                 )
             }
 
-            item {
-                Button(
-                    onClick = onNavigateToOpenSourceLicenses,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryGreen,
-                        contentColor = PastelYellow
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Description,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.credits_view_licenses),
-                        fontFamily = JerseyFont,
-                        fontSize = 18.sp
-                    )
-                }
-            }
+//            item {
+//                Button(
+//                    onClick = onNavigateToOpenSourceLicenses,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(vertical = 8.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = PrimaryGreen,
+//                        contentColor = PastelYellow
+//                    ),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Outlined.Description,
+//                        contentDescription = null,
+//                        modifier = Modifier.size(20.dp)
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text(
+//                        text = stringResource(R.string.credits_view_licenses),
+//                        fontFamily = JerseyFont,
+//                        fontSize = 18.sp
+//                    )
+//                }
+//            }
 
             item {
                 AcademicDisclaimerCard()
@@ -385,7 +478,6 @@ private fun CreditsCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Section Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)

@@ -307,6 +307,13 @@
     <!-- Credits - Images Section -->
     <string name="credits_images_title">Gambar</string>
     <string name="credits_images_description">Foto-foto hewan bersumber dari Wikimedia Commons, iNaturalist, dan Animalia.bio di bawah lisensi Creative Commons.</string>
+
+    <!-- Credits - Music Section -->
+    <string name="credits_music_title">Musik</string>
+    <string name="credits_ievgen_poltavskyi">Ievgen Poltavskyi</string>
+    <string name="credits_ievgen_poltavskyi_desc">Komposisi Musik Latar</string>
+    <string name="credits_pixabay_music">Pixabay Music</string>
+    <string name="credits_pixabay_music_desc">Platform Musik Bebas Royalti</string>
     <string name="credits_tim_laman">Tim Laman</string>
     <string name="credits_tim_laman_desc">Fotografi Orangutan Tapanuli</string>
     <string name="credits_charles_hardin">Charles W. Hardin</string>

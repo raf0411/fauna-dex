@@ -307,6 +307,13 @@
     <!-- Credits - Images Section -->
     <string name="credits_images_title">Images</string>
     <string name="credits_images_description">Animal photographs were sourced from Wikimedia Commons, iNaturalist, and Animalia.bio under Creative Commons licenses.</string>
+
+    <!-- Credits - Music Section -->
+    <string name="credits_music_title">Music</string>
+    <string name="credits_ievgen_poltavskyi">Ievgen Poltavskyi</string>
+    <string name="credits_ievgen_poltavskyi_desc">Background Music Composition</string>
+    <string name="credits_pixabay_music">Pixabay Music</string>
+    <string name="credits_pixabay_music_desc">Royalty-Free Music Platform</string>
     <string name="credits_tim_laman">Tim Laman</string>
     <string name="credits_tim_laman_desc">Tapanuli Orangutan Photography</string>
     <string name="credits_charles_hardin">Charles W. Hardin</string>

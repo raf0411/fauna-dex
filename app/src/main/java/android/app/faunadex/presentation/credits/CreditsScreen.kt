@@ -30,19 +30,16 @@ import kotlin.collections.forEachIndexed
 
 @Composable
 fun CreditsScreen(
-    onNavigateBack: () -> Unit = {},
-    onNavigateToOpenSourceLicenses: () -> Unit = {}
+    onNavigateBack: () -> Unit = {}
 ) {
     CreditsScreenContent(
-        onNavigateBack = onNavigateBack,
-        onNavigateToOpenSourceLicenses = onNavigateToOpenSourceLicenses
+        onNavigateBack = onNavigateBack
     )
 }
 
 @Composable
 fun CreditsScreenContent(
-    onNavigateBack: () -> Unit,
-    onNavigateToOpenSourceLicenses: () -> Unit = {}
+    onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -109,12 +106,6 @@ fun CreditsScreenContent(
                                 author = "Various Artists",
                                 license = "CC BY 4.0 / Royalty Free",
                                 url = "https://sketchfab.com/"
-                            ),
-                            CreditItem(
-                                titleResId = R.string.credits_cgtrader_models,
-                                author = "Various Artists",
-                                license = "Royalty Free",
-                                url = "https://www.cgtrader.com/"
                             )
                         )
                     ),
@@ -246,6 +237,33 @@ fun CreditsScreenContent(
             item {
                 CreditsCard(
                     section = CreditsSection(
+                        titleResId = R.string.credits_music_title,
+                        icon = Icons.Outlined.MusicNote,
+                        items = listOf(
+                            CreditItem(
+                                titleResId = R.string.credits_ievgen_poltavskyi,
+                                descriptionResId = R.string.credits_ievgen_poltavskyi_desc,
+                                license = "Pixabay Content License",
+                                url = "https://pixabay.com/music/id-295075/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_pixabay_music,
+                                descriptionResId = R.string.credits_pixabay_music_desc,
+                                license = "Pixabay Content License",
+                                url = "https://pixabay.com/music/"
+                            )
+                        )
+                    ),
+                    onUrlClick = { url ->
+                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                CreditsCard(
+                    section = CreditsSection(
                         titleResId = R.string.credits_scientific_sources_title,
                         icon = Icons.Outlined.School,
                         descriptionResId = R.string.credits_scientific_sources_description,
@@ -332,11 +350,6 @@ fun CreditsScreenContent(
                                 titleResId = R.string.credits_material_icons,
                                 license = "Apache 2.0",
                                 url = "https://fonts.google.com/icons"
-                            ),
-                            CreditItem(
-                                titleResId = R.string.credits_freepik,
-                                license = "Free with Attribution",
-                                url = "https://www.flaticon.com/"
                             )
                         )
                     ),
@@ -652,8 +665,7 @@ private fun AcademicDisclaimerCard() {
 fun CreditsScreenPreview() {
     FaunaDexTheme {
         CreditsScreenContent(
-            onNavigateBack = {},
-            onNavigateToOpenSourceLicenses = {}
+            onNavigateBack = {}
         )
     }
 }

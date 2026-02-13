@@ -301,9 +301,6 @@ fun NavGraph(
             CreditsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                },
-                onNavigateToOpenSourceLicenses = {
-                    // TODO: Navigate to Open Source Licenses screen if needed
                 }
             )
         }

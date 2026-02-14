@@ -148,8 +148,7 @@ private fun ArContent(
 
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
-    // Use mutableStateListOf for more stable list updates (prevents flickering from recomposition)
-    val childNodes = remember { mutableStateListOf<AnchorNode>() }
+    var childNodes by remember { mutableStateOf<List<AnchorNode>>(emptyList()) }
 
     var hasPlane by remember { mutableStateOf(false) }
     var currentFrame by remember { mutableStateOf<Frame?>(null) }
@@ -208,15 +207,13 @@ private fun ArContent(
         return
     }
 
-    val isModelPlaced by remember { derivedStateOf { arState == ArState.PLACED } }
-
     Box(modifier = Modifier.fillMaxSize()) {
         ARScene(
             modifier = Modifier.fillMaxSize(),
             engine = engine,
             modelLoader = modelLoader,
             childNodes = childNodes,
-            planeRenderer = !isModelPlaced,
+            planeRenderer = true,
             onViewUpdated = {
                 if (arSceneView == null) {
                     arSceneView = this
@@ -224,10 +221,12 @@ private fun ArContent(
             },
             sessionConfiguration = { session, config ->
                 config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-                config.lightEstimationMode = Config.LightEstimationMode.DISABLED
+                config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
                 config.focusMode = Config.FocusMode.AUTO
-                config.depthMode = Config.DepthMode.DISABLED
-                config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
+                if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+                    config.depthMode = Config.DepthMode.AUTOMATIC
+                }
+                config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
             },
             onSessionUpdated = { session, frame ->
                 currentFrame = frame
@@ -287,6 +286,12 @@ private fun ArContent(
                         if (depthHit != null) {
                             anchor = depthHit.createAnchor()
                             anchorSource = depthHit.trackable?.javaClass?.simpleName ?: "DepthPoint"
+                        } else {
+                            val instantHits = frame.hitTestInstantPlacement(motionEvent.x, motionEvent.y, 2.0f)
+                            instantHits.firstOrNull()?.let { hit ->
+                                anchor = hit.createAnchor()
+                                anchorSource = "instant_placement"
+                            }
                         }
                     }
 
@@ -303,7 +308,7 @@ private fun ArContent(
                     childNodes.forEach { node ->
                         try { node.anchor.detach(); node.destroy() } catch (_: Exception) {}
                     }
-                    childNodes.clear()
+                    childNodes = emptyList()
 
                     scope.launch {
                         try {
@@ -334,15 +339,10 @@ private fun ArContent(
                                     engine = engine,
                                     anchor = placementAnchor
                                 ).apply {
-                                    isEditable = false
                                     addChildNode(modelNode)
                                 }
 
-                                childNodes.clear()
-                                childNodes.add(anchorNode)
-
-                                kotlinx.coroutines.delay(50)
-
+                                childNodes = listOf(anchorNode)
                                 arState = ArState.PLACED
                                 loadingProgress = ""
                                 Log.d(TAG, "Model placed from $anchorSource")
@@ -378,7 +378,7 @@ private fun ArContent(
                 childNodes.forEach { node ->
                     try { node.anchor.detach(); node.destroy() } catch (_: Exception) {}
                 }
-                childNodes.clear()
+                childNodes = emptyList()
                 arState = if (hasPlane) ArState.READY else ArState.SCANNING
                 errorMessage = null
             },

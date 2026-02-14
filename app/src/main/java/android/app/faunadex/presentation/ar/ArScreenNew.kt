@@ -207,13 +207,15 @@ private fun ArContent(
         return
     }
 
+    val isModelPlaced = arState == ArState.PLACED
+
     Box(modifier = Modifier.fillMaxSize()) {
         ARScene(
             modifier = Modifier.fillMaxSize(),
             engine = engine,
             modelLoader = modelLoader,
             childNodes = childNodes,
-            planeRenderer = true,
+            planeRenderer = !isModelPlaced,
             onViewUpdated = {
                 if (arSceneView == null) {
                     arSceneView = this
@@ -333,6 +335,7 @@ private fun ArContent(
                                     scaleToUnits = MODEL_SCALE
                                 ).apply {
                                     isEditable = true
+                                    position = position.copy(y = position.y + 0.001f)
                                 }
 
                                 val anchorNode = AnchorNode(

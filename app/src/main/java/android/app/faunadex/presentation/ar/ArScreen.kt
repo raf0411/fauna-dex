@@ -99,8 +99,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
+import io.github.sceneview.math.Position
 import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import android.util.Log
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -187,11 +190,28 @@ fun ArCameraContent(
 
     var showCaptureSuccess by remember { mutableStateOf(false) }
     var isCapturing by remember { mutableStateOf(false) }
+    var timeoutJob by remember { mutableStateOf<Job?>(null) }
+    var modelLoadRetryCount by remember { mutableIntStateOf(0) }
+    val maxRetries = 3
 
     LaunchedEffect(showCaptureSuccess) {
         if (showCaptureSuccess) {
             kotlinx.coroutines.delay(3000L)
             showCaptureSuccess = false
+        }
+    }
+
+    // Clean up timeout job when leaving the screen
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            timeoutJob?.cancel()
+            timeoutJob = null
+            modelNodeRef?.let { node ->
+                try {
+                    node.anchor?.detach()
+                    node.destroy()
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -203,16 +223,19 @@ fun ArCameraContent(
                 ArSceneView(context).apply {
                     arSceneViewRef = this
 
+                    // Enable and show plane renderer - important for markerless AR
+                    // This gives users visual feedback about detected surfaces
                     planeRenderer.isEnabled = true
-                    planeRenderer.isVisible = false
+                    planeRenderer.isVisible = true
 
                     try {
                         isDepthOcclusionEnabled = false
                     } catch (_: Exception) { }
 
                     configureSession { _, config ->
-                        config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL
+                        config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
                         config.focusMode = com.google.ar.core.Config.FocusMode.AUTO
+                        config.lightEstimationMode = com.google.ar.core.Config.LightEstimationMode.ENVIRONMENTAL_HDR
                         try {
                             config.depthMode = com.google.ar.core.Config.DepthMode.DISABLED
                         } catch (_: Exception) { }
@@ -224,6 +247,19 @@ fun ArCameraContent(
                     onFrame = { _ ->
                         frameCounter++
 
+                        // Enable tapping after 2 seconds of AR session running
+                        // The onTapAr callback will only fire if ARCore detects a valid surface hit
+                        // so we don't need to manually count planes - ARCore handles this internally
+                        if (!isModelPlaced && planeCount == 0) {
+                            val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
+                            if (elapsedSeconds >= 2) {
+                                planeCount = 1
+                                onPlaneDetected(1)
+                                Log.d("ArScreen", "AR ready for placement after $elapsedSeconds seconds")
+                            }
+                        }
+
+                        // Track model anchor state for tracking lost detection
                         if (isModelPlaced && modelNodeRef != null && frameCounter % 30 == 0) {
                             val anchor = modelNodeRef?.anchor
                             val trackingState = anchor?.trackingState
@@ -238,48 +274,58 @@ fun ArCameraContent(
                                 }
                             }
                         }
-
-                        if (!isModelPlaced) {
-                            arSession?.let { currentSession ->
-                                if (frameCounter % 10 == 0) {
-                                    val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
-
-                                    if (elapsedSeconds >= 2 && planeCount == 0) {
-                                        planeCount = 1
-                                        onPlaneDetected(1)
-                                    } else {
-                                        val allPlanes = currentSession.getAllTrackables(com.google.ar.core.Plane::class.java)
-                                        val usablePlanes = allPlanes.count { plane ->
-                                            plane.trackingState == com.google.ar.core.TrackingState.TRACKING
-                                        }
-                                        if (usablePlanes > 0 && usablePlanes != planeCount) {
-                                            planeCount = usablePlanes
-                                            onPlaneDetected(usablePlanes)
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
 
                     onTapAr = { hitResult, _ ->
-                        if (!isModelPlaced && !isModelLoading && planeCount > 0) {
-                            isModelLoading = true
-                            modelLoadError = null
-                            modelLoadTimedOut = false
+                        // If we got a hitResult, it means ARCore detected a plane
+                        // Update planeCount if it was 0
+                        if (planeCount == 0) {
+                            planeCount = 1
+                            onPlaneDetected(1)
+                            Log.d("ArScreen", "Plane detected via tap hitResult")
+                        }
 
+                        if (!isModelPlaced && !isModelLoading) {
                             val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
-                            val modelUrl = if (!animalArUrl.isNullOrBlank()) animalArUrl else DUMMY_MODEL_URL
+                            val modelUrl = if (!animalArUrl.isNullOrBlank()) animalArUrl.trim() else DUMMY_MODEL_URL
 
-                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                                kotlinx.coroutines.delay(30000L)
+                            // Validate URL format
+                            val isValidUrl = modelUrl.startsWith("http://") || modelUrl.startsWith("https://")
+
+                            if (!isValidUrl) {
+                                Log.e("ArScreen", "Invalid model URL format: $modelUrl")
+                                modelLoadError = "Invalid model URL format"
+                            } else {
+                                // Validate URL ends with supported format (just a warning)
+                                val lowercaseUrl = modelUrl.lowercase()
+                                if (!lowercaseUrl.endsWith(".glb") && !lowercaseUrl.endsWith(".gltf") &&
+                                    !lowercaseUrl.contains(".glb?") && !lowercaseUrl.contains(".gltf?")) {
+                                    Log.w("ArScreen", "Model URL may not be in supported format (GLB/GLTF): $modelUrl")
+                                }
+
+                                isModelLoading = true
+                                modelLoadError = null
+                                modelLoadTimedOut = false
+                                modelLoadRetryCount = 0
+
+                                Log.d("ArScreen", "Loading AR model from URL: $modelUrl")
+
+                            // Cancel any existing timeout job
+                            timeoutJob?.cancel()
+                            timeoutJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                kotlinx.coroutines.delay(45000L) // Increased timeout for slower networks
                                 if (isModelLoading) {
+                                    Log.e("ArScreen", "Model loading timed out after 45 seconds")
                                     isModelLoading = false
                                     modelLoadTimedOut = true
                                     modelNodeRef?.let { node ->
-                                        node.anchor?.detach()
-                                        arSceneViewRef?.removeChild(node)
-                                        node.destroy()
+                                        try {
+                                            node.anchor?.detach()
+                                            arSceneViewRef?.removeChild(node)
+                                            node.destroy()
+                                        } catch (e: Exception) {
+                                            Log.e("ArScreen", "Error cleaning up timed out model: ${e.message}")
+                                        }
                                         modelNodeRef = null
                                     }
                                 }
@@ -288,13 +334,27 @@ fun ArCameraContent(
                             try {
                                 val anchor = hitResult.createAnchor()
 
+                                // Verify anchor is tracking before proceeding
+                                if (anchor.trackingState != com.google.ar.core.TrackingState.TRACKING) {
+                                    Log.w("ArScreen", "Anchor not tracking, state: ${anchor.trackingState}")
+                                }
+
                                 val newModelNode = ArModelNode(
                                     engine = engine,
                                     modelGlbFileLocation = modelUrl,
                                     autoAnimate = true,
                                     scaleToUnits = 0.5f,
-                                    onLoaded = {
-                                        if (isModelLoading) { // Only proceed if not timed out
+                                    centerOrigin = Position(x = 0f, y = 0f, z = 0f),
+                                    onLoaded = { modelInstance ->
+                                        Log.d("ArScreen", "Model loaded successfully: $modelInstance")
+                                        // Cancel timeout job since model loaded successfully
+                                        timeoutJob?.cancel()
+                                        timeoutJob = null
+
+                                        // Hide plane renderer once model is placed for better visual
+                                        arSceneViewRef?.planeRenderer?.isVisible = false
+
+                                        if (isModelLoading) {
                                             isModelLoading = false
                                             isModelPlaced = true
                                             modelLoadError = null
@@ -303,10 +363,26 @@ fun ArCameraContent(
                                         }
                                     },
                                     onError = { exception ->
-                                        if (isModelLoading) { // Only handle if not already timed out
-                                            isModelLoading = false
-                                            modelLoadError = exception.message ?: "Unknown error"
-                                            // Clean up
+                                        Log.e("ArScreen", "Model load error: ${exception.message}", exception)
+
+                                        // Cancel timeout job
+                                        timeoutJob?.cancel()
+                                        timeoutJob = null
+
+                                        if (isModelLoading) {
+                                            modelLoadRetryCount++
+
+                                            if (modelLoadRetryCount < maxRetries) {
+                                                Log.d("ArScreen", "Retrying model load, attempt ${modelLoadRetryCount + 1}/$maxRetries")
+                                                // Keep loading state for retry, the user can tap again
+                                                isModelLoading = false
+                                                // Don't show error yet, allow retry
+                                            } else {
+                                                isModelLoading = false
+                                                modelLoadError = exception.message ?: "Failed to load model after $maxRetries attempts"
+                                            }
+
+                                            // Clean up anchor
                                             try {
                                                 anchor.detach()
                                             } catch (_: Exception) {}
@@ -316,10 +392,16 @@ fun ArCameraContent(
                                 newModelNode.anchor = anchor
                                 addChild(newModelNode)
                                 modelNodeRef = newModelNode
+
+                                Log.d("ArScreen", "ArModelNode created and added to scene")
                             } catch (e: Exception) {
+                                Log.e("ArScreen", "Exception creating model: ${e.message}", e)
+                                timeoutJob?.cancel()
+                                timeoutJob = null
                                 isModelLoading = false
                                 modelLoadError = e.message ?: "Failed to create model"
                             }
+                            } // Close else block
                         }
                     }
                 }
@@ -536,15 +618,26 @@ fun ArCameraContent(
             sessionState = sessionState,
             onNavigateBack = onNavigateBack,
             onClearAnimals = {
+                // Cancel any pending timeout job
+                timeoutJob?.cancel()
+                timeoutJob = null
+
                 modelNodeRef?.let { node ->
-                    node.anchor?.detach()
-                    arSceneViewRef?.removeChild(node)
-                    node.destroy()
+                    try {
+                        node.anchor?.detach()
+                        arSceneViewRef?.removeChild(node)
+                        node.destroy()
+                    } catch (e: Exception) {
+                        Log.e("ArScreen", "Error clearing model: ${e.message}")
+                    }
                 }
                 modelNodeRef = null
                 isModelPlaced = false
                 isTrackingLost = false
-                planeCount = 0
+                modelLoadRetryCount = 0
+
+                // Restore plane renderer visibility for next placement
+                arSceneViewRef?.planeRenderer?.isVisible = true
 
                 onClearAnimals()
             },

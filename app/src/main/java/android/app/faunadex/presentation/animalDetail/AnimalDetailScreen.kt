@@ -104,17 +104,153 @@ fun AnimalDetailScreen(
     viewModel: AnimalDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val arAvailability by viewModel.arAvailability.collectAsState()
     val userEducationLevel = viewModel.currentUserEducationLevel
     val userType = viewModel.currentUserType
     val audioPlaybackState by viewModel.audioPlaybackState.collectAsState()
     val audioCurrentPosition by viewModel.audioCurrentPosition.collectAsState()
     val audioDuration by viewModel.audioDuration.collectAsState()
 
+    var showArUnsupportedDialog by remember { mutableStateOf(false) }
+    var showArNotInstalledDialog by remember { mutableStateOf(false) }
+    var showArErrorDialog by remember { mutableStateOf(false) }
+    var arErrorMessage by remember { mutableStateOf("") }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     Log.d("AnimalDetailScreen", "======================================")
     Log.d("AnimalDetailScreen", "Education Level in Screen: $userEducationLevel")
     Log.d("AnimalDetailScreen", "User Type: $userType")
     Log.d("AnimalDetailScreen", "UI State: ${uiState::class.simpleName}")
+    Log.d("AnimalDetailScreen", "AR Availability: $arAvailability")
     Log.d("AnimalDetailScreen", "======================================")
+
+    // AR Unsupported Dialog
+    if (showArUnsupportedDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showArUnsupportedDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.ar_not_supported_title),
+                    fontFamily = PoppinsFont,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.ar_not_supported_message),
+                    fontFamily = PoppinsFont
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { showArUnsupportedDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.ar_ok),
+                        fontFamily = PoppinsFont,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryGreenLight
+                    )
+                }
+            },
+            containerColor = DarkGreen,
+            titleContentColor = PastelYellow,
+            textContentColor = White
+        )
+    }
+
+    // AR Not Installed Dialog
+    if (showArNotInstalledDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showArNotInstalledDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.ar_not_installed_title),
+                    fontFamily = PoppinsFont,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.ar_not_installed_message),
+                    fontFamily = PoppinsFont
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showArNotInstalledDialog = false
+                        // Open Play Store to install ARCore
+                        val intent = android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse("market://details?id=com.google.ar.core")
+                        )
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: android.content.ActivityNotFoundException) {
+                            // If Play Store app is not available, open in browser
+                            val webIntent = android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://play.google.com/store/apps/details?id=com.google.ar.core")
+                            )
+                            context.startActivity(webIntent)
+                        }
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.ar_install),
+                        fontFamily = PoppinsFont,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryGreenLight
+                    )
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showArNotInstalledDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.default_cancel),
+                        fontFamily = PoppinsFont,
+                        color = MediumGreenSage
+                    )
+                }
+            },
+            containerColor = DarkGreen,
+            titleContentColor = PastelYellow,
+            textContentColor = White
+        )
+    }
+
+    // AR Error Dialog
+    if (showArErrorDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showArErrorDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.ar_unavailable_title),
+                    fontFamily = PoppinsFont,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = arErrorMessage.ifEmpty { stringResource(R.string.ar_unavailable_message) },
+                    fontFamily = PoppinsFont
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { showArErrorDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.ar_ok),
+                        fontFamily = PoppinsFont,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryGreenLight
+                    )
+                }
+            },
+            containerColor = DarkGreen,
+            titleContentColor = PastelYellow,
+            textContentColor = White
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -153,7 +289,32 @@ fun AnimalDetailScreen(
                     onPlayPauseClick = { viewModel.togglePlayPause() },
                     onStopAudioClick = { viewModel.stopAudio() },
                     onSeekTo = { position -> viewModel.seekTo(position) },
-                    onNavigateToAr = onNavigateToAr,
+                    onNavigateToAr = { animalId ->
+                        // Check AR availability before navigation
+                        when (arAvailability) {
+                            is ArAvailabilityState.Available -> {
+                                Log.d("AnimalDetailScreen", "ARCore available, navigating to AR")
+                                onNavigateToAr(animalId)
+                            }
+                            is ArAvailabilityState.NotInstalled -> {
+                                Log.d("AnimalDetailScreen", "ARCore not installed")
+                                showArNotInstalledDialog = true
+                            }
+                            is ArAvailabilityState.Unsupported -> {
+                                Log.d("AnimalDetailScreen", "ARCore not supported")
+                                showArUnsupportedDialog = true
+                            }
+                            is ArAvailabilityState.Error -> {
+                                Log.d("AnimalDetailScreen", "ARCore check error: ${(arAvailability as ArAvailabilityState.Error).message}")
+                                arErrorMessage = (arAvailability as ArAvailabilityState.Error).message
+                                showArErrorDialog = true
+                            }
+                            is ArAvailabilityState.Checking -> {
+                                Log.d("AnimalDetailScreen", "Still checking ARCore availability")
+                                // Could show a loading indicator here
+                            }
+                        }
+                    },
                     modifier = Modifier.padding(paddingValues)
                 )
             }

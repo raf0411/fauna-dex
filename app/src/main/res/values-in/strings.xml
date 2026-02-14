@@ -209,6 +209,21 @@
 
     <!-- AR Screen -->
     <string name="ar_scanning">Memindai…</string>
+    <string name="ar_scanning_for_surfaces">Memindai permukaan…</string>
+    <string name="ar_point_at_surface_hint">Arahkan ke permukaan lantai atau area bertekstur dengan pencahayaan baik</string>
+    <string name="ar_downloading_model">Mengunduh model %1$s…</string>
+    <string name="ar_please_wait">Harap tunggu…</string>
+    <string name="ar_tap_where_to_place">Ketuk di mana Anda ingin menempatkan model</string>
+    <string name="ar_interact_with_your_model">Berinteraksi dengan model Anda</string>
+    <string name="ar_photo_saved_to_gallery">Foto tersimpan di galeri!</string>
+    <string name="ar_loading_animal_data">Memuat data hewan…</string>
+    <string name="ar_no_3d_model_available">Tidak ada model 3D tersedia untuk hewan ini</string>
+    <string name="ar_loading_from_cache">Memuat dari cache…</string>
+    <string name="ar_downloading">Mengunduh model…</string>
+    <string name="ar_download_complete">Unduhan selesai!</string>
+    <string name="ar_back">Kembali</string>
+    <string name="ar_reset">Atur Ulang</string>
+    <string name="ar_go_back">Kembali</string>
     <string name="ar_surfaces_detected">%1$d Permukaan</string>
     <string name="ar_capture">Ambil Foto</string>
     <string name="ar_photo_captured">Foto Berhasil Diambil!</string>
@@ -238,8 +253,22 @@
     <string name="ar_surface_ready">Permukaan terdeteksi! Siap menempatkan model 3D</string>
     <string name="ar_tracking_lost">Pelacakan Hilang</string>
     <string name="ar_tracking_lost_hint">Arahkan kamera kembali ke permukaan awal</string>
+    <string name="ar_model_load_timeout">Waktu Muat Model Habis</string>
+    <string name="ar_model_load_timeout_hint">Model 3D membutuhkan waktu terlalu lama untuk dimuat. Silakan periksa koneksi internet Anda dan coba lagi.</string>
+    <string name="ar_model_load_failed">Gagal Memuat Model</string>
+    <string name="ar_model_load_failed_hint">Gagal memuat model 3D. Silakan periksa koneksi internet Anda dan coba lagi.</string>
     <string name="camera_permission_fail">Izin kamera diperlukan untuk menggunakan fitur AR</string>
     <string name="camera_permission_grant">Berikan izin kamera</string>
+
+    <!-- AR Availability Messages -->
+    <string name="ar_not_supported_title">AR Tidak Didukung</string>
+    <string name="ar_not_supported_message">Perangkat Anda tidak mendukung fungsi AR. Fitur AR memerlukan perangkat keras yang kompatibel dengan ARCore.</string>
+    <string name="ar_not_installed_title">ARCore Diperlukan</string>
+    <string name="ar_not_installed_message">Google Play Services untuk AR diperlukan untuk menggunakan fitur AR. Apakah Anda ingin menginstalnya?</string>
+    <string name="ar_install">Instal ARCore</string>
+    <string name="ar_unavailable_title">AR Tidak Tersedia</string>
+    <string name="ar_unavailable_message">Tidak dapat memeriksa dukungan AR di perangkat Anda. Pastikan Google Play Services sudah diperbarui.</string>
+    <string name="ar_ok">OK</string>
 
     <!-- Confirmation Dialog -->
     <string name="default_confirm">Konfirmasi</string>
@@ -262,6 +291,22 @@
     <string name="education_level_label">Tingkat Pendidikan:</string>
     <string name="press_back_to_exit">Tekan kembali lagi untuk keluar</string>
 
+    <!-- Permissions Screen -->
+    <string name="permissions_title">Izin Aplikasi</string>
+    <string name="permissions_description">WildAR membutuhkan beberapa izin untuk memberikan pengalaman terbaik. Anda dapat memberikannya sekarang atau nanti dari pengaturan.</string>
+    <string name="permissions_grant_button">Berikan Izin</string>
+    <string name="permissions_continue_button">Lanjutkan ke Aplikasi</string>
+    <string name="permissions_skip_button">Lewati untuk Sekarang</string>
+    <string name="permissions_note">Anda dapat mengubah izin ini kapan saja dari pengaturan perangkat Anda.</string>
+
+    <!-- Permission Items -->
+    <string name="permission_camera_title">Kamera</string>
+    <string name="permission_camera_description">Diperlukan untuk fitur AR untuk melihat dan menempatkan model 3D hewan di lingkungan Anda</string>
+    <string name="permission_location_title">Lokasi</string>
+    <string name="permission_location_description">Digunakan untuk menyediakan fitur berbasis lokasi dan informasi habitat hewan</string>
+    <string name="permission_storage_title">Foto &amp; Media</string>
+    <string name="permission_storage_description">Memungkinkan menyimpan tangkapan layar AR ke galeri Anda</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_credits">Kredit</string>
 
@@ -280,14 +325,56 @@
     <string name="credits_meshy_ai_description">Alat Pembuat Model 3D dari Teks / Gambar</string>
 
     <!-- Credits - External Models Section -->
-    <string name="credits_external_models_title">Aset Model 3D Eksternal</string>
+    <string name="credits_external_models_title">Aset Model 3D</string>
     <string name="credits_sketchfab_models">Model 3D Sketchfab</string>
     <string name="credits_cgtrader_models">Model 3D CGTrader</string>
 
     <!-- Credits - Images Section -->
-    <string name="credits_images_title">Gambar &amp; Tekstur</string>
+    <string name="credits_images_title">Gambar</string>
+    <string name="credits_images_description">Foto-foto hewan bersumber dari Wikimedia Commons, iNaturalist, dan Animalia.bio di bawah lisensi Creative Commons.</string>
+
+    <!-- Credits - Music Section -->
+    <string name="credits_music_title">Musik</string>
+    <string name="credits_ievgen_poltavskyi">Ievgen Poltavskyi</string>
+    <string name="credits_ievgen_poltavskyi_desc">Komposisi Musik Latar</string>
+    <string name="credits_pixabay_music">Pixabay Music</string>
+    <string name="credits_pixabay_music_desc">Platform Musik Bebas Royalti</string>
+    <string name="credits_tim_laman">Tim Laman</string>
+    <string name="credits_tim_laman_desc">Fotografi Orangutan Tapanuli</string>
+    <string name="credits_charles_hardin">Charles W. Hardin</string>
+    <string name="credits_charles_hardin_desc">Fotografi Badak Sumatera</string>
+    <string name="credits_vaclav_silha">Václav Šilha</string>
+    <string name="credits_vaclav_silha_desc">Fotografi Ekek Geling Jawa</string>
+    <string name="credits_seshadri_ks">Seshadri K. S.</string>
+    <string name="credits_seshadri_ks_desc">Fotografi Ghatophryne ornata</string>
+    <string name="credits_stefan_brending">Stefan Brending</string>
+    <string name="credits_stefan_brending_desc">Fotografi Lumba-lumba Irrawaddy</string>
+    <string name="credits_mangkau_zulkifli">Mangkau Zulkifli</string>
+    <string name="credits_mangkau_zulkifli_desc">Fotografi Babirusa Togian</string>
+    <string name="credits_dick_daniels">Dick Daniels</string>
+    <string name="credits_dick_daniels_desc">Fotografi Jalak Bali</string>
+    <string name="credits_jj_harrison">JJ Harrison</string>
+    <string name="credits_jj_harrison_desc">Fotografi Cenderawasih Wilson</string>
+    <string name="credits_fabian_lambeck">Fabian Lambeck</string>
+    <string name="credits_fabian_lambeck_desc">Fotografi Cenderawasih Merah</string>
+    <string name="credits_julien_willem">Julien Willem</string>
+    <string name="credits_julien_willem_desc">Fotografi Dugong</string>
+    <string name="credits_james_jolokia">James Jolokia</string>
+    <string name="credits_james_jolokia_desc">Fotografi Komodo</string>
+    <string name="credits_vardhan_patankar">Vardhan Patankar</string>
+    <string name="credits_vardhan_patankar_desc">Fotografi Penyu Sisik</string>
+    <string name="credits_derek_keats">Derek Keats</string>
+    <string name="credits_derek_keats_desc">Fotografi Ikan Napoleon</string>
+    <string name="credits_arturo_frias">Arturo de Frias Marques</string>
+    <string name="credits_arturo_frias_desc">Fotografi Pari Manta Raksasa</string>
+    <string name="credits_wikimedia_commons">Wikimedia Commons</string>
+    <string name="credits_wikimedia_commons_desc">Gambar Berlisensi Creative Commons</string>
+    <string name="credits_inaturalist_images">iNaturalist</string>
+    <string name="credits_inaturalist_images_desc">Fotografi Satwa Liar dari Komunitas</string>
+    <string name="credits_animalia_bio">Animalia.bio</string>
+    <string name="credits_animalia_bio_desc">Database Fotografi Hewan Nirlaba</string>
     <string name="credits_unsplash">Unsplash</string>
-    <string name="credits_pixabay">Pixabay</string>
+    <string name="credits_unsplash_desc">Foto oleh Berbagai Kontributor</string>
 
     <!-- Credits - Scientific Sources Section -->
     <string name="credits_scientific_sources_title">Sumber Edukasi &amp; Ilmiah</string>

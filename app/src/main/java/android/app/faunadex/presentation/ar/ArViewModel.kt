@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.app.faunadex.domain.model.Animal
 import android.app.faunadex.domain.usecase.GetAnimalDetailUseCase
+import android.app.faunadex.utils.ArCoreSessionManager
+import android.app.faunadex.utils.ArCoreStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,8 @@ class ArViewModel @Inject constructor(
     private val _sessionState = MutableStateFlow(ArSessionState())
     val sessionState: StateFlow<ArSessionState> = _sessionState.asStateFlow()
 
+    private val arCoreSessionManager = ArCoreSessionManager(application)
+
     init {
         checkArSupport()
     }
@@ -31,17 +35,46 @@ class ArViewModel @Inject constructor(
     private fun checkArSupport() {
         viewModelScope.launch {
             try {
-                _sessionState.value = _sessionState.value.copy(isArSupported = true)
-                _uiState.value = ArUiState.CameraPermissionRequired
+                val status = arCoreSessionManager.checkArCoreAvailability()
+                when (status) {
+                    ArCoreStatus.SUPPORTED -> {
+                        _sessionState.value = _sessionState.value.copy(isArSupported = true)
+                        _uiState.value = ArUiState.CameraPermissionRequired
+                    }
+                    ArCoreStatus.NOT_INSTALLED -> {
+                        _sessionState.value = _sessionState.value.copy(
+                            isArSupported = false,
+                            errorMessage = "ARCore is not installed. Please install Google Play Services for AR."
+                        )
+                        _uiState.value = ArUiState.Error("ARCore is not installed. Please install Google Play Services for AR.")
+                    }
+                    ArCoreStatus.UNSUPPORTED -> {
+                        _sessionState.value = _sessionState.value.copy(
+                            isArSupported = false,
+                            errorMessage = "Your device does not support AR functionality."
+                        )
+                        _uiState.value = ArUiState.Error("Your device does not support AR functionality.")
+                    }
+                    ArCoreStatus.UNKNOWN, ArCoreStatus.ERROR -> {
+                        _sessionState.value = _sessionState.value.copy(
+                            isArSupported = false,
+                            errorMessage = "Unable to check AR support. Please try again."
+                        )
+                        _uiState.value = ArUiState.Error("Unable to check AR support. Please try again.")
+                    }
+                }
             } catch (e: Exception) {
                 _sessionState.value = _sessionState.value.copy(
                     isArSupported = false,
-                    errorMessage = "AR is not supported on this device"
+                    errorMessage = "Error checking AR support: ${e.message}"
                 )
-                _uiState.value = ArUiState.Error("AR is not supported on this device")
+                _uiState.value = ArUiState.Error("Error checking AR support: ${e.message}")
             }
         }
     }
+
+    // ...existing code...
+
 
     fun onPermissionGranted() {
         _uiState.value = ArUiState.Ready

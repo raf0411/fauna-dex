@@ -3,10 +3,9 @@ package android.app.faunadex.presentation.credits
 import android.app.faunadex.R
 import android.app.faunadex.domain.model.CreditItem
 import android.app.faunadex.domain.model.CreditsSection
-import android.app.faunadex.presentation.components.FaunaBottomBar
+import android.app.faunadex.presentation.components.FaunaTopBarWithBack
 import android.app.faunadex.ui.theme.*
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,46 +30,24 @@ import kotlin.collections.forEachIndexed
 
 @Composable
 fun CreditsScreen(
-    onNavigateToDashboard: () -> Unit = {},
-    onNavigateToQuiz: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToOpenSourceLicenses: () -> Unit = {},
-    currentRoute: String = "credits"
+    onNavigateBack: () -> Unit = {}
 ) {
     CreditsScreenContent(
-        onNavigateToDashboard = onNavigateToDashboard,
-        onNavigateToQuiz = onNavigateToQuiz,
-        onNavigateToProfile = onNavigateToProfile,
-        onNavigateToOpenSourceLicenses = onNavigateToOpenSourceLicenses,
-        currentRoute = currentRoute
+        onNavigateBack = onNavigateBack
     )
 }
 
 @Composable
 fun CreditsScreenContent(
-    onNavigateToDashboard: () -> Unit,
-    onNavigateToQuiz: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToOpenSourceLicenses: () -> Unit = {},
-    currentRoute: String = "credits"
+    onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            CreditsTopBar()
-        },
-        bottomBar = {
-            FaunaBottomBar(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
-                    when (route) {
-                        "dashboard" -> onNavigateToDashboard()
-                        "quiz" -> onNavigateToQuiz()
-                        "profile" -> onNavigateToProfile()
-                        "credits" -> { /* Already on credits */ }
-                    }
-                }
+            FaunaTopBarWithBack(
+                title = stringResource(R.string.credits_title),
+                onNavigateBack = onNavigateBack
             )
         },
         containerColor = DarkForest
@@ -91,27 +67,27 @@ fun CreditsScreenContent(
                 AppInfoCard()
             }
 
-            item {
-                CreditsCard(
-                    section = CreditsSection(
-                        titleResId = R.string.credits_ai_models_title,
-                        icon = Icons.Outlined.ViewInAr,
-                        descriptionResId = R.string.credits_ai_models_description,
-                        items = listOf(
-                            CreditItem(
-                                titleResId = R.string.credits_meshy_ai,
-                                descriptionResId = R.string.credits_meshy_ai_description,
-                                license = "Public License (Pro)",
-                                url = "https://meshy.ai/"
-                            )
-                        )
-                    ),
-                    onUrlClick = { url ->
-                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                        context.startActivity(intent)
-                    }
-                )
-            }
+//            item {
+//                CreditsCard(
+//                    section = CreditsSection(
+//                        titleResId = R.string.credits_ai_models_title,
+//                        icon = Icons.Outlined.ViewInAr,
+//                        descriptionResId = R.string.credits_ai_models_description,
+//                        items = listOf(
+//                            CreditItem(
+//                                titleResId = R.string.credits_meshy_ai,
+//                                descriptionResId = R.string.credits_meshy_ai_description,
+//                                license = "Public License (Pro)",
+//                                url = "https://meshy.ai/"
+//                            )
+//                        )
+//                    ),
+//                    onUrlClick = { url ->
+//                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+//                        context.startActivity(intent)
+//                    }
+//                )
+//            }
 
             item {
                 CreditsCard(
@@ -120,16 +96,16 @@ fun CreditsScreenContent(
                         icon = Icons.Outlined.Widgets,
                         items = listOf(
                             CreditItem(
+                                titleResId = R.string.credits_meshy_ai,
+                                descriptionResId = R.string.credits_meshy_ai_description,
+                                license = "Commercial Use License (Pro)",
+                                url = "https://www.meshy.ai/"
+                            ),
+                            CreditItem(
                                 titleResId = R.string.credits_sketchfab_models,
                                 author = "Various Artists",
                                 license = "CC BY 4.0 / Royalty Free",
                                 url = "https://sketchfab.com/"
-                            ),
-                            CreditItem(
-                                titleResId = R.string.credits_cgtrader_models,
-                                author = "Various Artists",
-                                license = "Royalty Free",
-                                url = "https://www.cgtrader.com/"
                             )
                         )
                     ),
@@ -145,16 +121,142 @@ fun CreditsScreenContent(
                     section = CreditsSection(
                         titleResId = R.string.credits_images_title,
                         icon = Icons.Outlined.Image,
+                        descriptionResId = R.string.credits_images_description,
                         items = listOf(
                             CreditItem(
-                                titleResId = R.string.credits_unsplash,
-                                license = "CC0 / Free License",
-                                url = "https://unsplash.com/"
+                                titleResId = R.string.credits_tim_laman,
+                                descriptionResId = R.string.credits_tim_laman_desc,
+                                license = "CC BY 4.0",
+                                url = "https://commons.wikimedia.org/"
                             ),
                             CreditItem(
-                                titleResId = R.string.credits_pixabay,
-                                license = "Free for Commercial Use",
-                                url = "https://pixabay.com/"
+                                titleResId = R.string.credits_charles_hardin,
+                                descriptionResId = R.string.credits_charles_hardin_desc,
+                                license = "CC BY 2.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_vaclav_silha,
+                                descriptionResId = R.string.credits_vaclav_silha_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_seshadri_ks,
+                                descriptionResId = R.string.credits_seshadri_ks_desc,
+                                license = "CC BY-SA 3.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_stefan_brending,
+                                descriptionResId = R.string.credits_stefan_brending_desc,
+                                license = "CC BY-SA 3.0 DE",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_mangkau_zulkifli,
+                                descriptionResId = R.string.credits_mangkau_zulkifli_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_dick_daniels,
+                                descriptionResId = R.string.credits_dick_daniels_desc,
+                                license = "CC BY-SA 3.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_jj_harrison,
+                                descriptionResId = R.string.credits_jj_harrison_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_fabian_lambeck,
+                                descriptionResId = R.string.credits_fabian_lambeck_desc,
+                                license = "CC BY-SA 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_julien_willem,
+                                descriptionResId = R.string.credits_julien_willem_desc,
+                                license = "CC BY-SA 3.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_james_jolokia,
+                                descriptionResId = R.string.credits_james_jolokia_desc,
+                                license = "CC BY 4.0",
+                                url = "https://www.inaturalist.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_vardhan_patankar,
+                                descriptionResId = R.string.credits_vardhan_patankar_desc,
+                                license = "CC BY 4.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_derek_keats,
+                                descriptionResId = R.string.credits_derek_keats_desc,
+                                license = "CC BY 2.0",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_arturo_frias,
+                                descriptionResId = R.string.credits_arturo_frias_desc,
+                                license = "CC BY-SA",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_wikimedia_commons,
+                                descriptionResId = R.string.credits_wikimedia_commons_desc,
+                                license = "Various CC Licenses",
+                                url = "https://commons.wikimedia.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_inaturalist_images,
+                                descriptionResId = R.string.credits_inaturalist_images_desc,
+                                license = "CC BY 4.0",
+                                url = "https://www.inaturalist.org/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_animalia_bio,
+                                descriptionResId = R.string.credits_animalia_bio_desc,
+                                license = "Nonprofit Attribution",
+                                url = "https://animalia.bio/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_unsplash,
+                                descriptionResId = R.string.credits_unsplash_desc,
+                                license = "Unsplash License",
+                                url = "https://unsplash.com/"
+                            )
+                        )
+                    ),
+                    onUrlClick = { url ->
+                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                CreditsCard(
+                    section = CreditsSection(
+                        titleResId = R.string.credits_music_title,
+                        icon = Icons.Outlined.MusicNote,
+                        items = listOf(
+                            CreditItem(
+                                titleResId = R.string.credits_ievgen_poltavskyi,
+                                descriptionResId = R.string.credits_ievgen_poltavskyi_desc,
+                                license = "Pixabay Content License",
+                                url = "https://pixabay.com/music/id-295075/"
+                            ),
+                            CreditItem(
+                                titleResId = R.string.credits_pixabay_music,
+                                descriptionResId = R.string.credits_pixabay_music_desc,
+                                license = "Pixabay Content License",
+                                url = "https://pixabay.com/music/"
                             )
                         )
                     ),
@@ -254,11 +356,6 @@ fun CreditsScreenContent(
                                 titleResId = R.string.credits_material_icons,
                                 license = "Apache 2.0",
                                 url = "https://fonts.google.com/icons"
-                            ),
-                            CreditItem(
-                                titleResId = R.string.credits_freepik,
-                                license = "Free with Attribution",
-                                url = "https://www.flaticon.com/"
                             )
                         )
                     ),
@@ -269,31 +366,31 @@ fun CreditsScreenContent(
                 )
             }
 
-            item {
-                Button(
-                    onClick = onNavigateToOpenSourceLicenses,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryGreen,
-                        contentColor = PastelYellow
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Description,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.credits_view_licenses),
-                        fontFamily = JerseyFont,
-                        fontSize = 18.sp
-                    )
-                }
-            }
+//            item {
+//                Button(
+//                    onClick = onNavigateToOpenSourceLicenses,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(vertical = 8.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = PrimaryGreen,
+//                        contentColor = PastelYellow
+//                    ),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Outlined.Description,
+//                        contentDescription = null,
+//                        modifier = Modifier.size(20.dp)
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text(
+//                        text = stringResource(R.string.credits_view_licenses),
+//                        fontFamily = JerseyFont,
+//                        fontSize = 18.sp
+//                    )
+//                }
+//            }
 
             item {
                 AcademicDisclaimerCard()
@@ -306,23 +403,6 @@ fun CreditsScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CreditsTopBar() {
-    TopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.credits_title),
-                fontFamily = JerseyFont,
-                fontSize = 28.sp,
-                color = PastelYellow
-            )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = DarkForest
-        )
-    )
-}
 
 @Composable
 private fun AppInfoCard() {
@@ -423,7 +503,6 @@ private fun CreditsCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Section Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -444,7 +523,6 @@ private fun CreditsCard(
                 )
             }
 
-            // Section Description (if any)
             section.descriptionResId?.let { descId ->
                 Text(
                     text = stringResource(descId),
@@ -593,9 +671,7 @@ private fun AcademicDisclaimerCard() {
 fun CreditsScreenPreview() {
     FaunaDexTheme {
         CreditsScreenContent(
-            onNavigateToDashboard = {},
-            onNavigateToQuiz = {},
-            onNavigateToProfile = {}
+            onNavigateBack = {}
         )
     }
 }

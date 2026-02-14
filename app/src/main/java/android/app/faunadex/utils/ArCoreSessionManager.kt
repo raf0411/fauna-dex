@@ -4,13 +4,14 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.google.ar.core.ArCoreApk
-import com.google.ar.core.Config
-import com.google.ar.core.Session
-import com.google.ar.core.exceptions.*
 
+/**
+ * Helper class to check ARCore availability and request installation.
+ * Note: ArSceneView manages its own ARCore session internally,
+ * so this class only handles availability checking and install requests.
+ */
 class ArCoreSessionManager(private val context: Context) {
 
-    private var arSession: Session? = null
     private var installRequested = false
 
     fun checkArCoreAvailability(): ArCoreStatus {
@@ -46,70 +47,6 @@ class ArCoreSessionManager(private val context: Context) {
         }
     }
 
-    fun createSession(): Session? {
-        if (arSession != null) {
-            return arSession
-        }
-
-        return try {
-            val session = Session(context)
-
-            val config = Config(session).apply {
-                planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-
-                if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
-                    depthMode = Config.DepthMode.AUTOMATIC
-                }
-
-                updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-
-                lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
-            }
-
-            session.configure(config)
-            arSession = session
-
-            Log.d(TAG, "ARCore session created successfully")
-            session
-        } catch (e: UnavailableArcoreNotInstalledException) {
-            Log.e(TAG, "ARCore not installed", e)
-            null
-        } catch (e: UnavailableApkTooOldException) {
-            Log.e(TAG, "ARCore APK too old", e)
-            null
-        } catch (e: UnavailableSdkTooOldException) {
-            Log.e(TAG, "SDK too old for ARCore", e)
-            null
-        } catch (e: UnavailableDeviceNotCompatibleException) {
-            Log.e(TAG, "Device not compatible with ARCore", e)
-            null
-        } catch (e: Exception) {
-            Log.e(TAG, "Error creating ARCore session", e)
-            null
-        }
-    }
-
-    fun pause() {
-        arSession?.pause()
-        Log.d(TAG, "ARCore session paused")
-    }
-
-    fun resume() {
-        try {
-            arSession?.resume()
-            Log.d(TAG, "ARCore session resumed")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error resuming ARCore session", e)
-        }
-    }
-
-    fun close() {
-        arSession?.close()
-        arSession = null
-        Log.d(TAG, "ARCore session closed")
-    }
-
-    fun getSession(): Session? = arSession
 
     companion object {
         private const val TAG = "ArCoreSessionManager"

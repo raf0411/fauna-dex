@@ -125,7 +125,9 @@ fun FaunaDexApp(
     modifier: Modifier = Modifier,
     isUserLoggedIn: Boolean
 ) {
+    val context = LocalContext.current
     val navController = rememberNavController()
+
     val startDestination = if (isUserLoggedIn) {
         Screen.Dashboard.route
     } else {
@@ -135,7 +137,6 @@ fun FaunaDexApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val context = LocalContext.current
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     val backPressThreshold = 2000L
     val pressBackToExitMessage = stringResource(R.string.press_back_to_exit)

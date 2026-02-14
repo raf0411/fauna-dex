@@ -209,6 +209,21 @@
 
     <!-- AR Screen -->
     <string name="ar_scanning">Scanning…</string>
+    <string name="ar_scanning_for_surfaces">Scanning for surfaces…</string>
+    <string name="ar_point_at_surface_hint">Point at a textured floor or surface with good lighting</string>
+    <string name="ar_downloading_model">Downloading %1$s model…</string>
+    <string name="ar_please_wait">Please wait…</string>
+    <string name="ar_tap_where_to_place">Tap where you want to place the model</string>
+    <string name="ar_interact_with_your_model">Interact with your model</string>
+    <string name="ar_photo_saved_to_gallery">Photo saved to gallery!</string>
+    <string name="ar_loading_animal_data">Loading animal data…</string>
+    <string name="ar_no_3d_model_available">No 3D model available for this animal</string>
+    <string name="ar_loading_from_cache">Loading from cache…</string>
+    <string name="ar_downloading">Downloading model…</string>
+    <string name="ar_download_complete">Download complete!</string>
+    <string name="ar_back">Back</string>
+    <string name="ar_reset">Reset</string>
+    <string name="ar_go_back">Go Back</string>
     <string name="ar_surfaces_detected">%1$d Surface%2$s</string>
     <string name="ar_capture">Capture</string>
     <string name="ar_photo_captured">Photo Captured!</string>
@@ -245,6 +260,16 @@
     <string name="camera_permission_fail">Camera permission is required to use AR features</string>
     <string name="camera_permission_grant">Grant Camera Permission</string>
 
+    <!-- AR Availability Messages -->
+    <string name="ar_not_supported_title">AR Not Supported</string>
+    <string name="ar_not_supported_message">Your device does not support AR functionality. AR features require ARCore compatible hardware.</string>
+    <string name="ar_not_installed_title">ARCore Required</string>
+    <string name="ar_not_installed_message">Google Play Services for AR is required to use AR features. Would you like to install it?</string>
+    <string name="ar_install">Install ARCore</string>
+    <string name="ar_unavailable_title">AR Unavailable</string>
+    <string name="ar_unavailable_message">Unable to check AR support on your device. Please ensure Google Play Services is up to date.</string>
+    <string name="ar_ok">OK</string>
+
     <!-- Confirmation Dialog -->
     <string name="default_confirm">Confirm</string>
     <string name="default_cancel">Cancel</string>
@@ -266,6 +291,22 @@
     <string name="education_level_label">Education Level:</string>
     <string name="press_back_to_exit">Press back again to exit</string>
 
+    <!-- Permissions Screen -->
+    <string name="permissions_title">App Permissions</string>
+    <string name="permissions_description">WildAR needs certain permissions to provide you with the best experience. You can grant them now or later from settings.</string>
+    <string name="permissions_grant_button">Grant Permissions</string>
+    <string name="permissions_continue_button">Continue to App</string>
+    <string name="permissions_skip_button">Skip for Now</string>
+    <string name="permissions_note">You can change these permissions anytime from your device settings.</string>
+
+    <!-- Permission Items -->
+    <string name="permission_camera_title">Camera</string>
+    <string name="permission_camera_description">Required for AR features to view and place 3D animal models in your environment</string>
+    <string name="permission_location_title">Location</string>
+    <string name="permission_location_description">Used to provide location-based features and animal habitat information</string>
+    <string name="permission_storage_title">Photos &amp; Media</string>
+    <string name="permission_storage_description">Allows saving AR screenshots to your gallery</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_credits">Credits</string>
 
@@ -284,14 +325,56 @@
     <string name="credits_meshy_ai_description">Text-to-3D / Image-to-3D Generation Tool</string>
 
     <!-- Credits - External Models Section -->
-    <string name="credits_external_models_title">External 3D Model Assets</string>
+    <string name="credits_external_models_title">3D Model Assets</string>
     <string name="credits_sketchfab_models">Sketchfab 3D Models</string>
     <string name="credits_cgtrader_models">CGTrader 3D Models</string>
 
     <!-- Credits - Images Section -->
-    <string name="credits_images_title">Images &amp; Textures</string>
+    <string name="credits_images_title">Images</string>
+    <string name="credits_images_description">Animal photographs were sourced from Wikimedia Commons, iNaturalist, and Animalia.bio under Creative Commons licenses.</string>
+
+    <!-- Credits - Music Section -->
+    <string name="credits_music_title">Music</string>
+    <string name="credits_ievgen_poltavskyi">Ievgen Poltavskyi</string>
+    <string name="credits_ievgen_poltavskyi_desc">Background Music Composition</string>
+    <string name="credits_pixabay_music">Pixabay Music</string>
+    <string name="credits_pixabay_music_desc">Royalty-Free Music Platform</string>
+    <string name="credits_tim_laman">Tim Laman</string>
+    <string name="credits_tim_laman_desc">Tapanuli Orangutan Photography</string>
+    <string name="credits_charles_hardin">Charles W. Hardin</string>
+    <string name="credits_charles_hardin_desc">Sumatran Rhinoceros Photography</string>
+    <string name="credits_vaclav_silha">Václav Šilha</string>
+    <string name="credits_vaclav_silha_desc">Javan Green Magpie Photography</string>
+    <string name="credits_seshadri_ks">Seshadri K. S.</string>
+    <string name="credits_seshadri_ks_desc">Ghatophryne ornata Photography</string>
+    <string name="credits_stefan_brending">Stefan Brending</string>
+    <string name="credits_stefan_brending_desc">Irrawaddy Dolphin Photography</string>
+    <string name="credits_mangkau_zulkifli">Mangkau Zulkifli</string>
+    <string name="credits_mangkau_zulkifli_desc">Togian Babirusa Photography</string>
+    <string name="credits_dick_daniels">Dick Daniels</string>
+    <string name="credits_dick_daniels_desc">Bali Starling Photography</string>
+    <string name="credits_jj_harrison">JJ Harrison</string>
+    <string name="credits_jj_harrison_desc">Wilson\'s Bird-of-Paradise Photography</string>
+    <string name="credits_fabian_lambeck">Fabian Lambeck</string>
+    <string name="credits_fabian_lambeck_desc">Red Bird-of-Paradise Photography</string>
+    <string name="credits_julien_willem">Julien Willem</string>
+    <string name="credits_julien_willem_desc">Dugong Photography</string>
+    <string name="credits_james_jolokia">James Jolokia</string>
+    <string name="credits_james_jolokia_desc">Komodo Dragon Photography</string>
+    <string name="credits_vardhan_patankar">Vardhan Patankar</string>
+    <string name="credits_vardhan_patankar_desc">Hawksbill Sea Turtle Photography</string>
+    <string name="credits_derek_keats">Derek Keats</string>
+    <string name="credits_derek_keats_desc">Napoleon Wrasse Photography</string>
+    <string name="credits_arturo_frias">Arturo de Frias Marques</string>
+    <string name="credits_arturo_frias_desc">Giant Oceanic Manta Ray Photography</string>
+    <string name="credits_wikimedia_commons">Wikimedia Commons</string>
+    <string name="credits_wikimedia_commons_desc">Creative Commons Licensed Images</string>
+    <string name="credits_inaturalist_images">iNaturalist</string>
+    <string name="credits_inaturalist_images_desc">Community-sourced Wildlife Photography</string>
+    <string name="credits_animalia_bio">Animalia.bio</string>
+    <string name="credits_animalia_bio_desc">Nonprofit Animal Photography Database</string>
     <string name="credits_unsplash">Unsplash</string>
-    <string name="credits_pixabay">Pixabay</string>
+    <string name="credits_unsplash_desc">Photos by Various Contributors</string>
 
     <!-- Credits - Scientific Sources Section -->
     <string name="credits_scientific_sources_title">Educational &amp; Scientific Sources</string>

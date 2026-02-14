@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import android.app.faunadex.presentation.animalDetail.AnimalDetailScreen
-import android.app.faunadex.presentation.ar.ArScreen
+import android.app.faunadex.presentation.ar.ArScreenNew
 import android.app.faunadex.presentation.auth.login.LoginScreen
 import android.app.faunadex.presentation.auth.onboarding.OnboardingScreen
 import android.app.faunadex.presentation.auth.register.RegisterScreen
@@ -101,15 +101,6 @@ fun NavGraph(
                         restoreState = true
                     }
                 },
-                onNavigateToCredits = {
-                    navController.navigate(Screen.Credits.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
                 onNavigateToAnimalDetail = { animalId ->
                     navController.navigate(Screen.AnimalDetail.createRoute(animalId))
                 }
@@ -160,13 +151,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToCredits = {
-                    navController.navigate(Screen.Credits.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    navController.navigate(Screen.Credits.route)
                 },
                 onNavigateToOnboarding = {
                     navController.navigate(Screen.Onboarding.route) {
@@ -211,15 +196,6 @@ fun NavGraph(
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToCredits = {
-                    navController.navigate(Screen.Credits.route) {
                         popUpTo(Screen.Dashboard.route) {
                             saveState = true
                         }
@@ -323,35 +299,8 @@ fun NavGraph(
 
         composable(Screen.Credits.route) {
             CreditsScreen(
-                onNavigateToDashboard = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToQuiz = {
-                    navController.navigate(Screen.Quiz.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToOpenSourceLicenses = {
-                    // TODO: Navigate to Open Source Licenses screen if needed
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -367,9 +316,7 @@ fun NavGraph(
             val animalId = backStackEntry.arguments?.getString("animalId")
             android.util.Log.d("NavGraph", "=== AR SCREEN COMPOSABLE ===")
             android.util.Log.d("NavGraph", "AnimalId from backStackEntry: '$animalId'")
-            android.util.Log.d("NavGraph", "Is animalId null?: ${animalId == null}")
-            android.util.Log.d("NavGraph", "Passing to ArScreen...")
-            ArScreen(
+            ArScreenNew(
                 onNavigateBack = {
                     navController.popBackStack()
                 },

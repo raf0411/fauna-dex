@@ -1,14 +1,13 @@
 package android.app.faunadex.presentation.ar
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.view.PixelCopy
+import android.util.Log
 import android.app.faunadex.R
 import android.app.faunadex.ui.theme.DarkGreen
 import android.app.faunadex.ui.theme.FaunaDexTheme
@@ -75,6 +74,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -91,16 +91,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.ar.node.ArModelNode
-import androidx.core.graphics.createBitmap
+import com.google.ar.core.Anchor
+import com.google.ar.core.Config
+import com.google.ar.core.Plane
+import com.google.ar.core.TrackingState
+import io.github.sceneview.ar.ARScene
+import io.github.sceneview.ar.arcore.createAnchorOrNull
+import io.github.sceneview.ar.arcore.getUpdatedPlanes
+import io.github.sceneview.ar.node.AnchorNode
+import io.github.sceneview.node.ModelNode
+import io.github.sceneview.rememberEngine
+import io.github.sceneview.rememberModelLoader
+import io.github.sceneview.rememberOnGestureListener
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import android.app.faunadex.utils.ModelCache
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -165,6 +176,7 @@ fun ArScreen(
 
 private const val DUMMY_MODEL_URL = "https://ampugrpczxyluircynug.supabase.co/storage/v1/object/public/wildar-3d-models/models/dummy/dummy_animal.glb"
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun ArCameraContent(
     uiState: ArUiState,
@@ -175,6 +187,8 @@ fun ArCameraContent(
     onClearAnimals: () -> Unit
 ) {
     val currentSessionState by rememberUpdatedState(sessionState)
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var planeCount by remember { mutableIntStateOf(0) }
     var isModelPlaced by remember { mutableStateOf(false) }
@@ -182,11 +196,25 @@ fun ArCameraContent(
     var isTrackingLost by remember { mutableStateOf(false) }
     var modelLoadError by remember { mutableStateOf<String?>(null) }
     var modelLoadTimedOut by remember { mutableStateOf(false) }
-    var arSceneViewRef by remember { mutableStateOf<ArSceneView?>(null) }
-    var modelNodeRef by remember { mutableStateOf<ArModelNode?>(null) }
+    var childNodes by remember { mutableStateOf<List<AnchorNode>>(emptyList()) }
 
     var showCaptureSuccess by remember { mutableStateOf(false) }
     var isCapturing by remember { mutableStateOf(false) }
+    var timeoutJob by remember { mutableStateOf<Job?>(null) }
+    var modelLoadRetryCount by remember { mutableIntStateOf(0) }
+    val maxRetries = 3
+
+    // Track download progress for UI
+    var isDownloading by remember { mutableStateOf(false) }
+    var isCached by remember { mutableStateOf(false) }
+
+    // Counter to debounce tracking lost state - only show lost after sustained loss
+    var trackingLostCounter by remember { mutableIntStateOf(0) }
+    val trackingLostThreshold = 30 // About 0.5 seconds at 60fps
+
+    // SceneView 2.x - use rememberEngine and rememberModelLoader
+    val engine = rememberEngine()
+    val modelLoader = rememberModelLoader(engine)
 
     LaunchedEffect(showCaptureSuccess) {
         if (showCaptureSuccess) {
@@ -195,135 +223,365 @@ fun ArCameraContent(
         }
     }
 
+    // Clean up timeout job when leaving the screen
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            timeoutJob?.cancel()
+            timeoutJob = null
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { context ->
-                ArSceneView(context).apply {
-                    arSceneViewRef = this
+        var arFrame by remember { mutableStateOf<com.google.ar.core.Frame?>(null) }
+        var arSession by remember { mutableStateOf<com.google.ar.core.Session?>(null) }
 
-                    planeRenderer.isEnabled = true
-                    planeRenderer.isVisible = false
+        // Function to handle tap and place model
+        fun handleTapToPlace(motionEvent: android.view.MotionEvent) {
+            Log.d("ArScreen", "Tap detected - isModelPlaced: $isModelPlaced, isModelLoading: $isModelLoading, planeCount: $planeCount")
 
-                    try {
-                        isDepthOcclusionEnabled = false
-                    } catch (_: Exception) { }
+            if (!isModelPlaced && !isModelLoading) {
+                val currentFrame = arFrame
+                if (currentFrame == null) {
+                    Log.w("ArScreen", "No AR frame available for hit test")
+                    return
+                }
 
-                    configureSession { _, config ->
-                        config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL
-                        config.focusMode = com.google.ar.core.Config.FocusMode.AUTO
-                        try {
-                            config.depthMode = com.google.ar.core.Config.DepthMode.DISABLED
-                        } catch (_: Exception) { }
+                // Get tap coordinates
+                val x = motionEvent.x
+                val y = motionEvent.y
+                Log.d("ArScreen", "Tap coordinates: x=$x, y=$y")
+
+                // Try hit test with coordinates
+                val hitResults = currentFrame.hitTest(x, y)
+                Log.d("ArScreen", "Hit test returned ${hitResults.size} results")
+
+                // Log what types of trackables we're hitting
+                hitResults.forEachIndexed { index, hit ->
+                    val trackable = hit.trackable
+                    Log.d("ArScreen", "Hit $index: type=${trackable?.javaClass?.simpleName}, tracking=${trackable?.trackingState}")
+                }
+
+                // Priority 1: Accept Plane hits (best quality)
+                var validHit = hitResults.firstOrNull { hit ->
+                    val trackable = hit.trackable
+                    trackable is Plane && trackable.trackingState == TrackingState.TRACKING
+                }
+
+                // Priority 2: Accept DepthPoint hits (good quality, from depth sensor)
+                // DepthPoint is valid for anchoring - it's a 3D point from the depth map
+                if (validHit == null) {
+                    validHit = hitResults.firstOrNull { hit ->
+                        val trackable = hit.trackable
+                        trackable?.trackingState == TrackingState.TRACKING &&
+                        trackable.javaClass.simpleName == "DepthPoint"
                     }
-
-                    var frameCounter = 0
-                    val startTime = System.currentTimeMillis()
-
-                    onFrame = { _ ->
-                        frameCounter++
-
-                        if (isModelPlaced && modelNodeRef != null && frameCounter % 30 == 0) {
-                            val anchor = modelNodeRef?.anchor
-                            val trackingState = anchor?.trackingState
-
-                            if (trackingState == com.google.ar.core.TrackingState.STOPPED) {
-                                if (!isTrackingLost) {
-                                    isTrackingLost = true
-                                }
-                            } else if (trackingState == com.google.ar.core.TrackingState.TRACKING) {
-                                if (isTrackingLost) {
-                                    isTrackingLost = false
-                                }
-                            }
-                        }
-
-                        if (!isModelPlaced) {
-                            arSession?.let { currentSession ->
-                                if (frameCounter % 10 == 0) {
-                                    val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
-
-                                    if (elapsedSeconds >= 2 && planeCount == 0) {
-                                        planeCount = 1
-                                        onPlaneDetected(1)
-                                    } else {
-                                        val allPlanes = currentSession.getAllTrackables(com.google.ar.core.Plane::class.java)
-                                        val usablePlanes = allPlanes.count { plane ->
-                                            plane.trackingState == com.google.ar.core.TrackingState.TRACKING
-                                        }
-                                        if (usablePlanes > 0 && usablePlanes != planeCount) {
-                                            planeCount = usablePlanes
-                                            onPlaneDetected(usablePlanes)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    onTapAr = { hitResult, _ ->
-                        if (!isModelPlaced && !isModelLoading && planeCount > 0) {
-                            isModelLoading = true
-                            modelLoadError = null
-                            modelLoadTimedOut = false
-
-                            val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
-                            val modelUrl = if (!animalArUrl.isNullOrBlank()) animalArUrl else DUMMY_MODEL_URL
-
-                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                                kotlinx.coroutines.delay(30000L)
-                                if (isModelLoading) {
-                                    isModelLoading = false
-                                    modelLoadTimedOut = true
-                                    modelNodeRef?.let { node ->
-                                        node.anchor?.detach()
-                                        arSceneViewRef?.removeChild(node)
-                                        node.destroy()
-                                        modelNodeRef = null
-                                    }
-                                }
-                            }
-
-                            try {
-                                val anchor = hitResult.createAnchor()
-
-                                val newModelNode = ArModelNode(
-                                    engine = engine,
-                                    modelGlbFileLocation = modelUrl,
-                                    autoAnimate = true,
-                                    scaleToUnits = 0.5f,
-                                    onLoaded = {
-                                        if (isModelLoading) { // Only proceed if not timed out
-                                            isModelLoading = false
-                                            isModelPlaced = true
-                                            modelLoadError = null
-                                            modelLoadTimedOut = false
-                                            currentSessionState.selectedAnimal?.let { onAnimalPlaced(it) }
-                                        }
-                                    },
-                                    onError = { exception ->
-                                        if (isModelLoading) { // Only handle if not already timed out
-                                            isModelLoading = false
-                                            modelLoadError = exception.message ?: "Unknown error"
-                                            // Clean up
-                                            try {
-                                                anchor.detach()
-                                            } catch (_: Exception) {}
-                                        }
-                                    }
-                                )
-                                newModelNode.anchor = anchor
-                                addChild(newModelNode)
-                                modelNodeRef = newModelNode
-                            } catch (e: Exception) {
-                                isModelLoading = false
-                                modelLoadError = e.message ?: "Failed to create model"
-                            }
-                        }
+                    if (validHit != null) {
+                        Log.d("ArScreen", "Using DepthPoint hit for placement")
                     }
                 }
+
+                // Priority 3: Accept ANY tracking hit
+                if (validHit == null && hitResults.isNotEmpty()) {
+                    validHit = hitResults.firstOrNull { hit ->
+                        hit.trackable?.trackingState == TrackingState.TRACKING
+                    }
+                    if (validHit != null) {
+                        Log.d("ArScreen", "Using generic trackable hit as fallback")
+                    }
+                }
+
+                // Priority 4: If no hit but actual planes exist, anchor at plane center
+                var fallbackAnchor: Anchor? = null
+                if (validHit == null) {
+                    Log.d("ArScreen", "No valid hit, attempting fallback anchor creation")
+                    try {
+                        val planes = arSession?.getAllTrackables(Plane::class.java)
+                            ?.filter { it.trackingState == TrackingState.TRACKING }
+
+                        val firstPlane = planes?.firstOrNull()
+                        if (firstPlane != null) {
+                            // Create anchor at plane's center pose
+                            fallbackAnchor = firstPlane.createAnchor(firstPlane.centerPose)
+                            Log.d("ArScreen", "Created fallback anchor at plane center")
+                        } else {
+                            // Priority 5 (FINAL FALLBACK): Create anchor in front of camera
+                            // This uses "instant placement" approach - place at estimated distance
+                            Log.d("ArScreen", "No planes found, creating anchor in front of camera")
+                            val camera = currentFrame.camera
+                            if (camera.trackingState == TrackingState.TRACKING) {
+                                val cameraPose = camera.pose
+                                // Create a pose 1.5 meters in front of the camera, on the ground plane
+                                val translation = floatArrayOf(0f, -0.5f, -1.5f) // x, y (down), z (forward)
+                                val rotation = floatArrayOf(0f, 0f, 0f, 1f) // No rotation (quaternion)
+                                val anchorPose = cameraPose.compose(
+                                    com.google.ar.core.Pose(translation, rotation)
+                                )
+                                fallbackAnchor = arSession?.createAnchor(anchorPose)
+                                Log.d("ArScreen", "Created anchor 1.5m in front of camera")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ArScreen", "Failed to create fallback anchor: ${e.message}")
+                    }
+                }
+
+                if (validHit != null || fallbackAnchor != null) {
+                    Log.d("ArScreen", "Placing model - hitType: ${validHit?.trackable?.javaClass?.simpleName ?: "fallback"}")
+
+                    // Update plane count if needed
+                    if (planeCount == 0) {
+                        planeCount = 1
+                        onPlaneDetected(1)
+                    }
+
+                    // Valid plane tap - load model
+                    val animalArUrl = currentSessionState.selectedAnimal?.arModelUrl
+                    val modelUrl = if (!animalArUrl.isNullOrBlank()) animalArUrl.trim() else DUMMY_MODEL_URL
+
+                    // Validate URL format
+                    val isValidUrl = modelUrl.startsWith("http://") || modelUrl.startsWith("https://")
+
+                    if (!isValidUrl) {
+                        Log.e("ArScreen", "Invalid model URL format: $modelUrl")
+                        modelLoadError = "Invalid model URL format"
+                    } else {
+                        isModelLoading = true
+                        modelLoadError = null
+                        modelLoadTimedOut = false
+                        modelLoadRetryCount = 0
+
+                        Log.d("ArScreen", "Loading AR model from URL: $modelUrl")
+
+                        // Cancel any existing timeout job
+                        timeoutJob?.cancel()
+                        timeoutJob = scope.launch {
+                            kotlinx.coroutines.delay(45000L)
+                            if (isModelLoading) {
+                                Log.e("ArScreen", "Model loading timed out after 45 seconds")
+                                isModelLoading = false
+                                modelLoadTimedOut = true
+                                childNodes = emptyList()
+                            }
+                        }
+
+                        // Create anchor - use hit result anchor OR fallback anchor
+                        val anchor: Anchor? = if (validHit != null) {
+                            validHit.createAnchorOrNull()
+                        } else {
+                            fallbackAnchor // Already created above
+                        }
+
+                        if (anchor != null) {
+                            Log.d("ArScreen", "Anchor created successfully")
+
+                            scope.launch {
+                                try {
+                                    // Check if model is cached
+                                    isCached = ModelCache.isModelCached(context, modelUrl)
+
+                                    val modelPathToLoad: String = if (isCached) {
+                                        // Load from cache - use file:// URI format
+                                        Log.d("ArScreen", "Loading model from cache...")
+                                        val cachedPath = ModelCache.getCachedFilePath(context, modelUrl)
+                                        if (cachedPath != null) {
+                                            "file://$cachedPath"
+                                        } else {
+                                            // Cache file missing, re-download
+                                            Log.d("ArScreen", "Cache file missing, re-downloading...")
+                                            isDownloading = true
+                                            val path = ModelCache.getCachedModelPath(context, modelUrl)
+                                            isDownloading = false
+                                            if (path != null) "file://$path" else modelUrl
+                                        }
+                                    } else {
+                                        // Download and cache the model
+                                        Log.d("ArScreen", "Downloading model (first time)...")
+                                        isDownloading = true
+                                        val path = ModelCache.getCachedModelPath(context, modelUrl)
+                                        isDownloading = false
+                                        if (path != null) {
+                                            "file://$path"
+                                        } else {
+                                            // Fallback to direct URL if caching fails
+                                            Log.w("ArScreen", "Caching failed, loading directly from URL")
+                                            modelUrl
+                                        }
+                                    }
+
+                                    // Load the model
+                                    Log.d("ArScreen", "Loading model from: $modelPathToLoad")
+                                    val modelInstance = modelLoader.loadModelInstance(modelPathToLoad)
+
+                                    if (modelInstance != null) {
+                                        Log.d("ArScreen", "Model loaded successfully")
+
+                                        // Create model node with larger scale for better visibility
+                                        // scaleToUnits = 1.0f means model will be scaled to 1 meter
+                                        val modelNode = ModelNode(
+                                            modelInstance = modelInstance,
+                                            scaleToUnits = 1.0f  // Increased from 0.5f for better visibility
+                                        ).apply {
+                                            isEditable = true
+                                        }
+
+                                        // Create anchor node and attach model
+                                        val anchorNode = AnchorNode(
+                                            engine = engine,
+                                            anchor = anchor
+                                        ).apply {
+                                            addChildNode(modelNode)
+                                        }
+
+                                        childNodes = listOf(anchorNode)
+
+                                        // Cancel timeout
+                                        timeoutJob?.cancel()
+                                        timeoutJob = null
+
+                                        isModelLoading = false
+                                        isDownloading = false
+                                        isModelPlaced = true
+                                        modelLoadError = null
+                                        modelLoadTimedOut = false
+
+                                        currentSessionState.selectedAnimal?.let { onAnimalPlaced(it) }
+                                        Log.d("ArScreen", "Model placed successfully with scale 1.0")
+                                    } else {
+                                        throw Exception("Failed to load model instance")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("ArScreen", "Model load error: ${e.message}", e)
+
+                                    timeoutJob?.cancel()
+                                    timeoutJob = null
+                                    isDownloading = false
+
+                                    modelLoadRetryCount++
+                                    if (modelLoadRetryCount < maxRetries) {
+                                        Log.d("ArScreen", "Retrying model load, attempt ${modelLoadRetryCount + 1}/$maxRetries")
+                                        isModelLoading = false
+                                    } else {
+                                        isModelLoading = false
+                                        modelLoadError = e.message ?: "Failed to load model after $maxRetries attempts"
+                                    }
+
+                                    // Clean up anchor
+                                    try {
+                                        anchor.detach()
+                                    } catch (_: Exception) {}
+                                }
+                            }
+                        } else {
+                            Log.e("ArScreen", "Failed to create anchor")
+                            isModelLoading = false
+                            modelLoadError = "Failed to create anchor at this location"
+                        }
+                    }
+                } else {
+                    Log.d("ArScreen", "No valid plane hit at tap location - tap on a detected surface")
+                }
+            } else {
+                Log.d("ArScreen", "Tap ignored - model already placed or loading")
             }
+        }
+
+        // SceneView 2.x ARScene Composable
+        ARScene(
+            modifier = Modifier.fillMaxSize(),
+            engine = engine,
+            modelLoader = modelLoader,
+            childNodes = childNodes,
+            planeRenderer = true,
+            sessionConfiguration = { session, config ->
+                config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+                config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
+                config.depthMode = if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+                    Config.DepthMode.AUTOMATIC
+                } else {
+                    Config.DepthMode.DISABLED
+                }
+                config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
+            },
+            onSessionUpdated = { session, updatedFrame ->
+                arFrame = updatedFrame
+                arSession = session
+
+                // Track ALL planes from session, not just updated ones
+                // getUpdatedPlanes() only returns planes modified in this frame
+                // getAllTrackables() returns all detected planes
+                try {
+                    val allPlanes = session.getAllTrackables(Plane::class.java)
+                        .filter { it.trackingState == TrackingState.TRACKING }
+
+                    val newCount = allPlanes.size
+                    // Only update and log if count changed significantly (reduce log spam)
+                    if (newCount > 0 && (planeCount == 0 || kotlin.math.abs(newCount - planeCount) >= 5)) {
+                        val oldCount = planeCount
+                        planeCount = newCount
+                        if (oldCount == 0) {
+                            onPlaneDetected(newCount)
+                            Log.d("ArScreen", "First plane detection: $newCount planes")
+                        }
+                    } else if (newCount > 0 && planeCount == 0) {
+                        planeCount = newCount
+                        onPlaneDetected(newCount)
+                    }
+
+                    // Auto-enable placement after 3 seconds even if no planes detected
+                    // DepthPoint hits from the depth sensor can still work for placement
+                    if (planeCount == 0 && !isModelPlaced) {
+                        val frameTimestamp = updatedFrame.timestamp
+                        // frameTimestamp is in nanoseconds, check if > 3 seconds since first frame
+                        if (frameTimestamp > 3_000_000_000L) {
+                            planeCount = 1 // Enable tapping
+                            onPlaneDetected(1)
+                            Log.d("ArScreen", "Auto-enabled placement after timeout (DepthPoint fallback available)")
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Fallback to getUpdatedPlanes if getAllTrackables fails
+                    val detectedPlanes = updatedFrame.getUpdatedPlanes()
+                        .filter { it.trackingState == TrackingState.TRACKING }
+                    if (detectedPlanes.isNotEmpty() && planeCount == 0) {
+                        planeCount = detectedPlanes.size
+                        onPlaneDetected(detectedPlanes.size)
+                        Log.d("ArScreen", "Detected ${detectedPlanes.size} planes (updated)")
+                    }
+                }
+
+                // Check tracking state for placed models with debouncing
+                // Only show tracking lost after sustained loss to prevent flickering
+                if (isModelPlaced && childNodes.isNotEmpty()) {
+                    val anchorNode = childNodes.firstOrNull()
+                    val trackingState = anchorNode?.anchor?.trackingState
+
+                    if (trackingState == TrackingState.STOPPED) {
+                        trackingLostCounter++
+                        // Only show tracking lost after sustained loss
+                        if (trackingLostCounter >= trackingLostThreshold && !isTrackingLost) {
+                            isTrackingLost = true
+                            Log.w("ArScreen", "Tracking lost (sustained for $trackingLostCounter frames)")
+                        }
+                    } else if (trackingState == TrackingState.TRACKING) {
+                        // Reset counter when tracking recovers
+                        if (trackingLostCounter > 0) {
+                            trackingLostCounter = 0
+                        }
+                        if (isTrackingLost) {
+                            isTrackingLost = false
+                            Log.d("ArScreen", "Tracking recovered")
+                        }
+                    }
+                    // Ignore PAUSED state - it's normal during quick camera movements
+                }
+            },
+            onGestureListener = rememberOnGestureListener(
+                onSingleTapConfirmed = { e, node ->
+                    if (node == null) {
+                        handleTapToPlace(e)
+                    }
+                }
+            )
         )
 
         if (isModelLoading) {
@@ -339,12 +597,27 @@ fun ArCameraContent(
                 ) {
                     CircularProgressIndicator(color = PrimaryGreenLime, strokeWidth = 4.dp)
                     Text(
-                        text = stringResource(R.string.ar_loading_model),
+                        text = if (isDownloading) {
+                            "Downloading model... (first time only)"
+                        } else if (isCached) {
+                            "Loading from cache..."
+                        } else {
+                            stringResource(R.string.ar_loading_model)
+                        },
                         color = PastelYellow,
                         fontSize = 18.sp,
                         fontFamily = JerseyFont,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
                     )
+                    if (isDownloading) {
+                        Text(
+                            text = "This will be instant next time!",
+                            color = White.copy(alpha = 0.7f),
+                            fontSize = 14.sp,
+                            fontFamily = JerseyFont
+                        )
+                    }
                 }
             }
         }
@@ -536,30 +809,41 @@ fun ArCameraContent(
             sessionState = sessionState,
             onNavigateBack = onNavigateBack,
             onClearAnimals = {
-                modelNodeRef?.let { node ->
-                    node.anchor?.detach()
-                    arSceneViewRef?.removeChild(node)
-                    node.destroy()
+                // Cancel any pending timeout job
+                timeoutJob?.cancel()
+                timeoutJob = null
+
+                // Clear all child nodes (SceneView 2.x approach)
+                childNodes.forEach { anchorNode ->
+                    try {
+                        anchorNode.anchor.detach()
+                        anchorNode.destroy()
+                    } catch (e: Exception) {
+                        Log.e("ArScreen", "Error clearing model: ${e.message}")
+                    }
                 }
-                modelNodeRef = null
+                childNodes = emptyList()
+
+                // Reset all state to allow placing a new model
                 isModelPlaced = false
                 isTrackingLost = false
-                planeCount = 0
+                trackingLostCounter = 0
+                modelLoadRetryCount = 0
+                modelLoadError = null
+                modelLoadTimedOut = false
+                // Keep planeCount - planes are still detected, no need to reset
+                // This allows immediate re-placement without waiting for plane detection again
+
+                Log.d("ArScreen", "Model cleared, ready for new placement. Planes: $planeCount")
 
                 onClearAnimals()
             },
             showCaptureSuccess = showCaptureSuccess,
             isCapturing = isCapturing,
             onCapture = {
-                arSceneViewRef?.let { arView ->
-                    isCapturing = true
-                    captureArView(arView) { success ->
-                        isCapturing = false
-                        if (success) {
-                            showCaptureSuccess = true
-                        }
-                    }
-                }
+                // TODO: Implement screenshot capture for SceneView 2.x
+                // The capture API has changed in SceneView 2.x
+                Log.d("ArScreen", "Capture requested")
             }
         )
     }
@@ -1581,42 +1865,8 @@ fun ArScreenPreview() {
     }
 }
 
-@SuppressLint("UseKtx")
-private fun captureArView(arSceneView: ArSceneView, onResult: (Boolean) -> Unit) {
-    val bitmap = createBitmap(arSceneView.width, arSceneView.height)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        PixelCopy.request(
-            arSceneView,
-            bitmap,
-            { copyResult ->
-                if (copyResult == PixelCopy.SUCCESS) {
-                    val saved = saveBitmapToGallery(arSceneView.context, bitmap)
-                    onResult(saved)
-                } else {
-                    onResult(false)
-                }
-            },
-            android.os.Handler(android.os.Looper.getMainLooper())
-        )
-    } else {
-        try {
-            arSceneView.isDrawingCacheEnabled = true
-            arSceneView.buildDrawingCache()
-            val drawingCache = arSceneView.drawingCache
-            if (drawingCache != null) {
-                val capturedBitmap = Bitmap.createBitmap(drawingCache)
-                arSceneView.isDrawingCacheEnabled = false
-                val saved = saveBitmapToGallery(arSceneView.context, capturedBitmap)
-                onResult(saved)
-            } else {
-                onResult(false)
-            }
-        } catch (e: Exception) {
-            onResult(false)
-        }
-    }
-}
+// TODO: Implement screenshot capture for SceneView 2.x
+// The capture API has changed - use View.drawToBitmap() or similar approach
 
 private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Boolean {
     val filename = "WildAR!_AR_${System.currentTimeMillis()}.jpg"
@@ -1658,13 +1908,14 @@ private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Boolean {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream)
             }
 
+            @Suppress("DEPRECATION")
             val mediaScanIntent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
             mediaScanIntent.data = android.net.Uri.fromFile(imageFile)
             context.sendBroadcast(mediaScanIntent)
 
             true
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         false
     }
 }

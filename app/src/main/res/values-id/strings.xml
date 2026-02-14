@@ -209,6 +209,21 @@
 
     <!-- AR Screen -->
     <string name="ar_scanning">Memindai…</string>
+    <string name="ar_scanning_for_surfaces">Memindai permukaan…</string>
+    <string name="ar_point_at_surface_hint">Arahkan ke permukaan lantai atau area bertekstur dengan pencahayaan baik</string>
+    <string name="ar_downloading_model">Mengunduh model %1$s…</string>
+    <string name="ar_please_wait">Harap tunggu…</string>
+    <string name="ar_tap_where_to_place">Ketuk di mana Anda ingin menempatkan model</string>
+    <string name="ar_interact_with_your_model">Berinteraksi dengan model Anda</string>
+    <string name="ar_photo_saved_to_gallery">Foto tersimpan di galeri!</string>
+    <string name="ar_loading_animal_data">Memuat data hewan…</string>
+    <string name="ar_no_3d_model_available">Tidak ada model 3D tersedia untuk hewan ini</string>
+    <string name="ar_loading_from_cache">Memuat dari cache…</string>
+    <string name="ar_downloading">Mengunduh model…</string>
+    <string name="ar_download_complete">Unduhan selesai!</string>
+    <string name="ar_back">Kembali</string>
+    <string name="ar_reset">Atur Ulang</string>
+    <string name="ar_go_back">Kembali</string>
     <string name="ar_surfaces_detected">%1$d Permukaan</string>
     <string name="ar_capture">Ambil Foto</string>
     <string name="ar_photo_captured">Foto Berhasil Diambil!</string>

@@ -209,6 +209,21 @@
 
     <!-- AR Screen -->
     <string name="ar_scanning">Scanning…</string>
+    <string name="ar_scanning_for_surfaces">Scanning for surfaces…</string>
+    <string name="ar_point_at_surface_hint">Point at a textured floor or surface with good lighting</string>
+    <string name="ar_downloading_model">Downloading %1$s model…</string>
+    <string name="ar_please_wait">Please wait…</string>
+    <string name="ar_tap_where_to_place">Tap where you want to place the model</string>
+    <string name="ar_interact_with_your_model">Interact with your model</string>
+    <string name="ar_photo_saved_to_gallery">Photo saved to gallery!</string>
+    <string name="ar_loading_animal_data">Loading animal data…</string>
+    <string name="ar_no_3d_model_available">No 3D model available for this animal</string>
+    <string name="ar_loading_from_cache">Loading from cache…</string>
+    <string name="ar_downloading">Downloading model…</string>
+    <string name="ar_download_complete">Download complete!</string>
+    <string name="ar_back">Back</string>
+    <string name="ar_reset">Reset</string>
+    <string name="ar_go_back">Go Back</string>
     <string name="ar_surfaces_detected">%1$d Surface%2$s</string>
     <string name="ar_capture">Capture</string>
     <string name="ar_photo_captured">Photo Captured!</string>

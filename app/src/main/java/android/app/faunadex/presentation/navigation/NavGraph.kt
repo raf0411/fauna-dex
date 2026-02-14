@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import android.app.faunadex.presentation.animalDetail.AnimalDetailScreen
-import android.app.faunadex.presentation.ar.ArScreen
+import android.app.faunadex.presentation.ar.ArScreenNew
 import android.app.faunadex.presentation.auth.login.LoginScreen
 import android.app.faunadex.presentation.auth.onboarding.OnboardingScreen
 import android.app.faunadex.presentation.auth.register.RegisterScreen
@@ -316,9 +316,7 @@ fun NavGraph(
             val animalId = backStackEntry.arguments?.getString("animalId")
             android.util.Log.d("NavGraph", "=== AR SCREEN COMPOSABLE ===")
             android.util.Log.d("NavGraph", "AnimalId from backStackEntry: '$animalId'")
-            android.util.Log.d("NavGraph", "Is animalId null?: ${animalId == null}")
-            android.util.Log.d("NavGraph", "Passing to ArScreen...")
-            ArScreen(
+            ArScreenNew(
                 onNavigateBack = {
                     navController.popBackStack()
                 },

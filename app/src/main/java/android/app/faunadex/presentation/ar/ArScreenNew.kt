@@ -66,7 +66,7 @@ import java.security.MessageDigest
 
 private const val TAG = "ArScreenNew"
 
-private const val MODEL_SCALE = 1f  // 0.5 meters - good default size for animals
+private const val MODEL_SCALE = 1f
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -90,7 +90,6 @@ fun ArScreenNew(
 
     val sessionState by viewModel.sessionState.collectAsState()
 
-    // Log when animal is loaded
     LaunchedEffect(sessionState.selectedAnimal) {
         Log.d(TAG, "Selected animal updated: ${sessionState.selectedAnimal?.name}, URL: ${sessionState.selectedAnimal?.arModelUrl}")
     }
@@ -101,7 +100,6 @@ fun ArScreenNew(
             onNavigateBack = onNavigateBack
         )
     } else {
-        // Permission denied UI
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black),
             contentAlignment = Alignment.Center
@@ -115,13 +113,12 @@ fun ArScreenNew(
     }
 }
 
-// AR State Machine
 enum class ArState {
-    SCANNING,   // Looking for planes
-    READY,      // Plane found, ready to place
-    PLACING,    // Model is being loaded
-    PLACED,     // Model is placed
-    ERROR       // Something went wrong
+    SCANNING,
+    READY,
+    PLACING,
+    PLACED,
+    ERROR
 }
 
 @Composable
@@ -132,42 +129,33 @@ private fun ArContent(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Reference to the AR SceneView for screenshot capture
     var arSceneView by remember { mutableStateOf<ARSceneView?>(null) }
 
-    // Check if animal is loaded
     val animal = sessionState.selectedAnimal
     val modelUrl = animal?.arModelUrl
     val isAnimalLoaded = animal != null && !modelUrl.isNullOrBlank()
 
-    // Remove excessive logging - only log state changes
     LaunchedEffect(isAnimalLoaded) {
         Log.d(TAG, "Animal loaded: $isAnimalLoaded, name: ${animal?.name}")
     }
 
-    // Simple state
     var arState by remember { mutableStateOf(ArState.SCANNING) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var loadingProgress by remember { mutableStateOf("") }
 
-    // Capture state
     var isCapturing by remember { mutableStateOf(false) }
     var showCaptureSuccess by remember { mutableStateOf(false) }
 
-    // SceneView components
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
     var childNodes by remember { mutableStateOf<List<AnchorNode>>(emptyList()) }
 
-    // Track if we have a good plane
     var hasPlane by remember { mutableStateOf(false) }
     var currentFrame by remember { mutableStateOf<Frame?>(null) }
 
-    // Pre-load model when animal is available (don't wait for tap)
     var cachedModelPath by remember { mutableStateOf<String?>(null) }
     var isPreloading by remember { mutableStateOf(false) }
 
-    // Preload model in background
     LaunchedEffect(modelUrl) {
         if (modelUrl != null && cachedModelPath == null && !isPreloading) {
             isPreloading = true
@@ -186,7 +174,6 @@ private fun ArContent(
         }
     }
 
-    // Show loading if animal not loaded yet
     if (!isAnimalLoaded) {
         Box(
             modifier = Modifier
@@ -228,28 +215,22 @@ private fun ArContent(
             childNodes = childNodes,
             planeRenderer = true,
             onViewUpdated = {
-                // Capture reference to the ARSceneView for screenshot capture
-                // 'this' refers to the ARSceneView in this lambda
                 if (arSceneView == null) {
                     arSceneView = this
                 }
             },
             sessionConfiguration = { session, config ->
-                // Focus on HORIZONTAL planes for floor detection
                 config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
                 config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
                 config.focusMode = Config.FocusMode.AUTO
-                // Enable depth for better hit testing
                 if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
                     config.depthMode = Config.DepthMode.AUTOMATIC
                 }
-                // Enable instant placement - this is key for quick placement without planes
                 config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
             },
             onSessionUpdated = { session, frame ->
                 currentFrame = frame
 
-                // Check for any tracking planes
                 val planes = session.getAllTrackables(Plane::class.java)
                     .filter { it.trackingState == TrackingState.TRACKING }
 
@@ -261,7 +242,6 @@ private fun ArContent(
                     }
                 }
 
-                // Auto-enable after 3 seconds for instant placement
                 if (!hasPlane && arState == ArState.SCANNING) {
                     val timestamp = frame.timestamp
                     if (timestamp > 3_000_000_000L) {
@@ -273,30 +253,25 @@ private fun ArContent(
             },
             onGestureListener = rememberOnGestureListener(
                 onSingleTapConfirmed = { motionEvent, node ->
-                    // Block taps if not ready or if model is still downloading
                     if (arState != ArState.READY) {
                         Log.d(TAG, "Tap blocked - state: $arState")
                         return@rememberOnGestureListener
                     }
 
-                    // Block taps while model is being downloaded
                     if (isPreloading && cachedModelPath == null) {
                         Log.d(TAG, "Tap blocked - model still downloading")
                         return@rememberOnGestureListener
                     }
 
                     val frame = currentFrame ?: return@rememberOnGestureListener
-                    // Note: We don't use session directly but hitTestInstantPlacement uses it internally
 
                     Log.d(TAG, "Tap at ${motionEvent.x}, ${motionEvent.y}")
 
                     val hitResults = frame.hitTest(motionEvent.x, motionEvent.y)
 
-                    // Find best hit - prefer Plane over DepthPoint over InstantPlacement
                     var anchor: com.google.ar.core.Anchor? = null
                     var anchorSource = "unknown"
 
-                    // Try plane hit first (most stable)
                     val planeHit = hitResults.firstOrNull { hit ->
                         hit.trackable is Plane && hit.trackable.trackingState == TrackingState.TRACKING
                     }
@@ -305,7 +280,6 @@ private fun ArContent(
                         anchor = planeHit.createAnchor()
                         anchorSource = "Plane"
                     } else {
-                        // Try depth point (less stable but usually good)
                         val depthHit = hitResults.firstOrNull { hit ->
                             hit.trackable?.trackingState == TrackingState.TRACKING
                         }
@@ -313,7 +287,6 @@ private fun ArContent(
                             anchor = depthHit.createAnchor()
                             anchorSource = depthHit.trackable?.javaClass?.simpleName ?: "DepthPoint"
                         } else {
-                            // Use instant placement (least stable, will adjust)
                             val instantHits = frame.hitTestInstantPlacement(motionEvent.x, motionEvent.y, 2.0f)
                             instantHits.firstOrNull()?.let { hit ->
                                 anchor = hit.createAnchor()
@@ -327,13 +300,11 @@ private fun ArContent(
                         return@rememberOnGestureListener
                     }
 
-                    // Capture anchor in a val to avoid smart cast issues
                     val placementAnchor = anchor!!
 
                     Log.d(TAG, "Anchor: $anchorSource")
                     arState = ArState.PLACING
 
-                    // Clear previous models
                     childNodes.forEach { node ->
                         try { node.anchor.detach(); node.destroy() } catch (_: Exception) {}
                     }
@@ -341,7 +312,6 @@ private fun ArContent(
 
                     scope.launch {
                         try {
-                            // Use pre-loaded path or load now
                             val modelPath = cachedModelPath ?: run {
                                 loadingProgress = "Loading model..."
                                 getOrDownloadModel(context, modelUrl) { loadingProgress = it }
@@ -349,10 +319,8 @@ private fun ArContent(
 
                             loadingProgress = "Rendering..."
 
-                            // Load model instance with retry
                             var modelInstance = modelLoader.loadModelInstance(modelPath)
 
-                            // If failed, try once more after a short delay
                             if (modelInstance == null) {
                                 Log.w(TAG, "First load attempt failed, retrying...")
                                 kotlinx.coroutines.delay(100)
@@ -379,7 +347,6 @@ private fun ArContent(
                                 loadingProgress = ""
                                 Log.d(TAG, "Model placed from $anchorSource")
                             } else {
-                                // Delete bad cache
                                 cachedModelPath?.let { path ->
                                     File(path.removePrefix("file://")).delete()
                                     cachedModelPath = null
@@ -397,7 +364,6 @@ private fun ArContent(
             )
         )
 
-        // UI Overlay
         ArOverlay(
             arState = arState,
             loadingProgress = loadingProgress,
@@ -461,7 +427,6 @@ private fun BoxScope.ArOverlay(
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val navBarPadding = WindowInsets.navigationBars.asPaddingValues()
 
-    // Back button
     IconButton(
         onClick = onNavigateBack,
         modifier = Modifier
@@ -477,7 +442,6 @@ private fun BoxScope.ArOverlay(
         )
     }
 
-    // Status message based on state
     when (arState) {
         ArState.SCANNING -> {
             StatusCard(
@@ -490,9 +454,7 @@ private fun BoxScope.ArOverlay(
         }
 
         ArState.READY -> {
-            // Show different message based on whether model is ready
             if (isPreloading) {
-                // Model is still downloading - don't allow taps yet
                 StatusCard(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -502,7 +464,6 @@ private fun BoxScope.ArOverlay(
                     backgroundColor = Color.DarkGray
                 )
             } else {
-                // Model is ready - allow taps
                 StatusCard(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -543,7 +504,6 @@ private fun BoxScope.ArOverlay(
         }
 
         ArState.PLACED -> {
-            // State for showing gesture hint
             var showSuccessMessage by remember { mutableStateOf(true) }
             var showGestureHint by remember { mutableStateOf(false) }
 
@@ -555,7 +515,6 @@ private fun BoxScope.ArOverlay(
                 showGestureHint = false
             }
 
-            // Success message at top
             AnimatedVisibility(
                 visible = showSuccessMessage,
                 modifier = Modifier
@@ -587,7 +546,6 @@ private fun BoxScope.ArOverlay(
                 }
             }
 
-            // Animal name and scientific name popup at top
             AnimatedVisibility(
                 visible = !showSuccessMessage,
                 modifier = Modifier
@@ -616,7 +574,7 @@ private fun BoxScope.ArOverlay(
                         )
                         Text(
                             text = scientificName,
-                            color = Color(0xFF8FBC8F), // MediumGreenSage color
+                            color = Color(0xFF8FBC8F),
                             fontSize = 16.sp,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                             fontFamily = JerseyFont,
@@ -626,7 +584,6 @@ private fun BoxScope.ArOverlay(
                 }
             }
 
-            // Gesture hint tooltip
             AnimatedVisibility(
                 visible = showGestureHint,
                 modifier = Modifier
@@ -712,7 +669,6 @@ private fun BoxScope.ArOverlay(
                 }
             }
 
-            // Capture success message
             AnimatedVisibility(
                 visible = showCaptureSuccess,
                 modifier = Modifier
@@ -744,7 +700,6 @@ private fun BoxScope.ArOverlay(
                 }
             }
 
-            // Bottom action buttons (Reset and Capture)
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -753,7 +708,6 @@ private fun BoxScope.ArOverlay(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Reset/Clear button
                 IconButton(
                     onClick = onClear,
                     modifier = Modifier
@@ -768,7 +722,6 @@ private fun BoxScope.ArOverlay(
                     )
                 }
 
-                // Capture button
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -877,10 +830,6 @@ private fun StatusCard(
     }
 }
 
-/**
- * Simple model caching - downloads once, loads from cache after.
- * Validates downloaded file before caching using GLB magic bytes.
- */
 private suspend fun getOrDownloadModel(
     context: Context,
     url: String,
@@ -892,25 +841,22 @@ private suspend fun getOrDownloadModel(
     val fileName = url.md5() + ".glb"
     val cachedFile = File(cacheDir, fileName)
 
-    // Check if valid cached file exists (validate GLB magic bytes)
     if (cachedFile.exists() && isValidGlbFile(cachedFile)) {
         Log.d(TAG, "Loading from cache: ${cachedFile.absolutePath} (${cachedFile.length()} bytes)")
         onProgress(context.getString(R.string.ar_loading_from_cache))
         return@withContext "file://${cachedFile.absolutePath}"
     } else if (cachedFile.exists()) {
-        // Cached file exists but is invalid - delete it
         Log.w(TAG, "Cached file is invalid, deleting: ${cachedFile.absolutePath}")
         cachedFile.delete()
     }
 
-    // Download
     Log.d(TAG, "Downloading model: $url")
     onProgress(context.getString(R.string.ar_downloading))
 
     try {
         val connection = URL(url).openConnection()
         connection.connectTimeout = 30000
-        connection.readTimeout = 120000 // 2 minutes for large files
+        connection.readTimeout = 120000
 
         val totalSize = connection.contentLength
         var downloaded = 0L
@@ -930,7 +876,6 @@ private suspend fun getOrDownloadModel(
             }
         }
 
-        // Validate downloaded GLB file
         if (!isValidGlbFile(cachedFile)) {
             cachedFile.delete()
             throw Exception("Downloaded file is not a valid GLB model")
@@ -941,30 +886,25 @@ private suspend fun getOrDownloadModel(
 
         "file://${cachedFile.absolutePath}"
     } catch (e: Exception) {
-        cachedFile.delete() // Remove partial download
+        cachedFile.delete()
         throw e
     }
 }
 
-/**
- * Validate that a file is a valid GLB (binary glTF) file by checking magic bytes.
- * GLB files start with: 0x46546C67 (ASCII "glTF") as the first 4 bytes.
- */
 private fun isValidGlbFile(file: File): Boolean {
-    if (!file.exists() || file.length() < 12) return false // GLB header is 12 bytes minimum
+    if (!file.exists() || file.length() < 12) return false
 
     return try {
         file.inputStream().use { input ->
             val header = ByteArray(4)
             if (input.read(header) != 4) return@use false
 
-            // Check for "glTF" magic bytes (0x67, 0x6C, 0x54, 0x46 in little endian = 0x46546C67)
             val magic = (header[0].toInt() and 0xFF) or
                        ((header[1].toInt() and 0xFF) shl 8) or
                        ((header[2].toInt() and 0xFF) shl 16) or
                        ((header[3].toInt() and 0xFF) shl 24)
 
-            val isValid = magic == 0x46546C67 // "glTF" in little endian
+            val isValid = magic == 0x46546C67
             if (!isValid) {
                 Log.w(TAG, "Invalid GLB magic: ${header.contentToString()}, expected glTF")
             }
@@ -981,7 +921,6 @@ private fun String.md5(): String {
     return md.digest(toByteArray()).joinToString("") { "%02x".format(it) }
 }
 
-// Re-export the gesture listener
 @Composable
 private fun rememberOnGestureListener(
     onSingleTapConfirmed: (android.view.MotionEvent, io.github.sceneview.node.Node?) -> Unit
@@ -989,21 +928,14 @@ private fun rememberOnGestureListener(
     onSingleTapConfirmed = onSingleTapConfirmed
 )
 
-/**
- * Capture AR screenshot and save to gallery.
- * This captures only the AR scene (camera feed + 3D model) without UI overlay.
- */
 private suspend fun captureArScreenshot(context: Context, arSceneView: ARSceneView) = withContext(Dispatchers.Main) {
     try {
-        // Create bitmap matching the ArSceneView dimensions
         val bitmap = Bitmap.createBitmap(
             arSceneView.width,
             arSceneView.height,
             Bitmap.Config.ARGB_8888
         )
 
-        // Use PixelCopy to capture just the AR SceneView (not the whole window)
-        // This captures the camera feed + rendered 3D models without UI overlay
         val copyResult = suspendCancellableCoroutine { continuation ->
             PixelCopy.request(
                 arSceneView,
@@ -1020,7 +952,6 @@ private suspend fun captureArScreenshot(context: Context, arSceneView: ARSceneVi
             throw Exception("Failed to capture AR scene (error code: $copyResult)")
         }
 
-        // Save to gallery
         withContext(Dispatchers.IO) {
             saveBitmapToGallery(context, bitmap)
         }
@@ -1032,9 +963,6 @@ private suspend fun captureArScreenshot(context: Context, arSceneView: ARSceneVi
     }
 }
 
-/**
- * Save bitmap to device gallery
- */
 private fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
     val filename = "WildAR!_AR_${System.currentTimeMillis()}.jpg"
 
